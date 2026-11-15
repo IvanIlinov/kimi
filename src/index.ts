@@ -59,6 +59,14 @@ const PANEL_KEYBOARD = {
     ],
 };
 
+// Нижние вкладки админа
+const ADMIN_TABS: Btn[] = [
+    { text: '🏠 Главная', callback_data: 'adm:home' },
+    { text: '📒 Журнал', callback_data: 'adm:log' },
+    { text: '✨ Арена', callback_data: 'show:arena' },
+];
+const ADMIN_KEYBOARD = { inline_keyboard: [ADMIN_TABS] };
+
 // Кнопки под профилем чужого участника (для обычного ученика)
 const BACK_KEYBOARD = {
     inline_keyboard: [
@@ -100,7 +108,8 @@ function arenaKeyboard(ranked: Ranked[], viewerId: number) {
             })),
         );
     }
-    if (!isGuest(viewerId)) rows.push([{ text: '← Профиль', callback_data: 'show:me' }]);
+    if (isAdmin(viewerId)) rows.push(ADMIN_TABS);
+    else if (!isGuest(viewerId)) rows.push([{ text: '← Профиль', callback_data: 'show:me' }]);
     return { inline_keyboard: rows };
 }
 
@@ -136,6 +145,14 @@ function screenArena(viewerId: number, note = ''): Reply {
         text: withNote(note, renderArena(ranked, viewerId)),
         keyboard: arenaKeyboard(ranked, viewerId),
     };
+}
+
+function screenAdminHome(): Reply {
+    return { text: '🏠 Главная\n\nСтатистика недели появится на следующем шаге.', keyboard: ADMIN_KEYBOARD };
+}
+
+function screenAdminLog(): Reply {
+    return { text: '📒 Журнал\n\nЗаписи появятся на следующем шаге.', keyboard: ADMIN_KEYBOARD };
 }
 
 function screenSelf(viewerId: number, note = ''): Reply {
@@ -186,6 +203,11 @@ function applyChange(personId: number, op: string, arg: string, actorTgId: numbe
 // Единое место, где меняются данные и собирается ответ на действие из кнопки или текста
 function applyAction(viewerId: number, action: string): Reply {
     const [kind, a, b, c] = action.split(':');
+
+    if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
+        if (kind === 'adm' && a === 'log') return screenAdminLog();
+        if (kind === 'adm' || kind === 'show') return screenAdminHome();
+    }
 
     // Гость видит только арену и профили участников, всё остальное возвращает в арену
     if (isGuest(viewerId) && !(kind === 'show' && (a === 'arena' || a === 'user'))) {
