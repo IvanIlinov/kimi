@@ -7,8 +7,11 @@ import {
     leadParts,
     planTasks,
     planTopics,
+    sgn,
+    weekPct
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
+import type { WeekStat } from './store.ts';
 
 const ALL = Array.from({ length: TOPICS_TOTAL }, (_, i) => i + 1);
 const nums = (a: number[]) => (a.length ? [...a].sort((x, y) => x - y).join(' ') : '—');
@@ -56,7 +59,12 @@ const onTrack = (r: Ranked, now: Date) => {
     return (lead.topics ?? 0) >= 0 && (lead.tasks ?? 0) >= 0;
 };
 
-export function renderArena(ranked: Ranked[], viewerId?: number, now: Date = new Date()): string {
+export function renderArena(
+    ranked: Ranked[],
+    viewerId?: number,
+    week: Map<number, WeekStat> = new Map(),
+    now: Date = new Date(),
+): string {
     if (ranked.length === 0) return '✨ Арена\n\nПока никого нет.';
 
     const top = ranked.slice(0, 10);
@@ -67,9 +75,12 @@ export function renderArena(ranked: Ranked[], viewerId?: number, now: Date = new
     const tailStart = shown.length > 5 ? shown.length - 2 : shown.length;
     const iconFor = (i: number) => (i < 3 ? '💎' : i >= tailStart ? '🔥' : '⚡️');
 
-    const lines = shown.map(
-        (r, i) => `${iconFor(i)} ${r.place} ${cap(r.person.name)} ${onTrack(r, now) ? '🟢' : '🔴'}`,
-    );
+    const lines = shown.map((r, i) => {
+        const w = week.get(r.person.id) ?? { tasks: 0, topics: 0 };
+        const pct = Math.round(weekPct(w));
+        const status = onTrack(r, now) ? '🟢' : '🔴';
+        return `${iconFor(i)} ${r.place} ${cap(r.person.name)} ${status} ${sgn(pct)}% ${sgn(w.tasks)} задач ${sgn(w.topics)} заданий`;
+    });
 
     const body = [lines.slice(0, 3), lines.slice(3, tailStart), lines.slice(tailStart)]
         .filter((g) => g.length > 0)

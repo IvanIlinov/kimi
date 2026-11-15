@@ -95,3 +95,10 @@ export function leadParts(p: Person, now: Date): { topics: number | null; tasks:
         tasks: p.tasksTotal >= TASKS_GOAL ? null : p.tasksTotal - planTasks(now),
     };
 }
+
+// Знак для чисел: 0 и положительные с плюсом, отрицательные с минусом
+export const sgn = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+
+// Прирост прогресса за неделю в процентах (без пробника)
+export const weekPct = (s: { tasks: number; topics: number }) =>
+    100 * (0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL);

@@ -8,7 +8,7 @@ import {
     sendMessage,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
-import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL } from './logic.ts';
+import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import { cap, renderArena, renderHelpProgress, renderProfile } from './render.ts';
 import { getPersons, getWeekStats } from './store.ts';
@@ -142,20 +142,15 @@ function topicsKeyboard(p: Person, prefix: string, back: Btn) {
 
 function screenArena(viewerId: number, note = ''): Reply {
     const ranked = all();
+    const week = new Map(getWeekStats().map((s) => [s.userId, s]));
     const leader = weekLeaderLine();
-    const body = renderArena(ranked, viewerId);
+    const body = renderArena(ranked, viewerId, week);
     const text = leader ? `✨ Арена\n\n${leader}\n\n${body.replace(/^✨ Арена\n\n/, '')}` : body;
     return {
         text: withNote(note, text),
         keyboard: arenaKeyboard(ranked, viewerId),
     };
 }
-
-const sgn = (n: number) => (n > 0 ? `+${n}` : `${n}`);
-
-// Прирост прогресса за неделю в процентах (без пробника)
-const weekPct = (s: WeekStat) =>
-    100 * (0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL);
 
 // Стабильный недельный процент: сколько прогресса дают нормативы за 7 дней
 function stablePct(now: Date): number {
