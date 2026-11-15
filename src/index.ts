@@ -159,13 +159,14 @@ function stablePct(now: Date): number {
     const dTasks = planTasks(now) - planTasks(weekAgo);
     return 100 * (0.4 * dTopics / TOPICS_TOTAL + 0.4 * dTasks / TASKS_GOAL);
 }
+
 // Лидер недели для арены: по заданиям, при равенстве по задачам
 function weekLeaderLine(): string {
     const active = getWeekStats().filter((s) => s.active);
     if (active.length === 0) return '';
-    const best = active.sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
+    const best = [...active].sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
     const name = all().find((r) => r.person.id === best.userId)?.person.name ?? '—';
-    return `👑  Лидер недели 👑 ${cap(name)} 👑\n👑  ${sgn(best.tasks)} задач ${sgn(best.topics)} заданий`;
+    return `👑 Лидер недели 👑 ${cap(name)} 👑\n👑 ${sgn(Math.round(weekPct(best)))}% ${sgn(best.tasks)} задач ${sgn(best.topics)} заданий`;
 }
 
 function screenAdminHome(firstName: string): Reply {
