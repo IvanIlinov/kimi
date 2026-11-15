@@ -10,7 +10,7 @@ import {
 import type { CallbackQuery, Update } from './telegram.ts';
 import { leadParts, rank, TASKS_GOAL, TOPICS_TOTAL } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
-import { renderArena, renderHelpProgress, renderProfile } from './render.ts';
+import { cap, renderArena, renderHelpProgress, renderProfile } from './render.ts';
 import { getPersons, getWeekStats } from './store.ts';
 import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
@@ -159,12 +159,11 @@ const weekPct = (s: WeekStat) =>
 
 // Лидер недели для арены: по заданиям, при равенстве по задачам
 function weekLeaderLine(): string {
-    const stats = getWeekStats();
-    const active = stats.filter((s) => s.active);
+    const active = getWeekStats().filter((s) => s.active);
     if (active.length === 0) return '';
     const best = active.sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
     const name = all().find((r) => r.person.id === best.userId)?.person.name ?? '—';
-    return `👑 Лидер недели >> ${name} · ${sgn(best.tasks)} задач · ${sgn(best.topics)} заданий`;
+    return `👑  Лидер недели 👑 ${cap(name)} 👑\n👑  ${sgn(best.tasks)} задач ${sgn(best.topics)} заданий`;
 }
 
 function screenAdminHome(): Reply {

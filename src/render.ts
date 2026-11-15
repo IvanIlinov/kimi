@@ -12,6 +12,7 @@ import type { Ranked } from './logic.ts';
 
 const ALL = Array.from({ length: TOPICS_TOTAL }, (_, i) => i + 1);
 const nums = (a: number[]) => (a.length ? [...a].sort((x, y) => x - y).join(' ') : '—');
+export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Полоска прогресса из 10 клеток: 21% -> ██░░░░░░░░
 const bar = (pct: number, cells = 10) => {
@@ -27,7 +28,7 @@ export function renderProfile(r: Ranked, now: Date): string {
     const lead = leadParts(p, now);
 
     const lines = [
-        `⚡️${p.name}⚡️`,
+        `⚡️${cap(p.name)}⚡️`,
         '',
         `${bar(r.pct)} ${r.pct}%`,
         `💎${p.exam ?? '—'}  🎖${r.place}   ⚔️${p.studied.length}`,
@@ -67,7 +68,7 @@ export function renderArena(ranked: Ranked[], viewerId?: number, now: Date = new
     const iconFor = (i: number) => (i < 3 ? '💎' : i >= tailStart ? '🔥' : '⚡️');
 
     const lines = shown.map(
-        (r, i) => `${iconFor(i)} ${r.place} ${r.person.name} ${onTrack(r, now) ? '🟢' : '🔴'}`,
+        (r, i) => `${iconFor(i)} ${r.place} ${cap(r.person.name)} ${onTrack(r, now) ? '🟢' : '🔴'}`,
     );
 
     const body = [lines.slice(0, 3), lines.slice(3, tailStart), lines.slice(tailStart)]
