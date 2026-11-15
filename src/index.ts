@@ -28,6 +28,7 @@ const ADMIN_HELP =
     '/rename <id> <имя>\n' +
     '/remove <id>\n' +
     '/exam <id> <балл>\n' +
+    '/as <tg_id> — смотреть глазами участника (без изменений), /as off — выйти\n' +
     '/id — узнать свой Telegram id';
 
 const ICON: Record<TopicStatus, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
@@ -401,6 +402,33 @@ function actionFromText(text: string): string {
 const panel = new Map<number, number>(); // chatId -> message_id единственной панели
 const keyboardCleared = new Set<number>(); // чаты, где уже убрали старую reply-клавиатуру
 
+// adminTgId -> tgId участника, которого админ сейчас смотрит
+const viewAsMap = new Map<number, number>();
+
+// Ответ с учётом режима просмотра. В режиме просмотра изменения отключены.
+function respond(viewerId: number, action: string, firstName: string): Reply {
+    const targetTg = viewAsMap.get(viewerId);
+    if (targetTg === undefined) return applyAction(viewerId, action, firstName);
+
+    const target = findByTg(targetTg);
+    if (!target) {
+        viewAsMap.delete(viewerId);
+        return applyAction(viewerId, action, firstName);
+    }
+
+    const kind = action.split(':')[0];
+    const banner = `👁 Вы смотрите как ${cap(target.person.name)} · /as off — выйти`;
+
+    // Изменения и админские действия в режиме просмотра не выполняем
+    if (kind === 'add' || kind === 'exam' || kind === 'topic' || kind === 'a' || kind === 'adm') {
+        const base = applyAction(targetTg, 'show:me', firstName);
+        return { ...base, text: `${banner}\n⛔ Изменения отключены\n\n${base.text}` };
+    }
+
+    const r = applyAction(targetTg, action, firstName);
+    return { ...r, text: `${banner}\n\n${r.text}` };
+}
+
 async function deleteQuietly(chatId: number, messageId: number): Promise<void> {
     try {
         await deleteMessage(BOT_TOKEN, chatId, messageId);
@@ -438,7 +466,7 @@ async function handleCallback(q: CallbackQuery): Promise<void> {
     if (!msg || !q.data) return;
 
     panel.set(msg.chat.id, msg.message_id);
-    await showPanel(msg.chat.id, applyAction(q.from.id, q.data));
+    await showPanel(msg.chat.id, respond(q.from.id, q.data, q.from.first_name));
 }
 
 async function handle(u: Update): Promise<void> {
@@ -470,13 +498,30 @@ async function handle(u: Update): Promise<void> {
         return;
     }
 
+    if (isAdmin(viewerId) && /^\/as(\s|$)/.test(text)) {
+        const arg = text.split(/\s+/)[1];
+        if (!arg || arg === 'off') {
+            viewAsMap.delete(viewerId);
+            await showPanel(chatId, screenSelf(viewerId, '👁 Режим просмотра выключен'));
+            return;
+        }
+        const targetTg = Number(arg);
+        if (!findByTg(targetTg)) {
+            await showPanel(chatId, screenArena(viewerId, `⚠️ Участника с id ${arg} нет`));
+            return;
+        }
+        viewAsMap.set(viewerId, targetTg);
+        await showPanel(chatId, respond(viewerId, 'show:me', m.from.first_name));
+        return;
+    }
+
     const adminReply = adminCommand(viewerId, text);
     if (adminReply) {
         await showPanel(chatId, adminReply);
         return;
     }
 
-    await showPanel(chatId, applyAction(viewerId, actionFromText(text)));
+    await showPanel(chatId, respond(viewerId, actionFromText(text), m.from.first_name));
 }
 
 const me = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
