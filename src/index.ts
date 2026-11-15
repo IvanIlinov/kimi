@@ -104,7 +104,7 @@ function arenaKeyboard(ranked: Ranked[], viewerId: number) {
     for (let i = 0; i < shown.length; i += 2) {
         rows.push(
             shown.slice(i, i + 2).map((r) => ({
-                text: r.person.name,
+                text: cap(r.person.name),
                 callback_data: `show:user:${r.person.id}`,
             })),
         );
