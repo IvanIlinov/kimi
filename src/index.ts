@@ -184,6 +184,7 @@ function screenAdminHome(firstName: string): Reply {
     const tops = active.filter((x) => x.pct >= stable).sort((a, b) => b.pct - a.pct);
     const lost = active.filter((x) => x.pct < stable).sort((a, b) => b.pct - a.pct);
 
+    // Строка участника: «Имя: +9% +213 задач +0 заданий»
     const line = (x: (typeof rows)[number]) =>
         `${x.name}: ${sgn(Math.round(x.pct))}% ${sgn(x.s.tasks)} задач ${sgn(x.s.topics)} заданий`;
 
@@ -196,7 +197,7 @@ function screenAdminHome(firstName: string): Reply {
     }).length;
 
     const parts: string[] = [
-        `👑 Привет, ${firstName}!`,
+        `👑 Привет, ${firstName}!!`,
         '',
         `Активны: ${active.length}/${rows.length}`,
         `Отстают: ${behind}/${rows.length}`,
@@ -205,13 +206,13 @@ function screenAdminHome(firstName: string): Reply {
     if (leader) {
         parts.push(
             '',
-            `🏆 Лидер ${leader.name}`,
-            `🏆 ${sgn(Math.round(leader.pct))}% ${sgn(leader.s.tasks)} задач ${sgn(leader.s.topics)} заданий`,
+            `💎 Лидер ${leader.name}`,
+            `💎 ${sgn(Math.round(leader.pct))}% ${sgn(leader.s.tasks)} задач ${sgn(leader.s.topics)} заданий`,
         );
     }
-    if (tops.length) parts.push('', '⚡️ Топы', ...tops.map((x) => `⚡️ ${line(x)}`));
-    if (lost.length) parts.push('', '🐼 Теряем', ...lost.map((x) => `🐼 ${line(x)}`));
-    if (idle.length) parts.push('', '🐾 Не заходили', ...idle.map((x) => `🐾 ${x.name}`));
+    if (tops.length) parts.push('', 'Топы', ...tops.map((x) => `⚡️ ${line(x)}`));
+    if (lost.length) parts.push('', 'Теряем', ...lost.map((x) => `🐼 ${line(x)}`));
+    if (idle.length) parts.push('', 'Не заходили', ...idle.map((x) => `🐾 ${x.name}`));
 
     return { text: parts.join('\n'), keyboard: ADMIN_KEYBOARD };
 }
