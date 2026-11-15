@@ -8,10 +8,11 @@ import {
     sendMessage,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
-import { rank } from './logic.ts';
+import { leadParts, rank, TASKS_GOAL, TOPICS_TOTAL } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import { renderArena, renderHelpProgress, renderProfile } from './render.ts';
-import { getPersons } from './store.ts';
+import { getPersons, getWeekStats } from './store.ts';
+import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 
@@ -141,14 +142,73 @@ function topicsKeyboard(p: Person, prefix: string, back: Btn) {
 
 function screenArena(viewerId: number, note = ''): Reply {
     const ranked = all();
+    const leader = weekLeaderLine();
+    const body = renderArena(ranked, viewerId);
+    const text = leader ? `✨ Арена\n\n${leader}\n\n${body.replace(/^✨ Арена\n\n/, '')}` : body;
     return {
-        text: withNote(note, renderArena(ranked, viewerId)),
+        text: withNote(note, text),
         keyboard: arenaKeyboard(ranked, viewerId),
     };
 }
 
+const sgn = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+
+// Прирост прогресса за неделю в процентах (без пробника)
+const weekPct = (s: WeekStat) =>
+    Math.round((0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL) * 100);
+
+// Лидер недели для арены: по заданиям, при равенстве по задачам
+function weekLeaderLine(): string {
+    const stats = getWeekStats();
+    const active = stats.filter((s) => s.active);
+    if (active.length === 0) return '';
+    const best = active.sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
+    const name = all().find((r) => r.person.id === best.userId)?.person.name ?? '—';
+    return `👑 Лидер недели >> ${name} · ${sgn(best.tasks)} задач · ${sgn(best.topics)} заданий`;
+}
+
 function screenAdminHome(): Reply {
-    return { text: '🏠 Главная\n\nСтатистика недели появится на следующем шаге.', keyboard: ADMIN_KEYBOARD };
+    const persons = all();
+    const byId = new Map(getWeekStats().map((s) => [s.userId, s]));
+    const rows = persons.map((r) => ({
+        r,
+        s: byId.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false },
+    }));
+
+    const activeCount = rows.filter((x) => x.s.active).length;
+
+    // Лидер недели: по заданиям, при равенстве по задачам
+    const leader = [...rows].sort((a, b) => b.s.topics - a.s.topics || b.s.tasks - a.s.tasks)[0];
+    // Чилл: меньше всех задач за неделю
+    const chill = [...rows].sort((a, b) => a.s.tasks - b.s.tasks)[0];
+
+    const now = new Date();
+    const behind = rows.filter(({ r }) => {
+        const lead = leadParts(r.person, now);
+        return (lead.topics ?? 0) < 0 || (lead.tasks ?? 0) < 0;
+    }).length;
+
+    const leaderLine =
+        leader && leader.s.active
+            ? `🏆 Лидер: ${leader.r.person.name} · ${sgn(leader.s.tasks)} задач · ${sgn(leader.s.topics)} заданий · ${sgn(weekPct(leader.s))}%`
+            : '🏆 Лидер: пока никого';
+
+    const chillLine = chill
+        ? `🛋 Чилл: ${chill.r.person.name} · ${sgn(chill.s.tasks)} задач · ${sgn(weekPct(chill.s))}%`
+        : '';
+
+    const text = [
+        '👑 Админ · главная',
+        '',
+        `Активны: ${activeCount}/${rows.length}`,
+        '',
+        leaderLine,
+        chillLine,
+        '',
+        `Отстают по плану: ${behind} из ${rows.length}`,
+    ].join('\n');
+
+    return { text, keyboard: ADMIN_KEYBOARD };
 }
 
 function screenAdminLog(): Reply {
@@ -333,7 +393,6 @@ async function deleteQuietly(chatId: number, messageId: number): Promise<void> {
 }
 
 async function showPanel(chatId: number, reply: Reply): Promise<void> {
-    console.log('[showPanel] отправляю, chat', chatId, 'панель', panel.get(chatId));
     const opts = {
         parse_mode: reply.parse_mode,
         reply_markup: reply.keyboard ?? PANEL_KEYBOARD,
@@ -377,7 +436,6 @@ async function handle(u: Update): Promise<void> {
     const chatId = m.chat.id;
     const viewerId = m.from.id;
     const text = m.text.trim();
-    console.log('[handle] получено:', text, 'от', viewerId);
 
     await deleteQuietly(chatId, m.message_id); // ваши сообщения не остаются в чате
 
