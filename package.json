@@ -1,0 +1,15 @@
+{
+  "name": "arena-bot",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "NODE_USE_ENV_PROXY=1 node --disable-warning=ExperimentalWarning --env-file=.env src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}
