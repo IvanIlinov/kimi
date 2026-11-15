@@ -209,13 +209,13 @@ function screenAdminHome(firstName: string): Reply {
     if (leader) {
         parts.push(
             '',
-            `🏆 Лидер: ${leader.name}`,
-            `🏆 ${sgn(leader.s.tasks)} задач, ${sgn(leader.s.topics)} заданий, ${sgn(Math.round(leader.pct))}%`,
+            `🏆 Лидер ${leader.name}`,
+            `🏆 ${sgn(Math.round(leader.pct))}% ${sgn(leader.s.tasks)} задач ${sgn(leader.s.topics)} заданий`,
         );
     }
-    if (tops.length) parts.push('', '⚡️Топы', ...tops.map((x) => `⚡️${line(x)}`));
-    if (lost.length) parts.push('', '🐼 Теряем', ...lost.map((x) => `🐼${line(x)}`));
-    if (idle.length) parts.push('', '🐾 Не заходили', ...idle.map((x) => `🐾${x.name}`));
+    if (tops.length) parts.push('', '⚡️ Топы', ...tops.map((x) => `⚡️ ${line(x)}`));
+    if (lost.length) parts.push('', '🐼 Теряем', ...lost.map((x) => `🐼 ${line(x)}`));
+    if (idle.length) parts.push('', '🐾 Не заходили', ...idle.map((x) => `🐾 ${x.name}`));
 
     return { text: parts.join('\n'), keyboard: ADMIN_KEYBOARD };
 }
@@ -270,7 +270,7 @@ function applyChange(personId: number, op: string, arg: string, actorTgId: numbe
 }
 
 // Единое место, где меняются данные и собирается ответ на действие из кнопки или текста
-function applyAction(viewerId: number, action: string, firstName = 'админ'): Reply {
+function applyAction(viewerId: number, action: string, firstName = 'Вань!'): Reply {
     const [kind, a, b, c] = action.split(':');
 
     if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
