@@ -8,7 +8,7 @@ import {
     sendMessage,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
-import { leadParts, rank, TASKS_GOAL, TOPICS_TOTAL } from './logic.ts';
+import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import { cap, renderArena, renderHelpProgress, renderProfile } from './render.ts';
 import { getPersons, getWeekStats } from './store.ts';
@@ -155,8 +155,15 @@ const sgn = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 
 // Прирост прогресса за неделю в процентах (без пробника)
 const weekPct = (s: WeekStat) =>
-    Math.round((0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL) * 100);
+    100 * (0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL);
 
+// Стабильный недельный процент: сколько прогресса дают нормативы за 7 дней
+function stablePct(now: Date): number {
+    const weekAgo = new Date(now.getTime() - 7 * 864e5);
+    const dTopics = planTopics(now) - planTopics(weekAgo);
+    const dTasks = planTasks(now) - planTasks(weekAgo);
+    return 100 * (0.4 * dTopics / TOPICS_TOTAL + 0.4 * dTasks / TASKS_GOAL);
+}
 // Лидер недели для арены: по заданиям, при равенстве по задачам
 function weekLeaderLine(): string {
     const active = getWeekStats().filter((s) => s.active);
@@ -166,48 +173,51 @@ function weekLeaderLine(): string {
     return `👑  Лидер недели 👑 ${cap(name)} 👑\n👑  ${sgn(best.tasks)} задач ${sgn(best.topics)} заданий`;
 }
 
-function screenAdminHome(): Reply {
-    const persons = all();
+function screenAdminHome(firstName: string): Reply {
+    const now = new Date();
+    const stable = stablePct(now);
     const byId = new Map(getWeekStats().map((s) => [s.userId, s]));
-    const rows = persons.map((r) => ({
-        r,
-        s: byId.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false },
-    }));
 
-    const activeCount = rows.filter((x) => x.s.active).length;
+    const rows = all().map((r) => {
+        const s = byId.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
+        return { name: cap(r.person.name), person: r.person, s, pct: weekPct(s) };
+    });
+
+    const active = rows.filter((x) => x.s.active);
+    const idle = rows.filter((x) => !x.s.active);
+    const tops = active.filter((x) => x.pct >= stable).sort((a, b) => b.pct - a.pct);
+    const lost = active.filter((x) => x.pct < stable).sort((a, b) => b.pct - a.pct);
+
+    const line = (x: (typeof rows)[number]) =>
+        `${x.name}: ${sgn(Math.round(x.pct))}% ${sgn(x.s.tasks)} задач ${sgn(x.s.topics)} заданий`;
 
     // Лидер недели: по заданиям, при равенстве по задачам
-    const leader = [...rows].sort((a, b) => b.s.topics - a.s.topics || b.s.tasks - a.s.tasks)[0];
-    // Чилл: меньше всех задач за неделю
-    const chill = [...rows].sort((a, b) => a.s.tasks - b.s.tasks)[0];
+    const leader = [...active].sort((a, b) => b.s.topics - a.s.topics || b.s.tasks - a.s.tasks)[0];
 
-    const now = new Date();
-    const behind = rows.filter(({ r }) => {
-        const lead = leadParts(r.person, now);
+    const behind = rows.filter((x) => {
+        const lead = leadParts(x.person, now);
         return (lead.topics ?? 0) < 0 || (lead.tasks ?? 0) < 0;
     }).length;
 
-    const leaderLine =
-        leader && leader.s.active
-            ? `🏆 Лидер: ${leader.r.person.name} · ${sgn(leader.s.tasks)} задач · ${sgn(leader.s.topics)} заданий · ${sgn(weekPct(leader.s))}%`
-            : '🏆 Лидер: пока никого';
-
-    const chillLine = chill
-        ? `🛋 Чилл: ${chill.r.person.name} · ${sgn(chill.s.tasks)} задач · ${sgn(weekPct(chill.s))}%`
-        : '';
-
-    const text = [
-        '👑 Админ · главная',
+    const parts: string[] = [
+        `👑 Привет, ${firstName}!`,
         '',
-        `Активны: ${activeCount}/${rows.length}`,
-        '',
-        leaderLine,
-        chillLine,
-        '',
-        `Отстают по плану: ${behind} из ${rows.length}`,
-    ].join('\n');
+        `Активны: ${active.length}/${rows.length}`,
+        `Отстают: ${behind}/${rows.length}`,
+    ];
 
-    return { text, keyboard: ADMIN_KEYBOARD };
+    if (leader) {
+        parts.push(
+            '',
+            `🏆 Лидер: ${leader.name}`,
+            `🏆 ${sgn(leader.s.tasks)} задач, ${sgn(leader.s.topics)} заданий, ${sgn(Math.round(leader.pct))}%`,
+        );
+    }
+    if (tops.length) parts.push('', '⚡️Топы', ...tops.map((x) => `⚡️${line(x)}`));
+    if (lost.length) parts.push('', '🐼 Теряем', ...lost.map((x) => `🐼${line(x)}`));
+    if (idle.length) parts.push('', '🐾 Не заходили', ...idle.map((x) => `🐾${x.name}`));
+
+    return { text: parts.join('\n'), keyboard: ADMIN_KEYBOARD };
 }
 
 function screenAdminLog(): Reply {
@@ -260,12 +270,12 @@ function applyChange(personId: number, op: string, arg: string, actorTgId: numbe
 }
 
 // Единое место, где меняются данные и собирается ответ на действие из кнопки или текста
-function applyAction(viewerId: number, action: string): Reply {
+function applyAction(viewerId: number, action: string, firstName = 'админ'): Reply {
     const [kind, a, b, c] = action.split(':');
 
     if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
         if (kind === 'adm' && a === 'log') return screenAdminLog();
-        if (kind === 'adm' || kind === 'show') return screenAdminHome();
+        if (kind === 'adm' || kind === 'show') return screenAdminHome(firstName);
     }
 
     // Гость видит только арену и профили участников, всё остальное возвращает в арену
