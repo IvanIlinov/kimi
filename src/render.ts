@@ -11,7 +11,7 @@ import {
     weekPct
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
-import type { WeekStat } from './store.ts';
+import type { WeekStat, JournalEntry } from './store.ts';
 
 const ALL = Array.from({ length: TOPICS_TOTAL }, (_, i) => i + 1);
 const nums = (a: number[]) => (a.length ? [...a].sort((x, y) => x - y).join(' ') : '—');
@@ -115,4 +115,30 @@ export function renderHelpProgress(now: Date): string {
         `• заданий ${planTopics(now)}`,
         `• задач ${planTasks(now)}`,
     ].join('\n');
+}
+
+const JOURNAL_ICON: Record<string, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
+
+// Время по Москве: 15.11 15:42
+const mskTime = (ms: number) => {
+    const d = new Date(ms + 3 * 3600e3);
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${p(d.getUTCDate())}.${p(d.getUTCMonth() + 1)} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+};
+
+export function renderJournal(entries: JournalEntry[]): string {
+    if (entries.length === 0) return '📒 Журнал\n\nПока пусто.';
+
+    const lines = entries.map((e) => {
+        const who = cap(e.name);
+        const time = mskTime(e.at);
+        if (e.kind === 'task') {
+            return `${time} ${who}: ${sgn(e.amount)} задач`;
+        }
+        // Отметка 👑, если статус меняли не сам участник
+        const byAdmin = e.actorTgId !== null && e.actorTgId !== e.tgId ? ' 👑' : '';
+        return `${time} ${who}: задание ${e.topicNo} ${JOURNAL_ICON[e.from]} → ${JOURNAL_ICON[e.to]}${byAdmin}`;
+    });
+
+    return ['📒 Журнал', '', ...lines].join('\n');
 }

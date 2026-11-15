@@ -115,3 +115,55 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
 
     return [...stats.values()];
 }
+
+export interface JournalEntry {
+    at: number;              // Unix-время в миллисекундах
+    name: string;            // имя участника
+    tgId: number;            // tg_id участника
+    kind: 'task' | 'topic';
+    amount: number;          // для задач: сколько добавили или убавили
+    topicNo: number;         // для заданий: номер
+    from: string;            // для заданий: статус до
+    to: string;              // для заданий: статус после
+    actorTgId: number | null; // кто нажал
+}
+
+export function getJournal(limit: number, offset: number): JournalEntry[] {
+    const rows = db
+        .prepare(`
+            SELECT j.at, u.name, u.tg_id, j.kind, j.amount, j.topic_no,
+                   j.from_status, j.to_status, j.actor_tg_id
+            FROM (
+                SELECT created_at AS at, user_id, 'task' AS kind, amount,
+                       NULL AS topic_no, NULL AS from_status, NULL AS to_status,
+                       NULL AS actor_tg_id
+                FROM task_log
+                WHERE cancelled = 0
+                UNION ALL
+                SELECT created_at, user_id, 'topic', 0,
+                       topic_no, from_status, to_status, actor_tg_id
+                FROM topic_log
+            ) AS j
+            JOIN users u ON u.id = j.user_id
+            ORDER BY j.at DESC
+            LIMIT ? OFFSET ?
+        `)
+        .all(limit, offset) as unknown as {
+            at: number; name: string; tg_id: number; kind: 'task' | 'topic';
+            amount: number; topic_no: number | null;
+            from_status: string | null; to_status: string | null;
+            actor_tg_id: number | null;
+        }[];
+
+    return rows.map((r) => ({
+        at: Number(r.at),
+        name: r.name,
+        tgId: r.tg_id,
+        kind: r.kind,
+        amount: Number(r.amount),
+        topicNo: Number(r.topic_no ?? 0),
+        from: r.from_status ?? '',
+        to: r.to_status ?? '',
+        actorTgId: r.actor_tg_id,
+    }));
+}

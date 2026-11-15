@@ -10,8 +10,8 @@ import {
 import type { CallbackQuery, Update } from './telegram.ts';
 import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
-import { cap, renderArena, renderHelpProgress, renderProfile } from './render.ts';
-import { getPersons, getWeekStats } from './store.ts';
+import { cap, renderArena, renderHelpProgress, renderProfile, renderJournal } from './render.ts';
+import { getPersons, getWeekStats, getJournal } from './store.ts';
 import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
@@ -216,8 +216,19 @@ function screenAdminHome(firstName: string): Reply {
     return { text: parts.join('\n'), keyboard: ADMIN_KEYBOARD };
 }
 
-function screenAdminLog(): Reply {
-    return { text: '📒 Журнал\n\nЗаписи появятся на следующем шаге.', keyboard: ADMIN_KEYBOARD };
+const JOURNAL_PAGE = 15;
+
+function screenAdminLog(offset = 0): Reply {
+    const rows = getJournal(JOURNAL_PAGE + 1, offset); // +1, чтобы узнать, есть ли следующая страница
+    const hasMore = rows.length > JOURNAL_PAGE;
+    const entries = rows.slice(0, JOURNAL_PAGE);
+
+    const nav: Btn[] = [];
+    if (offset > 0) nav.push({ text: '◀ Новее', callback_data: `adm:log:${Math.max(0, offset - JOURNAL_PAGE)}` });
+    if (hasMore) nav.push({ text: 'Старее ▶', callback_data: `adm:log:${offset + JOURNAL_PAGE}` });
+
+    const keyboardRows = nav.length ? [nav, ...ADMIN_KEYBOARD.inline_keyboard] : ADMIN_KEYBOARD.inline_keyboard;
+    return { text: renderJournal(entries), keyboard: { inline_keyboard: keyboardRows } };
 }
 
 function screenSelf(viewerId: number, note = ''): Reply {
@@ -270,7 +281,7 @@ function applyAction(viewerId: number, action: string, firstName = 'Вань!'):
     const [kind, a, b, c] = action.split(':');
 
     if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
-        if (kind === 'adm' && a === 'log') return screenAdminLog();
+        if (kind === 'adm' && a === 'log') return screenAdminLog(Number(b) || 0);
         if (kind === 'adm' || kind === 'show') return screenAdminHome(firstName);
     }
 
