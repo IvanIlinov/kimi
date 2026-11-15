@@ -67,7 +67,7 @@ export function renderArena(ranked: Ranked[], viewerId?: number, now: Date = new
     const iconFor = (i: number) => (i < 3 ? '💎' : i >= tailStart ? '🔥' : '⚡️');
 
     const lines = shown.map(
-        (r, i) => `${iconFor(i)}${r.place} ${r.person.name} ${onTrack(r, now) ? '🟢' : '🔴'}`,
+        (r, i) => `${iconFor(i)} ${r.place} ${r.person.name} ${onTrack(r, now) ? '🟢' : '🔴'}`,
     );
 
     const body = [lines.slice(0, 3), lines.slice(3, tailStart), lines.slice(tailStart)]

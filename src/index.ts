@@ -167,15 +167,15 @@ function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = '
     };
 }
 
-// Меняет данные участника. Возвращает текст ошибки или null.
-function applyChange(personId: number, op: string, arg: string): string | null {
+
+function applyChange(personId: number, op: string, arg: string, actorTgId: number): string | null {
     try {
         if (op === 'add') addTasks(personId, Number(arg));
         else if (op === 'exam') setExam(personId, Number(arg));
         else if (op === 'topic') {
             const p = findById(personId)!.person;
             const n = Number(arg);
-            setTopicStatus(personId, n, nextStatus(statusOf(p, n)));
+            setTopicStatus(personId, n, nextStatus(statusOf(p, n)), actorTgId);
         }
         return null;
     } catch (e) {
@@ -212,7 +212,7 @@ function applyAction(viewerId: number, action: string): Reply {
     if (kind === 'add' || kind === 'exam' || kind === 'topic') {
         const r = findByTg(viewerId);
         if (!r) return { text: NOT_MEMBER };
-        const err = applyChange(r.person.id, kind, a);
+        const err = applyChange(r.person.id, kind, a, viewerId);
         if (kind === 'topic') {
             return screenTopics(findById(r.person.id)!.person, 'topic', SELF_BACK, warn(err));
         }
@@ -231,7 +231,7 @@ function applyAction(viewerId: number, action: string): Reply {
             return screenTopics(target.person, `a:${id}:topic`, { text: '← Игрок', callback_data: `a:${id}:me` }, '', `: ${target.person.name}`);
         }
 
-        const err = applyChange(id, b, c);
+        const err = applyChange(id, b, c, viewerId);
         if (b === 'topic') {
             return screenTopics(findById(id)!.person, `a:${id}:topic`, { text: '← Игрок', callback_data: `a:${id}:me` }, warn(err), `: ${target.person.name}`);
         }

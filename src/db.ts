@@ -34,4 +34,14 @@ CREATE TABLE IF NOT EXISTS task_log (
   created_at INTEGER NOT NULL,
   cancelled  INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS topic_log (
+  id           INTEGER PRIMARY KEY,
+  user_id      INTEGER NOT NULL REFERENCES users(id),
+  actor_tg_id  INTEGER,                 -- кто сделал: Telegram id ученика или админа
+  topic_no     INTEGER NOT NULL,
+  from_status  TEXT NOT NULL,
+  to_status    TEXT NOT NULL,
+  created_at   INTEGER NOT NULL         -- Unix-время в миллисекундах
+);
 `);
