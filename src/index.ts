@@ -311,6 +311,7 @@ async function deleteQuietly(chatId: number, messageId: number): Promise<void> {
 }
 
 async function showPanel(chatId: number, reply: Reply): Promise<void> {
+    console.log('[showPanel] отправляю, chat', chatId, 'панель', panel.get(chatId));
     const opts = {
         parse_mode: reply.parse_mode,
         reply_markup: reply.keyboard ?? PANEL_KEYBOARD,
@@ -354,6 +355,7 @@ async function handle(u: Update): Promise<void> {
     const chatId = m.chat.id;
     const viewerId = m.from.id;
     const text = m.text.trim();
+    console.log('[handle] получено:', text, 'от', viewerId);
 
     await deleteQuietly(chatId, m.message_id); // ваши сообщения не остаются в чате
 
