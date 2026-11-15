@@ -72,3 +72,16 @@ export const deleteMessage = (token: string, chat_id: number, message_id: number
 // Убирает «часики» на нажатой кнопке
 export const answerCallbackQuery = (token: string, callback_query_id: string) =>
     callApi(token, 'answerCallbackQuery', { callback_query_id });
+
+export const sendRich = (token: string, chat_id: number, html: string) =>
+    callApi<{ message_id: number }>(token, 'sendRichMessage', {
+        chat_id,
+        rich_message: { html },
+    });
+
+export const editRich = (token: string, chat_id: number, message_id: number, html: string) =>
+    callApi(token, 'editMessageText', {
+        chat_id,
+        message_id,
+        rich_message: { html },
+    });

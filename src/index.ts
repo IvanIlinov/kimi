@@ -4,8 +4,10 @@ import {
     callApi,
     deleteMessage,
     editMessageText,
+    editRich,
     getUpdates,
     sendMessage,
+    sendRich,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
 import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
@@ -16,11 +18,15 @@ import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 
+
+
 type TopicStatus = 'done' | 'learning' | 'todo';
 type Btn = { text: string; callback_data: string };
-type Reply = { text: string; parse_mode?: 'HTML'; keyboard?: unknown };
+type Reply = { text: string; rich?: string; parse_mode?: 'HTML'; keyboard?: unknown };
 
 const NOT_MEMBER = 'В Арене супер интересно!';
+// RICH_UI=0 в .env возвращает текстовый вариант главной
+const RICH_UI = process.env.RICH_UI !== '0';
 
 const ADMIN_HELP =
     'Команды админа:\n' +
@@ -28,7 +34,8 @@ const ADMIN_HELP =
     '/rename <id> <имя>\n' +
     '/remove <id>\n' +
     '/exam <id> <балл>\n' +
-    '/as <tg_id> — смотреть глазами участника (без изменений), /as off — выйти\n' +
+    '/as <tg_id> — смотреть глазами участника (без изменений)' +
+    '/as off — выйти\n>\n' +
     '/id — узнать свой Telegram id';
 
 const ICON: Record<TopicStatus, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
@@ -39,6 +46,12 @@ const TOPICS_LEGEND =
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const withNote = (note: string, body: string) => (note ? `${note}\n\n${body}` : body);
 const warn = (err: string | null) => (err ? `⚠️ ${err}` : '');
+
+// Полоска из 10 клеток по проценту недели (0..100)
+const homeBar = (pct: number) => {
+    const n = Math.max(0, Math.min(10, Math.round(pct / 10)));
+    return '▰'.repeat(n) + '▱'.repeat(10 - n);
+};
 
 const isAdmin = (id: number) => ADMIN_IDS.includes(id);
 const all = () => rank(getPersons());
@@ -184,26 +197,21 @@ function screenAdminHome(firstName: string): Reply {
     const idle = rows.filter((x) => !x.s.active);
     const tops = active.filter((x) => x.pct >= stable).sort((a, b) => b.pct - a.pct);
     const lost = active.filter((x) => x.pct < stable).sort((a, b) => b.pct - a.pct);
-
-    // Строка участника: «Имя: +9% +213 задач +0 заданий»
-    const line = (x: (typeof rows)[number]) =>
-        `${x.name}: ${sgn(Math.round(x.pct))}% ${sgn(x.s.tasks)} задач ${sgn(x.s.topics)} заданий`;
-
-    // Лидер недели: по заданиям, при равенстве по задачам
     const leader = [...active].sort((a, b) => b.s.topics - a.s.topics || b.s.tasks - a.s.tasks)[0];
-
     const behind = rows.filter((x) => {
         const lead = leadParts(x.person, now);
         return (lead.topics ?? 0) < 0 || (lead.tasks ?? 0) < 0;
     }).length;
 
+    // Текстовый вариант (запасной)
+    const line = (x: (typeof rows)[number]) =>
+        `${x.name}: ${sgn(Math.round(x.pct))}% ${sgn(x.s.tasks)} задач ${sgn(x.s.topics)} заданий`;
     const parts: string[] = [
         `👑 Привет, ${firstName}!!`,
         '',
         `Активны: ${active.length}/${rows.length}`,
         `Отстают: ${behind}/${rows.length}`,
     ];
-
     if (leader) {
         parts.push(
             '',
@@ -215,7 +223,45 @@ function screenAdminHome(firstName: string): Reply {
     if (lost.length) parts.push('', 'Теряем', ...lost.map((x) => `🐼 ${line(x)}`));
     if (idle.length) parts.push('', 'Не заходили', ...idle.map((x) => `🐾 ${x.name}`));
 
-    return { text: parts.join('\n'), keyboard: ADMIN_KEYBOARD };
+    // Rich-вариант: таблицы с выравниванием, полоска прогресса и кнопки внутри сообщения
+    const ALIGN = ['left', 'left', 'right', 'right', 'right'];
+    const HEAD = ['Участник', 'Прогресс', 'Прирост', 'Задачи', 'Задания'];
+    const cells = (c: string[], bold = false) =>
+        `<tr>${c.map((v, i) => `<td align="${ALIGN[i]}">${bold ? `<b>${v}</b>` : v}</td>`).join('')}</tr>`;
+    const personRow = (x: (typeof rows)[number]) =>
+        cells([
+            esc(x.name),
+            homeBar(x.pct),
+            `${sgn(Math.round(x.pct))}%`,
+            sgn(x.s.tasks),
+            sgn(x.s.topics),
+        ]);
+    const table = (list: typeof rows) =>
+        `<table bordered striped compact>${cells(HEAD, true)}${list.map(personRow).join('')}</table>`;
+    const section = (title: string, list: typeof rows) =>
+        list.length ? `<h3>${title}</h3>${table(list)}` : '';
+
+    const richParts = [
+        `<h3>👑 Привет, ${esc(firstName)}!!</h3>`,
+        `<p>Активны <b>${active.length}/${rows.length}</b> · отстают <b>${behind}/${rows.length}</b></p>`,
+        leader
+            ? `<h3>💎 Лидер</h3>${`<table bordered striped compact>${cells(
+                [esc(leader.name), homeBar(leader.pct), `${sgn(Math.round(leader.pct))}%`, sgn(leader.s.tasks), sgn(leader.s.topics)],
+                true,
+            )}</table>`}`
+            : '',
+        section('⚡️ Топы', tops),
+        section('🐼 Теряем', lost),
+        idle.length ? `<h3>🐾 Не заходили</h3><p>${idle.map((x) => esc(x.name)).join(', ')}</p>` : '',
+        `<tg-button-row align="center"><tg-button type="callback_data" data="adm:home">🔄 Обновить</tg-button><tg-button type="callback_data" data="adm:log:0">📒 Журнал</tg-button></tg-button-row>`,
+        `<tg-button-row align="center"><tg-button type="callback_data" data="adm:arena">✨ Арена</tg-button></tg-button-row>`,
+    ];
+
+    return {
+        text: parts.join('\n'),
+        rich: richParts.filter(Boolean).join('\n'),
+        keyboard: ADMIN_KEYBOARD,
+    };
 }
 
 const JOURNAL_PAGE = 15;
@@ -284,6 +330,7 @@ function applyAction(viewerId: number, action: string, firstName = 'Вань!'):
 
     if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
         if (kind === 'adm' && a === 'log') return screenAdminLog(Number(b) || 0);
+        if (kind === 'adm' && a === 'arena') return screenArena(viewerId);
         if (kind === 'adm' || kind === 'show') return screenAdminHome(firstName);
     }
 
@@ -438,15 +485,14 @@ async function deleteQuietly(chatId: number, messageId: number): Promise<void> {
 }
 
 async function showPanel(chatId: number, reply: Reply): Promise<void> {
-    const opts = {
-        parse_mode: reply.parse_mode,
-        reply_markup: reply.keyboard ?? PANEL_KEYBOARD,
-    };
+    const useRich = RICH_UI && !!reply.rich;
+    const opts = { parse_mode: reply.parse_mode, reply_markup: reply.keyboard ?? PANEL_KEYBOARD };
     const id = panel.get(chatId);
 
     if (id) {
         try {
-            await editMessageText(BOT_TOKEN, chatId, id, reply.text, opts);
+            if (useRich) await editRich(BOT_TOKEN, chatId, id, reply.rich!);
+            else await editMessageText(BOT_TOKEN, chatId, id, reply.text, opts);
             return;
         } catch (e) {
             if (String(e).includes('not modified')) return;
@@ -455,7 +501,9 @@ async function showPanel(chatId: number, reply: Reply): Promise<void> {
         }
     }
 
-    const sent = await sendMessage(BOT_TOKEN, chatId, reply.text, opts);
+    const sent = useRich
+        ? await sendRich(BOT_TOKEN, chatId, reply.rich!)
+        : await sendMessage(BOT_TOKEN, chatId, reply.text, opts);
     panel.set(chatId, sent.message_id);
 }
 
