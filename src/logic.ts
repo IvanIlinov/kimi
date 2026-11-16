@@ -102,3 +102,23 @@ export const sgn = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 // Прирост прогресса за неделю в процентах (без пробника)
 export const weekPct = (s: { tasks: number; topics: number }) =>
     100 * (0.4 * s.topics / TOPICS_TOTAL + 0.4 * s.tasks / TASKS_GOAL);
+
+// Цели на конец каждого месяца: задания и пробник (вторичный балл) — накопленно, задачи — накопленно от 1 сентября
+export const MONTH_GOALS = [
+    { topics: 6, tasks: 104, exam: 40 },   // сен
+    { topics: 12, tasks: 214, exam: 56 },  // окт
+    { topics: 16, tasks: 321, exam: 67 },  // ноя
+    { topics: 19, tasks: 432, exam: 75 },  // дек
+    { topics: 22, tasks: 543, exam: 83 },  // янв
+    { topics: 24, tasks: 643, exam: 88 },  // фев
+    { topics: 26, tasks: 754, exam: 95 },  // мар
+    { topics: 27, tasks: 861, exam: 100 }, // апр
+    { topics: 27, tasks: 900, exam: 100 }, // май
+];
+
+// Цели текущего месяца по московскому времени. Июнь–август: цели мая.
+export function monthGoal(now: Date) {
+    const { m } = moscow(now);
+    const idx = (m - 8 + 12) % 12; // 0 = сентябрь
+    return MONTH_GOALS[Math.min(idx, MONTH_GOALS.length - 1)];
+}

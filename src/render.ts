@@ -9,7 +9,8 @@ import {
     planTopics,
     sgn,
     weekPct,
-    progressPct
+    progressPct,
+    monthGoal
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
 import type { WeekStat, JournalEntry } from './store.ts';
@@ -264,6 +265,12 @@ const devBar = (dev: number, range: number) => {
     return `${left}┃${right}`;
 };
 
+// Полоска месячной цели: заполнение до value/goal, не больше полной
+const monthBar = (value: number, goal: number) => {
+    const n = Math.round(Math.min(1, value / goal) * BAR_CELLS);
+    return '▰'.repeat(n) + '▱'.repeat(BAR_CELLS - n);
+};
+
 export function renderStudentRich(
     r: Ranked,
     week: WeekStat | undefined,
@@ -272,33 +279,23 @@ export function renderStudentRich(
 ): string {
     const p = r.person;
     const w = week ?? { userId: p.id, tasks: 0, topics: 0, active: false };
-    const lead = leadParts(p, now);
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
-    const dot = (ok: boolean) => (ok ? '🟢' : '🔴');
-    const sp = '&nbsp;&nbsp;&nbsp;';
-    const blank = '<p>&nbsp;</p>';
-
-    // Шкала отклонения без подписи: шкала, значение и точка в одной строке
-    const devLine = (dev: number | null, range: number) =>
-        dev === null
-            ? `<p>${devBar(0, range)} ✅ 100%</p>`
-            : `<p>${devBar(dev, range)} ${dot(dev >= 0)} ${sgn(dev)}</p>`;
+    const m = monthGoal(now);
+    const hr = '<hr>';
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
-        blank,
-        `<p> ${pctBar(r.pct)} ${r.pct}%</p>`,
-        `<p> ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
-        blank,
-        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📘 ${p.tasksTotal}</p>`,
-        blank,
-        devLine(lead.topics, TOPIC_RANGE),
-        devLine(lead.tasks, TASK_RANGE),
-        blank,
+        hr,
+        `<p>Global ${pctBar(r.pct)} ${r.pct}%</p>`,
+        `<p>Week ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
+        hr,
+        '<p><b>Month</b></p>',
+        `<p>📗 ${monthBar(p.studied.length, m.topics)} ${p.studied.length}/${m.topics}</p>`,
+        `<p>📘 ${monthBar(p.tasksTotal, m.tasks)} ${p.tasksTotal}/${m.tasks}</p>`,
+        `<p>📕 ${monthBar(p.exam ?? 0, m.exam)} ${p.exam ?? '—'}/${m.exam}</p>`,
         buttonsHtml,
     ].join('\n');
 }
-
 // Журнал в Rich: время, имя, событие. Кнопки навигации и вкладки передаются готовым HTML
 export function renderJournalRich(entries: JournalEntry[], navHtml: string, tabsHtml: string): string {
     const blank = '<p>&nbsp;</p>';
