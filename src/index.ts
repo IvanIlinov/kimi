@@ -198,15 +198,23 @@ function screenArena(viewerId: number, note = '', mode: 'global' | 'week' = 'glo
             callback_data: 'show:arena:week',
         },
     ];
-    const kb = { inline_keyboard: [modeRow, ...arenaKeyboard(ranked, viewerId).inline_keyboard] };
+    const navRows = arenaKeyboard(ranked, viewerId).inline_keyboard;
+    const kb = { inline_keyboard: [modeRow, ...navRows] };
 
     // Текстовый вариант (запасной)
     const leader = weekLeaderLine();
     const body = renderArena(ranked, viewerId, week);
     const text = leader ? `✨ Арена\n\n${leader}\n\n${body.replace(/^✨ Арена\n\n/, '')}` : body;
 
-    // Rich-вариант
-    const rich = renderArenaRich(ranked, viewerId, week, richButtons(kb.inline_keyboard), mode);
+    // Rich-вариант: режим и навигация отдельными блоками, между ними пустые строки
+    const rich = renderArenaRich(
+        ranked,
+        viewerId,
+        week,
+        richButtons([modeRow]),
+        richButtons(navRows),
+        mode,
+    );
 
     return {
         text: withNote(note, text),

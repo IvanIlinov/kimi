@@ -162,11 +162,16 @@ export function renderArenaRich(
     ranked: Ranked[],
     viewerId: number | undefined,
     week: Map<number, WeekStat>,
-    buttonsHtml: string,
+    modeHtml: string,
+    navHtml: string,
     mode: 'global' | 'week' = 'global',
     now: Date = new Date(),
 ): string {
-    if (ranked.length === 0) return `<h3>✨ Арена</h3><p>Пока никого нет.</p>${buttonsHtml}`;
+    const blank = '<p>&nbsp;</p>';
+
+    if (ranked.length === 0) {
+        return ['<h3>✨ Арена</h3>', '<p>Пока никого нет.</p>', blank, modeHtml, blank, navHtml].join('\n');
+    }
 
     const top = ranked.slice(0, 10);
     const mine = ranked.find((r) => r.person.tgId === viewerId);
@@ -215,12 +220,7 @@ export function renderArenaRich(
             .sort((a, b) => b.w.tasks - a.w.tasks || b.w.topics - a.w.topics)
             .map((x) =>
                 tr(
-                    [
-                        x.name,
-                        arenaBar(x.goal),
-                        `${x.goal}%`,
-                        `${sgn(Math.round(weekPct(x.w)))}%`,
-                    ],
+                    [x.name, arenaBar(x.goal), `${x.goal}%`, `${sgn(Math.round(weekPct(x.w)))}%`],
                     ['left', 'left', 'right', 'right'],
                 ),
             )
@@ -228,7 +228,19 @@ export function renderArenaRich(
         body = table(rows);
     }
 
-    return ['<h3>✨ Арена</h3>', leader, body, buttonsHtml].filter(Boolean).join('\n');
+    return [
+        '<h3>✨ Арена</h3>',
+        blank,
+        leader,
+        leader ? blank : '',
+        body,
+        blank,
+        modeHtml,
+        blank,
+        navHtml,
+    ]
+        .filter(Boolean)
+        .join('\n');
 }
 
 // ---- Главная ученика (Rich) ----
