@@ -346,8 +346,6 @@ function screenUser(id: number, viewerId: number, note = ''): Reply {
 }
 
 function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = ''): Reply {
-    const legend = '🟢 изучено · 🟡 в процессе · 🔴 не изучено';
-
     // Текстовый вариант (запасной)
     const text = withNote(note, `📘 Задания${title}\n${TOPICS_LEGEND}`);
 
@@ -362,7 +360,6 @@ function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = '
     const rich = [
         `<h3>📘 Задания${esc(title)}</h3>`,
         note ? `<p>${esc(note)}</p>` : '',
-        `<p>${legend}</p>`,
         '<p>&nbsp;</p>',
         richButtons(grid),
         '<p>&nbsp;</p>',
