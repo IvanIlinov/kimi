@@ -256,7 +256,7 @@ export function renderStudentRich(
         `<p>Глобально: ${pctBar(r.pct)} ${r.pct}% ${dot(onTrack(r, now))}</p>`,
         `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
         blank,
-        `<p>📒 ${p.exam ?? '—'} пробник${sp}📒 ${p.studied.length} заданий${sp}📒 ${p.tasksTotal} задач</p>`,
+        `<p>📒 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
         blank,
         devLine('Задания', lead.topics, TOPIC_RANGE),
         devLine('Задачи', lead.tasks, TASK_RANGE),
