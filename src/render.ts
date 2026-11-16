@@ -212,7 +212,7 @@ export function renderArenaRich(
 }
 
 // ---- Главная ученика (Rich) ----
-const BAR_CELLS = 20;
+const BAR_CELLS = 10;
 const TOPIC_RANGE = 3; // шкала по заданиям: ±3 от плана — край
 const TASK_RANGE = 50; // шкала по задачам: ±50 от плана — край
 
@@ -243,6 +243,7 @@ export function renderStudentRich(
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
     const dot = (ok: boolean) => (ok ? '🟢' : '🔴');
     const sp = '&nbsp;&nbsp;&nbsp;';
+    const blank = '<p>&nbsp;</p>';
 
     const devLine = (label: string, dev: number | null, range: number) =>
         dev === null
@@ -251,14 +252,15 @@ export function renderStudentRich(
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
-        '<p>&nbsp;</p>',
+        blank,
         `<p>Глобально: ${pctBar(r.pct)} ${r.pct}% ${dot(onTrack(r, now))}</p>`,
         `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
-        '<p>&nbsp;</p>',
+        blank,
         `<p>📒 ${p.exam ?? '—'} пробник${sp}📒 ${p.studied.length} заданий${sp}📒 ${p.tasksTotal} задач</p>`,
-        '<p>&nbsp;</p>',
+        blank,
         devLine('Задания', lead.topics, TOPIC_RANGE),
         devLine('Задачи', lead.tasks, TASK_RANGE),
+        blank,
         buttonsHtml,
     ].join('\n');
 }
