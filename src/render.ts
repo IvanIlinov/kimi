@@ -70,10 +70,14 @@ const goalsTable = (now: Date) => {
     return `<table>${tr([`${m.topics}`, `${m.tasks}`, `${m.exam}`], ['center', 'center', 'center'])}</table>`;
 };
 
-// Строки таблицы: место и имя, полоска по центру, процент, кружок
-// Строки таблицы: место и имя, полоска по центру, процент, кружок.
+// Строки таблицы: имя (с местом или без), полоска по центру, процент, кружок.
 // Если передано время последней активности, давно молчащим вместо кружка ставится 💤.
-const monthRows = (list: Ranked[], now: Date, lastActive?: Map<number, number>) =>
+const monthRows = (
+    list: Ranked[],
+    now: Date,
+    lastActive?: Map<number, number>,
+    withPlace = true,
+) =>
     list
         .map((r) => {
             const pct = monthPct(r, now);
@@ -83,17 +87,15 @@ const monthRows = (list: Ranked[], now: Date, lastActive?: Map<number, number>) 
                     : onTrack(r, now)
                         ? '🟢'
                         : '🔴';
+            const name = escHtml(cap(r.person.name));
             return tr(
-                [
-                    `${r.place} ${escHtml(cap(r.person.name))}`,
-                    pctBar(pct, ARENA_CELLS),
-                    `${pct}%`,
-                    status,
-                ],
+                [withPlace ? `${r.place} ${name}` : name, pctBar(pct, ARENA_CELLS), `${pct}%`, status],
                 ['left', 'center', 'right', 'left'],
             );
         })
         .join('');
+
+
 // ---- Арена ----
 
 const ARENA_CELLS = 10;
@@ -139,7 +141,7 @@ export function renderArenaRich(
             .map((r) =>
                 tr(
                     [
-                        `${r.place} ${escHtml(cap(r.person.name))}`,
+                        escHtml(cap(r.person.name)),
                         pctBar(r.pct, ARENA_CELLS),
                         `${r.pct}%`,
                         onTrack(r, now) ? '🟢' : '🔴',
@@ -165,8 +167,8 @@ export function renderArenaRich(
             .join('');
         body = table(rows);
     } else {
-        // Месяц: успеваемость каждого по целям месяца
-        body = table(monthRows(shown, now));
+        // Месяц: успеваемость каждого по целям месяца, без номеров мест
+        body = table(monthRows(shown, now, undefined, false));
     }
 
     return [
@@ -196,7 +198,7 @@ export function renderAdminHomeRich(
     return [
         `<h3>👑 Привет, ${escHtml(firstName)}!</h3>`,
         goalsTable(now),
-        ranked.length ? table(monthRows(ranked, now, lastActive)) : '<p>Пока никого нет.</p>',
+        ranked.length ? table(monthRows(ranked, now, lastActive, false)) : '<p>Пока никого нет.</p>',
         BLANK,
         buttonsHtml,
     ].join('\n');
