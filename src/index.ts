@@ -346,8 +346,33 @@ function screenUser(id: number, viewerId: number, note = ''): Reply {
 }
 
 function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = ''): Reply {
+    const legend = '🟢 изучено · 🟡 в процессе · 🔴 не изучено';
+
+    // Текстовый вариант (запасной)
+    const text = withNote(note, `📘 Задания${title}\n${TOPICS_LEGEND}`);
+
+    // Rich-вариант: 27 кнопок по 8 в ряд, затем кнопка возврата
+    const cells: Btn[] = Array.from({ length: 27 }, (_, i) => {
+        const n = i + 1;
+        return { text: `${ICON[statusOf(p, n)]}${n}`, callback_data: `${prefix}:${n}` };
+    });
+    const rows: Btn[][] = [];
+    for (let i = 0; i < cells.length; i += 8) rows.push(cells.slice(i, i + 8));
+    rows.push([back]);
+
+    const rich = [
+        `<h3>📘 Задания${esc(title)}</h3>`,
+        note ? `<p>${esc(note)}</p>` : '',
+        `<p>${legend}</p>`,
+        '<p>&nbsp;</p>',
+        richButtons(rows),
+    ]
+        .filter(Boolean)
+        .join('\n');
+
     return {
-        text: withNote(note, `📘 Задания${title}\n${TOPICS_LEGEND}`),
+        text,
+        rich,
         keyboard: topicsKeyboard(p, prefix, back),
     };
 }
