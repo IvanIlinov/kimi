@@ -25,6 +25,7 @@ import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 import { startWeeklySummary } from './weekly.ts';
+import { startTagSync, syncTag } from './tags.ts';
 
 
 
@@ -687,6 +688,9 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
         return;
     }
 
+    const fresh = findByTg(viewerId)!.person;
+    void syncTag(viewerId, fresh.exam, fresh.tasksTotal);
+
     try {
         await setReaction(BOT_TOKEN, m.chat.id, m.message_id, '✍');
     } catch (e) {
@@ -697,6 +701,7 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
 const me = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
 console.log(`Бот @${me.username} запущен`);
 startWeeklySummary();
+startTagSync();
 
 let offset = 0;
 for (; ;) {

@@ -101,3 +101,7 @@ export const setReaction = (token: string, chat_id: number, message_id: number, 
         message_id,
         reaction: [{ type: 'emoji', emoji }],
     });
+
+// Тег участника беседки: до 16 символов, без эмодзи. Пустая строка — удалить.
+export const setMemberTag = (token: string, chat_id: number, user_id: number, tag: string) =>
+    callApi(token, 'setChatMemberTag', { chat_id, user_id, tag });
