@@ -31,6 +31,7 @@ type Btn = { text: string; callback_data: string };
 type Reply = string; // готовый Rich-HTML
 
 const NOT_MEMBER = 'В Арене супер интересно!';
+const GUEST_VIEW = -1;
 
 const ADMIN_HELP = [
     '/add <tg_id> <имя>',
@@ -38,6 +39,7 @@ const ADMIN_HELP = [
     '/remove <id>',
     '/exam <id> <балл>',
     '/as <tg_id> — смотреть глазами участника (без изменений)',
+    '/as guest — смотреть глазами гостя',
     '/as off — выйти',
     '/id — узнать свой Telegram id',
 ];
@@ -406,16 +408,18 @@ function respond(viewerId: number, action: string, firstName: string): Reply {
     const targetTg = viewAsMap.get(viewerId);
     if (targetTg === undefined) return applyAction(viewerId, action, firstName);
 
-    const target = findByTg(targetTg);
-    if (!target) {
+    const guestView = targetTg === GUEST_VIEW;
+    const target = guestView ? undefined : findByTg(targetTg);
+    if (!guestView && !target) {
         viewAsMap.delete(viewerId);
         return applyAction(viewerId, action, firstName);
     }
 
-    const kind = action.split(':')[0];
-    const banner = `<p>👁 Вы смотрите как ${escHtml(cap(target.person.name))} · /as off — выйти</p>`;
+    const label = guestView ? 'Гость' : cap(target!.person.name);
+    const banner = `<p>👁 Вы смотрите как ${escHtml(label)} · /as off — выйти</p>`;
 
     // Изменения и админские действия в режиме просмотра не выполняем
+    const kind = action.split(':')[0];
     if (kind === 'add' || kind === 'exam' || kind === 'topic' || kind === 'a' || kind === 'adm') {
         const base = applyAction(targetTg, 'show:me', firstName);
         return `${banner}\n<p>⛔ Изменения отключены</p>\n${base}`;
@@ -505,6 +509,11 @@ async function handle(u: Update): Promise<void> {
                 chatId,
                 withNote('👁 Режим просмотра выключен', respond(viewerId, 'show:me', m.from.first_name)),
             );
+            return;
+        }
+        if (arg === 'guest') {
+            viewAsMap.set(viewerId, GUEST_VIEW);
+            await showPanel(chatId, respond(viewerId, 'show:me', m.from.first_name));
             return;
         }
         const targetTg = Number(arg);
