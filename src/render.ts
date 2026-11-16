@@ -254,10 +254,10 @@ export function renderStudentRich(
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
         blank,
-        `<p>🌍 ${pctBar(r.pct)} ${r.pct}%</p>`,
-        `<p>📅 ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
+        `<p> ${pctBar(r.pct)} ${r.pct}%</p>`,
+        `<p> ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
         blank,
-        `<p>📒 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
+        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
         blank,
         devLine(lead.topics, TOPIC_RANGE),
         devLine(lead.tasks, TASK_RANGE),
