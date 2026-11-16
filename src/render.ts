@@ -212,7 +212,7 @@ export function renderArenaRich(
 }
 
 // ---- Главная ученика (Rich) ----
-const BAR_CELLS = 10;
+const BAR_CELLS = 17;
 const TOPIC_RANGE = 3; // шкала по заданиям: ±3 от плана — край
 const TASK_RANGE = 50; // шкала по задачам: ±50 от плана — край
 
@@ -245,21 +245,22 @@ export function renderStudentRich(
     const sp = '&nbsp;&nbsp;&nbsp;';
     const blank = '<p>&nbsp;</p>';
 
-    const devLine = (label: string, dev: number | null, range: number) =>
+    // Шкала отклонения без подписи: шкала, значение и точка в одной строке
+    const devLine = (dev: number | null, range: number) =>
         dev === null
-            ? `<p>${label}: ${devBar(0, range)} ✅ 100%</p>`
-            : `<p>${label}: ${devBar(dev, range)} ${dot(dev >= 0)} ${sgn(dev)}</p>`;
+            ? `<p>${devBar(0, range)} ✅ 100%</p>`
+            : `<p>${devBar(dev, range)} ${dot(dev >= 0)} ${sgn(dev)}</p>`;
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
         blank,
-        `<p>Глобально: ${pctBar(r.pct)} ${r.pct}% ${dot(onTrack(r, now))}</p>`,
-        `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
+        `<p>🌍 ${pctBar(r.pct)} ${r.pct}%</p>`,
+        `<p>📅 ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
         blank,
         `<p>📒 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
         blank,
-        devLine('Задания', lead.topics, TOPIC_RANGE),
-        devLine('Задачи', lead.tasks, TASK_RANGE),
+        devLine(lead.topics, TOPIC_RANGE),
+        devLine(lead.tasks, TASK_RANGE),
         blank,
         buttonsHtml,
     ].join('\n');
