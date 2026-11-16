@@ -19,9 +19,9 @@ import {
     renderHelpRich,
     renderJournalRich,
     renderStudentRich,
-    renderAdminHomeRich,
-    ArenaMode
+    renderAdminHomeRich
 } from './render.ts';
+import type { ArenaMode } from './render.ts';
 import { getJournal, getPersons, getWeekStats } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
