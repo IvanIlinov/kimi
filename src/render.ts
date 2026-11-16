@@ -98,7 +98,7 @@ export function renderArenaRich(
     week: Map<number, WeekStat>,
     modeHtml: string,
     navHtml: string,
-    mode: ArenaMode = 'global',
+    mode: ArenaMode = 'week',
     now: Date = new Date(),
 ): string {
     if (ranked.length === 0) {
@@ -157,8 +157,8 @@ export function renderArenaRich(
             .join('');
         body = table(rows);
     } else {
-        // Месяц: цели месяца сверху и успеваемость каждого по ним
-        body = goalsTable(now) + '\n' + table(monthRows(shown, now));
+        // Месяц: успеваемость каждого по целям месяца
+        body = table(monthRows(shown, now));
     }
 
     return [

@@ -153,15 +153,15 @@ const nextStatus = (s: TopicStatus): TopicStatus =>
 
 // ---- Экраны ----
 
-function screenArena(viewerId: number, note = '', mode: ArenaMode = 'global'): Reply {
+function screenArena(viewerId: number, note = '', mode: ArenaMode = 'week'): Reply {
     const ranked = all();
     const week = new Map(getWeekStats().map((s) => [s.userId, s]));
 
-    // Переключатель режима: только эмодзи, текущий отмечен точкой
+    // Переключатель режима: только эмодзи
     const modeRow: Btn[] = [
-        { text: mode === 'global' ? '• 🌍' : '🌍', callback_data: 'show:arena:global' },
-        { text: mode === 'week' ? '• 📅' : '📅', callback_data: 'show:arena:week' },
-        { text: mode === 'month' ? '• 💯' : '💯', callback_data: 'show:arena:month' },
+        { text: '🌍', callback_data: 'show:arena:global' },
+        { text: '📅', callback_data: 'show:arena:week' },
+        { text: '💯', callback_data: 'show:arena:month' },
     ];
 
     // Кнопки с именами, отступ, затем вкладки основного меню
@@ -282,7 +282,7 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
 
     if (kind === 'show') {
         if (a === 'arena') {
-            const mode: ArenaMode = b === 'week' ? 'week' : b === 'month' ? 'month' : 'global';
+            const mode: ArenaMode = b === 'global' ? 'global' : b === 'month' ? 'month' : 'week';
             return screenArena(viewerId, '', mode);
         }
         if (a === 'user') return screenUser(Number(b), viewerId);
