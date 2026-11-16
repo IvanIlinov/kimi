@@ -256,6 +256,16 @@ const pctBar = (pct: number, cells: number) => {
     return '▰'.repeat(n) + '▱'.repeat(cells - n);
 };
 
+// Склонение по числу: plural(1, ['задача', 'задачи', 'задач']) -> 'задача'
+const plural = (n: number, [one, few, many]: [string, string, string]) => {
+    const a = Math.abs(n) % 100;
+    const b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b === 1) return one;
+    if (b >= 2 && b <= 4) return few;
+    return many;
+};
+
 // Полоска месячной цели: value/goal, не больше полной
 const monthBar = (value: number, goal: number) =>
     pctBar(goal > 0 ? Math.min(1, value / goal) * 100 : 0, MONTH_CELLS);
@@ -270,14 +280,15 @@ export function renderStudentRich(
     const w = week ?? { userId: p.id, tasks: 0, topics: 0, active: false };
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
     const m = monthGoal(now);
-    const mt = monthTopicsProgress(p, now);
     const hr = '<hr>';
 
     const notes = [
-        `Нарешал ${w.tasks} задач из ${WEEK_GOAL}`,
-        mt.quota > 0 ? `Изучил ${mt.done} ${mt.done === 1 ? 'задание' : 'заданий'} из ${mt.quota}` : null,
-        `Пробник: цель ${m.exam} баллов`,
-    ].filter(Boolean).join('<br>');
+        `Нарешано ${w.tasks} ${plural(w.tasks, ['задача', 'задачи', 'задач'])} из ${WEEK_GOAL}`,
+        `Изучили ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} из ${m.topics}`,
+        p.exam === null
+            ? `Пробник пока не внесён, цель ${m.exam} ${plural(m.exam, ['балл', 'балла', 'баллов'])}`
+            : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])} из ${m.exam}`,
+    ].join('<br>');
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
