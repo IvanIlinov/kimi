@@ -351,21 +351,22 @@ function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = '
     // Текстовый вариант (запасной)
     const text = withNote(note, `📘 Задания${title}\n${TOPICS_LEGEND}`);
 
-    // Rich-вариант: 27 кнопок по 8 в ряд, затем кнопка возврата
+    // Сетка заданий: 27 кнопок по 8 в ряд
     const cells: Btn[] = Array.from({ length: 27 }, (_, i) => {
         const n = i + 1;
         return { text: `${ICON[statusOf(p, n)]}${n}`, callback_data: `${prefix}:${n}` };
     });
-    const rows: Btn[][] = [];
-    for (let i = 0; i < cells.length; i += 8) rows.push(cells.slice(i, i + 8));
-    rows.push([back]);
+    const grid: Btn[][] = [];
+    for (let i = 0; i < cells.length; i += 8) grid.push(cells.slice(i, i + 8));
 
     const rich = [
         `<h3>📘 Задания${esc(title)}</h3>`,
         note ? `<p>${esc(note)}</p>` : '',
         `<p>${legend}</p>`,
         '<p>&nbsp;</p>',
-        richButtons(rows),
+        richButtons(grid),
+        '<p>&nbsp;</p>',
+        richButtons([[back]]),
     ]
         .filter(Boolean)
         .join('\n');
