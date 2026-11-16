@@ -119,39 +119,24 @@ export function renderArenaRich(
     const mine = ranked.find((r) => r.person.tgId === viewerId);
     const shown = mine && !top.includes(mine) ? [...top, mine] : top;
 
-    // Лидер недели: по заданиям, при равенстве по задачам
-    const active = [...week.values()].filter((s) => s.active);
-    const best = [...active].sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
-    const bestName = best ? ranked.find((r) => r.person.id === best.userId)?.person.name : undefined;
-    const leader =
-        best && bestName
-            ? `<h3>👑 Лидер недели</h3>${table(
+    let leader = '';
+    let body: string;
+
+    if (mode === 'week') {
+        // Лидер недели: по заданиям, при равенстве по задачам
+        const active = [...week.values()].filter((s) => s.active);
+        const best = [...active].sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
+        const bestName = best ? ranked.find((r) => r.person.id === best.userId)?.person.name : undefined;
+        if (best && bestName) {
+            leader = `<h3>👑 Лидер недели</h3>${table(
                 tr(
                     [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
                     ['left', 'right', 'right', 'right'],
                     true,
                 ),
-            )}`
-            : '';
+            )}`;
+        }
 
-    let body: string;
-
-    if (mode === 'global') {
-        const rows = shown
-            .map((r) =>
-                tr(
-                    [
-                        escHtml(cap(r.person.name)),
-                        pctBar(r.pct, ARENA_CELLS),
-                        `${r.pct}%`,
-                        onTrack(r, now) ? '🟢' : '🔴',
-                    ],
-                    ['left', 'center', 'right', 'left'],
-                ),
-            )
-            .join('');
-        body = table(rows);
-    } else if (mode === 'week') {
         const rows = shown
             .map((r) => {
                 const w = week.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
@@ -167,8 +152,43 @@ export function renderArenaRich(
             .join('');
         body = table(rows);
     } else {
-        // Месяц: успеваемость каждого по целям месяца, без номеров мест
-        body = table(monthRows(shown, now, undefined, false));
+        // Лидер года: первое место рейтинга.
+        // Имя, глобальный прогресс, успеваемость по целям месяца, пробник, задания, задачи
+        const r = ranked[0];
+        const p = r.person;
+        leader = `<h3>👑 Лидер года</h3>${table(
+            tr(
+                [
+                    escHtml(cap(p.name)),
+                    `${r.pct}%`,
+                    `${monthPct(r, now)}%`,
+                    `${p.exam ?? '—'}`,
+                    `${p.studied.length}`,
+                    `${p.tasksTotal}`,
+                ],
+                ['left', 'center', 'center', 'center', 'center', 'center'],
+            ),
+        )}`;
+
+        if (mode === 'global') {
+            const rows = shown
+                .map((x) =>
+                    tr(
+                        [
+                            escHtml(cap(x.person.name)),
+                            pctBar(x.pct, ARENA_CELLS),
+                            `${x.pct}%`,
+                            onTrack(x, now) ? '🟢' : '🔴',
+                        ],
+                        ['left', 'center', 'right', 'left'],
+                    ),
+                )
+                .join('');
+            body = table(rows);
+        } else {
+            // Месяц: успеваемость каждого по целям месяца, без номеров мест
+            body = table(monthRows(shown, now, undefined, false));
+        }
     }
 
     return [
