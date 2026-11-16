@@ -241,19 +241,22 @@ export function renderStudentRich(
     const w = week ?? { userId: p.id, tasks: 0, topics: 0, active: false };
     const lead = leadParts(p, now);
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
-    const gain = Math.round(weekPct(w)); // прирост прогресса за неделю
     const dot = (ok: boolean) => (ok ? '🟢' : '🔴');
+    const sp = '&nbsp;&nbsp;&nbsp;';
 
     const devLine = (label: string, dev: number | null, range: number) =>
         dev === null
-            ? `<p>${label}: ✅ 100%</p>`
+            ? `<p>${label}: ${devBar(0, range)} ✅ 100%</p>`
             : `<p>${label}: ${devBar(dev, range)} ${dot(dev >= 0)} ${sgn(dev)}</p>`;
 
     return [
-        `<h3>🎯 ${escHtml(cap(p.name))} · 🎖${r.place}</h3>`,
+        `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
+        '<p>&nbsp;</p>',
         `<p>Глобально: ${pctBar(r.pct)} ${r.pct}% ${dot(onTrack(r, now))}</p>`,
-        `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}% ${sgn(gain)}%</p>`,
-        `<p>📒 ${p.exam ?? '—'} пробник · 📒 ${p.studied.length} заданий · 📒 ${p.tasksTotal} задач</p>`,
+        `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
+        '<p>&nbsp;</p>',
+        `<p>📒 ${p.exam ?? '—'} пробник${sp}📒 ${p.studied.length} заданий${sp}📒 ${p.tasksTotal} задач</p>`,
+        '<p>&nbsp;</p>',
         devLine('Задания', lead.topics, TOPIC_RANGE),
         devLine('Задачи', lead.tasks, TASK_RANGE),
         buttonsHtml,
