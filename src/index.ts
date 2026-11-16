@@ -19,7 +19,8 @@ import {
     renderHelpRich,
     renderJournalRich,
     renderStudentRich,
-    renderAdminHomeRich
+    renderAdminHomeRich,
+    ArenaMode
 } from './render.ts';
 import { getJournal, getPersons, getWeekStats } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
@@ -152,14 +153,15 @@ const nextStatus = (s: TopicStatus): TopicStatus =>
 
 // ---- Экраны ----
 
-function screenArena(viewerId: number, note = '', mode: 'global' | 'week' = 'global'): Reply {
+function screenArena(viewerId: number, note = '', mode: ArenaMode = 'global'): Reply {
     const ranked = all();
     const week = new Map(getWeekStats().map((s) => [s.userId, s]));
 
-    // Переключатель режима: текущий отмечен точкой
+    // Переключатель режима: только эмодзи, текущий отмечен точкой
     const modeRow: Btn[] = [
-        { text: mode === 'global' ? '• 🌍 Глобально' : '🌍 Глобально', callback_data: 'show:arena:global' },
-        { text: mode === 'week' ? '• 📅 Неделя' : '📅 Неделя', callback_data: 'show:arena:week' },
+        { text: mode === 'global' ? '• 🌍' : '🌍', callback_data: 'show:arena:global' },
+        { text: mode === 'week' ? '• 📅' : '📅', callback_data: 'show:arena:week' },
+        { text: mode === 'month' ? '• 💯' : '💯', callback_data: 'show:arena:month' },
     ];
 
     const rich = renderArenaRich(
@@ -276,7 +278,10 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
     if (a === 'help') return renderHelpRich(new Date(), richButtons([[SELF_BACK]]));
 
     if (kind === 'show') {
-        if (a === 'arena') return screenArena(viewerId, '', b === 'week' ? 'week' : 'global');
+        if (a === 'arena') {
+            const mode: ArenaMode = b === 'week' ? 'week' : b === 'month' ? 'month' : 'global';
+            return screenArena(viewerId, '', mode);
+        }
         if (a === 'user') return screenUser(Number(b), viewerId);
         if (a === 'topics') {
             const r = findByTg(viewerId);
