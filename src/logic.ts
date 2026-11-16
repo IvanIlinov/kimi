@@ -64,15 +64,6 @@ export function planTasks(now: Date): number {
     return Math.min(TASKS_GOAL, Math.round((WEEK_GOAL * days) / 7));
 }
 
-const sign = (n: number) => (n > 0 ? `+${n}` : `${n}`);
-
-// Опережение или отставание: "+3 | +100". Когда цель достигнута, число заменяется на 100%.
-export function leadText(p: Person, now: Date): string {
-    const a = p.studied.length >= TOPICS_TOTAL ? '100%' : sign(p.studied.length - planTopics(now));
-    const b = p.tasksTotal >= TASKS_GOAL ? '100%' : sign(p.tasksTotal - planTasks(now));
-    return `${a} | ${b}`;
-}
-
 // Рейтинг: по убыванию очков, при равных очках место одинаковое.
 export function rank(people: Person[]): Ranked[] {
     const sorted = people
@@ -121,15 +112,4 @@ export function monthGoal(now: Date) {
     const { m } = moscow(now);
     const idx = (m - 8 + 12) % 12; // 0 = сентябрь
     return MONTH_GOALS[Math.min(idx, MONTH_GOALS.length - 1)];
-}
-
-// Прогресс по заданиям внутри текущего месяца: сколько изучено из месячной нормы.
-// Норма = разница накопленных целей (например, ноябрь: 16 − 12 = 4).
-export function monthTopicsProgress(p: Person, now: Date): { done: number; quota: number } {
-    const { m } = moscow(now);
-    const idx = Math.min((m - 8 + 12) % 12, MONTH_GOALS.length - 1);
-    const prev = idx > 0 ? MONTH_GOALS[idx - 1].topics : 0;
-    const quota = MONTH_GOALS[idx].topics - prev;
-    const done = Math.max(0, Math.min(quota, p.studied.length - prev));
-    return { done, quota };
 }

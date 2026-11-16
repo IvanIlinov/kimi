@@ -58,14 +58,6 @@ export const sendMessage = (
     extra: { reply_markup?: unknown; parse_mode?: 'HTML' } = {},
 ) => callApi<{ message_id: number }>(token, 'sendMessage', { chat_id, text, ...extra });
 
-export const editMessageText = (
-    token: string,
-    chat_id: number,
-    message_id: number,
-    text: string,
-    extra: { reply_markup?: unknown; parse_mode?: 'HTML' } = {},
-) => callApi(token, 'editMessageText', { chat_id, message_id, text, ...extra });
-
 export const deleteMessage = (token: string, chat_id: number, message_id: number) =>
     callApi(token, 'deleteMessage', { chat_id, message_id });
 
@@ -84,14 +76,6 @@ export const editRich = (token: string, chat_id: number, message_id: number, htm
         chat_id,
         message_id,
         rich_message: { html },
-    });
-
-// Ответ в беседке, который видит только один участник
-export const sendRichEphemeral = (token: string, chat_id: number, html: string, receiver_user_id: number) =>
-    callApi(token, 'sendRichMessage', {
-        chat_id,
-        rich_message: { html },
-        ephemeral_message_parameters: { receiver_user_id },
     });
 
 // Тихая реакция на сообщение: без текста, без ответа в чат
