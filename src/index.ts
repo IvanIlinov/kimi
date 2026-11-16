@@ -12,7 +12,10 @@ import {
 import type { CallbackQuery, Update } from './telegram.ts';
 import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
-import { cap, renderArena, renderHelpProgress, renderProfile, renderJournal } from './render.ts';
+import {
+    cap, renderArena, renderArenaRich,
+    renderHelpProgress, renderJournal, renderProfile
+} from './render.ts';
 import { getPersons, getWeekStats, getJournal } from './store.ts';
 import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
@@ -106,8 +109,17 @@ function adminUserKeyboard(id: number) {
     };
 }
 
-// Кнопки арены: по одной на участника топ-10 и на смотрящего
-// Кнопки арены: по одной на участника топ-10 и на смотрящего, внизу — возврат в профиль
+// Кнопки для Rich-сообщения: та же раскладка, что у arenaKeyboard
+const richButtons = (rows: Btn[][]) =>
+    rows
+        .map(
+            (r) =>
+                `<tg-button-row align="center">${r
+                    .map((b) => `<tg-button type="callback_data" data="${b.callback_data}">${esc(b.text)}</tg-button>`)
+                    .join('')}</tg-button-row>`,
+        )
+        .join('\n');
+
 // Кнопки арены: по одной на участника топ-10 и на смотрящего. Кнопка профиля только у участников.
 function arenaKeyboard(ranked: Ranked[], viewerId: number) {
     const top = ranked.slice(0, 10);
@@ -157,12 +169,20 @@ function topicsKeyboard(p: Person, prefix: string, back: Btn) {
 function screenArena(viewerId: number, note = ''): Reply {
     const ranked = all();
     const week = new Map(getWeekStats().map((s) => [s.userId, s]));
+    const kb = arenaKeyboard(ranked, viewerId);
+
+    // Текстовый вариант (запасной)
     const leader = weekLeaderLine();
     const body = renderArena(ranked, viewerId, week);
     const text = leader ? `✨ Арена\n\n${leader}\n\n${body.replace(/^✨ Арена\n\n/, '')}` : body;
+
+    // Rich-вариант: кнопки встроены в сообщение
+    const rich = renderArenaRich(ranked, viewerId, week, richButtons(kb.inline_keyboard));
+
     return {
         text: withNote(note, text),
-        keyboard: arenaKeyboard(ranked, viewerId),
+        rich: note ? `<p>${esc(note)}</p>\n${rich}` : rich,
+        keyboard: kb,
     };
 }
 

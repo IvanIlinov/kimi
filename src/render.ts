@@ -142,3 +142,70 @@ export function renderJournal(entries: JournalEntry[]): string {
 
     return ['📒 Журнал', '', ...lines].join('\n');
 }
+
+const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const tr = (cells: string[], align: string[], bold = false) =>
+    `<tr>${cells.map((c, i) => `<td align="${align[i]}">${bold ? `<b>${c}</b>` : c}</td>`).join('')}</tr>`;
+const table = (rows: string) => `<table bordered striped compact>${rows}</table>`;
+
+// Rich-версия арены: лидер недели, таблицы по группам, кнопки передаются готовым HTML
+export function renderArenaRich(
+    ranked: Ranked[],
+    viewerId: number | undefined,
+    week: Map<number, WeekStat>,
+    buttonsHtml: string,
+    now: Date = new Date(),
+): string {
+    if (ranked.length === 0) return `<h3>✨ Арена</h3><p>Пока никого нет.</p>${buttonsHtml}`;
+
+    const top = ranked.slice(0, 10);
+    const mine = ranked.find((r) => r.person.tgId === viewerId);
+    const shown = mine && !top.includes(mine) ? [...top, mine] : top;
+    const tailStart = shown.length > 5 ? shown.length - 2 : shown.length;
+
+    // Лидер недели: по заданиям, при равенстве по задачам
+    const active = [...week.values()].filter((s) => s.active);
+    const best = active.sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
+    const bestName = best ? ranked.find((r) => r.person.id === best.userId)?.person.name : undefined;
+    const leader =
+        best && bestName
+            ? `<h3>👑 Лидер недели</h3>${table(
+                tr(
+                    [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
+                    ['left', 'right', 'right', 'right'],
+                    true,
+                ),
+            )}`
+            : '';
+
+    const ALIGN = ['left', 'left', 'left', 'right', 'right', 'right'];
+    const rowOf = (r: Ranked, i: number) => {
+        const w = week.get(r.person.id) ?? { tasks: 0, topics: 0 };
+        const icon = i < 3 ? '💎' : i >= tailStart ? '🔥' : '⚡️';
+        return tr(
+            [
+                `${icon} ${r.place}`,
+                escHtml(cap(r.person.name)),
+                onTrack(r, now) ? '🟢' : '🔴',
+                `${sgn(Math.round(weekPct(w)))}%`,
+                sgn(w.tasks),
+                sgn(w.topics),
+            ],
+            ALIGN,
+        );
+    };
+
+    // Три группы, каждая отдельной таблицей (пустые пропускаем)
+    const groups = [
+        { list: shown.slice(0, 3), from: 0 },
+        { list: shown.slice(3, tailStart), from: 3 },
+        { list: shown.slice(tailStart), from: tailStart },
+    ];
+    const body = groups
+        .filter((g) => g.list.length > 0)
+        .map((g) => table(g.list.map((r, j) => rowOf(r, g.from + j)).join('')))
+        .join('\n');
+
+    return ['<h3>✨ Арена</h3>', leader, body, buttonsHtml].filter(Boolean).join('\n');
+}
