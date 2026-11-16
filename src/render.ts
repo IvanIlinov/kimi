@@ -211,7 +211,7 @@ export function renderArenaRich(
             .join('');
         body = table(rows);
     } else {
-        // Неделя: выполнение (задачи / 25), прирост прогресса справа. Сортировка по выполнению.
+        // Неделя: полоска выполнения (задачи / 25), затем задачи и задания за неделю
         const rows = shown
             .map((r) => {
                 const w = week.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
@@ -220,7 +220,7 @@ export function renderArenaRich(
             .sort((a, b) => b.w.tasks - a.w.tasks || b.w.topics - a.w.topics)
             .map((x) =>
                 tr(
-                    [x.name, arenaBar(x.goal), `${x.goal}%`, `${sgn(Math.round(weekPct(x.w)))}%`],
+                    [x.name, arenaBar(x.goal), sgn(x.w.tasks), sgn(x.w.topics)],
                     ['left', 'left', 'right', 'right'],
                 ),
             )
@@ -329,4 +329,23 @@ export function renderJournalRich(entries: JournalEntry[], navHtml: string, tabs
     ]
         .filter(Boolean)
         .join('\n');
+}
+
+// Итоги недели в беседку: таблица по убыванию задач
+export function renderSummaryRich(rows: { name: string; tasks: number; topics: number }[]): string {
+    const blank = '<p>&nbsp;</p>';
+    const head = '<h3>🏆 Итоги недели</h3>';
+    if (rows.length === 0) {
+        return [head, blank, '<p>На этой неделе задач не было.</p>'].join('\n');
+    }
+    const header = tr(['№', 'Участник', 'Задачи', 'Задания'], ['left', 'left', 'right', 'right'], true);
+    const body = rows
+        .map((x, i) =>
+            tr(
+                [`${i + 1}`, escHtml(cap(x.name)), sgn(x.tasks), sgn(x.topics)],
+                ['left', 'left', 'right', 'right'],
+            ),
+        )
+        .join('');
+    return [head, blank, table(header + body)].join('\n');
 }

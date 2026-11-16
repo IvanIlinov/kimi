@@ -307,17 +307,40 @@ function screenSelf(viewerId: number, note = ''): Reply {
 function screenUser(id: number, viewerId: number, note = ''): Reply {
     const r = findById(id);
     if (!r) return { text: 'Участник не найден.' };
-    const profile = renderProfile(r, new Date());
+    const now = new Date();
+    const week = getWeekStats().find((s) => s.userId === r.person.id);
+    const profile = renderProfile(r, now);
+
+    // Админ: карточка в Rich-формате, кнопки управления внизу
     if (isAdmin(viewerId)) {
+        const kb = adminUserKeyboard(id);
+        const buttons = `<p>👑 Режим админа</p>\n${richButtons(kb.inline_keyboard)}`;
+        const rich = renderStudentRich(r, week, now, buttons);
         return {
             text: withNote(note, profile + '\n\n👑 Режим админа'),
-            keyboard: adminUserKeyboard(id),
+            rich: note ? `<p>${esc(note)}</p>\n${rich}` : rich,
+            keyboard: kb,
         };
     }
-    const keyboard = isGuest(viewerId)
-        ? { inline_keyboard: [[{ text: '← Арена', callback_data: 'show:arena' }]] }
-        : BACK_KEYBOARD;
-    return { text: withNote(note, profile), keyboard };
+
+    // Гость: только возврат в арену
+    if (isGuest(viewerId)) {
+        const kb = { inline_keyboard: [[{ text: '← Арена', callback_data: 'show:arena' }]] };
+        const rich = renderStudentRich(r, week, now, richButtons(kb.inline_keyboard));
+        return {
+            text: withNote(note, profile),
+            rich: note ? `<p>${esc(note)}</p>\n${rich}` : rich,
+            keyboard: kb,
+        };
+    }
+
+    // Участник: карточка друга с кнопками назад
+    const rich = renderStudentRich(r, week, now, richButtons(BACK_KEYBOARD.inline_keyboard));
+    return {
+        text: withNote(note, profile),
+        rich: note ? `<p>${esc(note)}</p>\n${rich}` : rich,
+        keyboard: BACK_KEYBOARD,
+    };
 }
 
 function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = ''): Reply {
