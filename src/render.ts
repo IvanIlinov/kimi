@@ -10,7 +10,8 @@ import {
     sgn,
     weekPct,
     progressPct,
-    monthGoal
+    monthGoal,
+    monthTopicsProgress
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
 import type { WeekStat, JournalEntry } from './store.ts';
@@ -245,31 +246,19 @@ export function renderArenaRich(
 }
 
 // ---- Главная ученика (Rich) ----
-const BAR_CELLS = 17;
-const TOPIC_RANGE = 3; // шкала по заданиям: ±3 от плана — край
-const TASK_RANGE = 50; // шкала по задачам: ±50 от плана — край
+const GLOBAL_CELLS = 6;
+const WEEK_CELLS = 10;
+const MONTH_CELLS = 15;
 
-// Полоска прогресса 0..100%
-const pctBar = (pct: number) => {
-    const n = Math.max(0, Math.min(BAR_CELLS, Math.round((pct / 100) * BAR_CELLS)));
-    return '▰'.repeat(n) + '▱'.repeat(BAR_CELLS - n);
+// Полоска 0..100% с заданным числом клеток
+const pctBar = (pct: number, cells: number) => {
+    const n = Math.max(0, Math.min(cells, Math.round((pct / 100) * cells)));
+    return '▰'.repeat(n) + '▱'.repeat(cells - n);
 };
 
-// Половина шкалы отклонения: по 8 клеток с каждой стороны от ┃
-const DEV_HALF = 8;
-
-const devBar = (dev: number, range: number) => {
-    const n = Math.round(Math.min(1, Math.abs(dev) / range) * DEV_HALF);
-    const left = dev < 0 ? '▰'.repeat(n).padStart(DEV_HALF, '▱') : '▱'.repeat(DEV_HALF);
-    const right = dev > 0 ? '▰'.repeat(n).padEnd(DEV_HALF, '▱') : '▱'.repeat(DEV_HALF);
-    return `${left}┃${right}`;
-};
-
-// Полоска месячной цели: заполнение до value/goal, не больше полной
-const monthBar = (value: number, goal: number) => {
-    const n = Math.round(Math.min(1, value / goal) * BAR_CELLS);
-    return '▰'.repeat(n) + '▱'.repeat(BAR_CELLS - n);
-};
+// Полоска месячной цели: value/goal, не больше полной
+const monthBar = (value: number, goal: number) =>
+    pctBar(goal > 0 ? Math.min(1, value / goal) * 100 : 0, MONTH_CELLS);
 
 export function renderStudentRich(
     r: Ranked,
@@ -281,13 +270,22 @@ export function renderStudentRich(
     const w = week ?? { userId: p.id, tasks: 0, topics: 0, active: false };
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
     const m = monthGoal(now);
+    const mt = monthTopicsProgress(p, now);
     const hr = '<hr>';
+
+    const notes = [
+        `Нарешал ${w.tasks} задач из ${WEEK_GOAL}`,
+        mt.quota > 0 ? `Изучил ${mt.done} ${mt.done === 1 ? 'задание' : 'заданий'} из ${mt.quota}` : null,
+        `Пробник: цель ${m.exam} баллов`,
+    ].filter(Boolean).join('<br>');
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
         hr,
-        `<p>Global ${pctBar(r.pct)} ${r.pct}%</p>`,
-        `<p>Week ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
+        `<p>Global ${pctBar(r.pct, GLOBAL_CELLS)} ${r.pct}%</p>`,
+        `<p>Week ${pctBar(Math.min(goal, 100), WEEK_CELLS)} ${goal}%</p>`,
+        hr,
+        `<blockquote>${notes}</blockquote>`,
         hr,
         '<p><b>Month</b></p>',
         `<p>📗 ${monthBar(p.studied.length, m.topics)} ${p.studied.length}/${m.topics}</p>`,
@@ -296,6 +294,7 @@ export function renderStudentRich(
         buttonsHtml,
     ].join('\n');
 }
+
 // Журнал в Rich: время, имя, событие. Кнопки навигации и вкладки передаются готовым HTML
 export function renderJournalRich(entries: JournalEntry[], navHtml: string, tabsHtml: string): string {
     const blank = '<p>&nbsp;</p>';
