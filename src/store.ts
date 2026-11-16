@@ -169,3 +169,20 @@ export function getJournal(limit: number, offset: number): JournalEntry[] {
         source: r.source === 'group' ? 'group' : 'bot',
     }));
 }
+
+// Время последнего действия каждого участника: задачи или смена статуса задания
+export function getLastActivity(): Map<number, number> {
+    const rows = db
+        .prepare(`
+            SELECT user_id, MAX(at) AS last
+            FROM (
+                SELECT user_id, created_at AS at FROM task_log WHERE cancelled = 0
+                UNION ALL
+                SELECT user_id, created_at AS at FROM topic_log
+            )
+            GROUP BY user_id
+        `)
+        .all() as unknown as { user_id: number; last: number }[];
+
+    return new Map(rows.map((r) => [r.user_id, Number(r.last)]));
+}

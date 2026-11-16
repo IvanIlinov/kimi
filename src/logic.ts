@@ -113,3 +113,11 @@ export function monthGoal(now: Date) {
     const idx = (m - 8 + 12) % 12; // 0 = сентябрь
     return MONTH_GOALS[Math.min(idx, MONTH_GOALS.length - 1)];
 }
+
+// Давно не было действий: на начало 8-го дня без действия (по Москве) и дальше.
+// Нет ни одного действия вообще: тоже true.
+export function isSleeping(lastMs: number | undefined, now: Date): boolean {
+    if (lastMs === undefined) return true;
+    const day = (ms: number) => Math.floor((ms + 3 * 3600e3) / 864e5);
+    return day(now.getTime()) - day(lastMs) >= 8;
+}

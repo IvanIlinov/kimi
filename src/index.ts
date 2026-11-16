@@ -22,7 +22,7 @@ import {
     renderAdminHomeRich
 } from './render.ts';
 import type { ArenaMode } from './render.ts';
-import { getJournal, getPersons, getWeekStats } from './store.ts';
+import { getJournal, getPersons, getWeekStats, getLastActivity } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 import { startWeeklySummary } from './weekly.ts';
@@ -182,7 +182,7 @@ function screenArena(viewerId: number, note = '', mode: ArenaMode = 'week'): Rep
 // 🟢 — норматив по задачам выполнен, 🟡 — хотя бы одна задача, 🔴 — не приступали
 // Главная админа: цели месяца и успеваемость каждого участника
 function screenAdminHome(firstName: string): Reply {
-    return renderAdminHomeRich(firstName, all(), richButtons(ADMIN_ROWS));
+    return renderAdminHomeRich(firstName, all(), richButtons(ADMIN_ROWS), getLastActivity());
 }
 
 const JOURNAL_PAGE = 15;

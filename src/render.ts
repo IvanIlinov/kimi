@@ -10,6 +10,7 @@ import {
     planTopics,
     sgn,
     weekPct,
+    isSleeping
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
 import type { JournalEntry, WeekStat } from './store.ts';
@@ -70,22 +71,29 @@ const goalsTable = (now: Date) => {
 };
 
 // Строки таблицы: место и имя, полоска по центру, процент, кружок
-const monthRows = (list: Ranked[], now: Date) =>
+// Строки таблицы: место и имя, полоска по центру, процент, кружок.
+// Если передано время последней активности, давно молчащим вместо кружка ставится 💤.
+const monthRows = (list: Ranked[], now: Date, lastActive?: Map<number, number>) =>
     list
         .map((r) => {
             const pct = monthPct(r, now);
+            const status =
+                lastActive && isSleeping(lastActive.get(r.person.id), now)
+                    ? '💤'
+                    : onTrack(r, now)
+                        ? '🟢'
+                        : '🔴';
             return tr(
                 [
                     `${r.place} ${escHtml(cap(r.person.name))}`,
                     pctBar(pct, ARENA_CELLS),
                     `${pct}%`,
-                    onTrack(r, now) ? '🟢' : '🔴',
+                    status,
                 ],
                 ['left', 'center', 'right', 'left'],
             );
         })
         .join('');
-
 // ---- Арена ----
 
 const ARENA_CELLS = 10;
@@ -182,12 +190,13 @@ export function renderAdminHomeRich(
     firstName: string,
     ranked: Ranked[],
     buttonsHtml: string,
+    lastActive: Map<number, number>,
     now: Date = new Date(),
 ): string {
     return [
         `<h3>👑 Привет, ${escHtml(firstName)}!</h3>`,
         goalsTable(now),
-        ranked.length ? table(monthRows(ranked, now)) : '<p>Пока никого нет.</p>',
+        ranked.length ? table(monthRows(ranked, now, lastActive)) : '<p>Пока никого нет.</p>',
         BLANK,
         buttonsHtml,
     ].join('\n');
