@@ -183,18 +183,30 @@ function topicsKeyboard(p: Person, prefix: string, back: Btn) {
 
 // Экраны
 
-function screenArena(viewerId: number, note = ''): Reply {
+function screenArena(viewerId: number, note = '', mode: 'global' | 'week' = 'global'): Reply {
     const ranked = all();
     const week = new Map(getWeekStats().map((s) => [s.userId, s]));
-    const kb = arenaKeyboard(ranked, viewerId);
+
+    // Переключатель режима: текущий отмечен точкой
+    const modeRow: Btn[] = [
+        {
+            text: mode === 'global' ? '• 🌍 Глобально' : '🌍 Глобально',
+            callback_data: 'show:arena:global',
+        },
+        {
+            text: mode === 'week' ? '• 📅 Неделя' : '📅 Неделя',
+            callback_data: 'show:arena:week',
+        },
+    ];
+    const kb = { inline_keyboard: [modeRow, ...arenaKeyboard(ranked, viewerId).inline_keyboard] };
 
     // Текстовый вариант (запасной)
     const leader = weekLeaderLine();
     const body = renderArena(ranked, viewerId, week);
     const text = leader ? `✨ Арена\n\n${leader}\n\n${body.replace(/^✨ Арена\n\n/, '')}` : body;
 
-    // Rich-вариант: кнопки встроены в сообщение
-    const rich = renderArenaRich(ranked, viewerId, week, richButtons(kb.inline_keyboard));
+    // Rich-вариант
+    const rich = renderArenaRich(ranked, viewerId, week, richButtons(kb.inline_keyboard), mode);
 
     return {
         text: withNote(note, text),
@@ -412,7 +424,7 @@ function applyAction(viewerId: number, action: string, firstName = 'Вань!'):
     };
 
     if (kind === 'show') {
-        if (a === 'arena') return screenArena(viewerId);
+        if (a === 'arena') return screenArena(viewerId, '', b === 'week' ? 'week' : 'global');
         if (a === 'user') return screenUser(Number(b), viewerId);
         if (a === 'topics') {
             const r = findByTg(viewerId);
