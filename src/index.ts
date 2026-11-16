@@ -19,6 +19,7 @@ import {
     renderHelpRich,
     renderJournalRich,
     renderStudentRich,
+    renderAdminHomeRich
 } from './render.ts';
 import { getJournal, getPersons, getWeekStats } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
@@ -174,21 +175,9 @@ function screenArena(viewerId: number, note = '', mode: 'global' | 'week' = 'glo
 
 // Главная админа: приветствие и индикатор недели по каждому участнику (в порядке рейтинга)
 // 🟢 — норматив по задачам выполнен, 🟡 — хотя бы одна задача, 🔴 — не приступали
+// Главная админа: цели месяца и успеваемость каждого участника
 function screenAdminHome(firstName: string): Reply {
-    const week = new Map(getWeekStats().map((s) => [s.userId, s]));
-    const icon = (r: Ranked) => {
-        const tasks = week.get(r.person.id)?.tasks ?? 0;
-        return tasks >= WEEK_GOAL ? '🟢' : tasks > 0 ? '🟡' : '🔴';
-    };
-    const row = all().map(icon).join(' ');
-
-    return [
-        `<h3>👑 Привет, ${escHtml(firstName)}!</h3>`,
-        '<p>&nbsp;</p>',
-        `<p>${row}</p>`,
-        '<p>&nbsp;</p>',
-        richButtons(ADMIN_ROWS),
-    ].join('\n');
+    return renderAdminHomeRich(firstName, all(), richButtons(ADMIN_ROWS));
 }
 
 const JOURNAL_PAGE = 15;

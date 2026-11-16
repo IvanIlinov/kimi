@@ -134,6 +134,59 @@ export function renderArenaRich(
         .join('\n');
 }
 
+// ---- Главная админа ----
+
+// Насколько участник укладывается в цели месяца. Веса те же, что в общем прогрессе (40/40/20).
+// Каждая доля ограничена единицей: 100% значит, что все три цели месяца выполнены.
+const monthPct = (r: Ranked, now: Date) => {
+    const m = monthGoal(now);
+    const p = r.person;
+    const share = (value: number, goal: number) => Math.min(1, value / goal);
+    return Math.round(
+        100 *
+        (0.4 * share(p.studied.length, m.topics) +
+            0.4 * share(p.tasksTotal, m.tasks) +
+            0.2 * share(p.exam ?? 0, m.exam)),
+    );
+};
+
+export function renderAdminHomeRich(
+    firstName: string,
+    ranked: Ranked[],
+    buttonsHtml: string,
+    now: Date = new Date(),
+): string {
+    const m = monthGoal(now);
+
+    // Невидимая таблица из трёх полей по центру: цели месяца (задания, задачи, пробник)
+    const goals = `<table>${tr([`${m.topics}`, `${m.tasks}`, `${m.exam}`], ['center', 'center', 'center'])}</table>`;
+
+    const rows = ranked
+        .map((r) => {
+            const pct = monthPct(r, now);
+            return tr(
+                [
+                    `${r.place} ${escHtml(cap(r.person.name))}`,
+                    pctBar(pct, ARENA_CELLS), // полоска не выходит за 100%
+                    `${pct}%`, // число может быть и 110
+                    onTrack(r, now) ? '🟢' : '🔴',
+                ],
+                ['left', 'left', 'right', 'left'],
+            );
+        })
+        .join('');
+
+    return [
+        `<h3>👑 Привет, ${escHtml(firstName)}!</h3>`,
+        BLANK,
+        goals,
+        BLANK,
+        ranked.length ? table(rows) : '<p>Пока никого нет.</p>',
+        BLANK,
+        buttonsHtml,
+    ].join('\n');
+}
+
 // ---- Справка ----
 
 const MONTH_NAMES = ['сен', 'окт', 'ноя', 'дек', 'янв', 'фев', 'март', 'апр'];
