@@ -131,7 +131,7 @@ export function renderJournal(entries: JournalEntry[]): string {
     if (entries.length === 0) return '📒 Журнал\n\nПока пусто.';
 
     const lines = entries.map((e) => {
-        const who = cap(e.name);
+        const who = cap(e.name) + (e.source === 'group' ? ' ⛺' : '');
         const time = mskTime(e.at);
         if (e.kind === 'task') {
             return `${time} ${who}: ${sgn(e.amount)} задач`;
@@ -289,11 +289,44 @@ export function renderStudentRich(
         `<p> ${pctBar(r.pct)} ${r.pct}%</p>`,
         `<p> ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
         blank,
-        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
+        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📘 ${p.tasksTotal}</p>`,
         blank,
         devLine(lead.topics, TOPIC_RANGE),
         devLine(lead.tasks, TASK_RANGE),
         blank,
         buttonsHtml,
     ].join('\n');
+}
+
+// Журнал в Rich: время, имя, событие. Кнопки навигации и вкладки передаются готовым HTML
+export function renderJournalRich(entries: JournalEntry[], navHtml: string, tabsHtml: string): string {
+    const blank = '<p>&nbsp;</p>';
+    if (entries.length === 0) {
+        return ['<h3>📒 Журнал</h3>', '<p>Пока пусто.</p>', blank, tabsHtml].join('\n');
+    }
+
+    const body = entries
+        .map((e) => {
+            const time = mskTime(e.at);
+            const who = escHtml(cap(e.name)) + (e.source === 'group' ? ' ⛺' : '');
+            if (e.kind === 'task') {
+                return tr([time, who, `${sgn(e.amount)} задач`], ['left', 'left', 'right']);
+            }
+            const byAdmin = e.actorTgId !== null && e.actorTgId !== e.tgId ? ' 👑' : '';
+            const event = `${e.topicNo} ${JOURNAL_ICON[e.from]} → ${JOURNAL_ICON[e.to]}${byAdmin}`;
+            return tr([time, who, event], ['left', 'left', 'right']);
+        })
+        .join('');
+
+    return [
+        '<h3>📒 Журнал</h3>',
+        blank,
+        table(body),
+        blank,
+        navHtml,
+        blank,
+        tabsHtml,
+    ]
+        .filter(Boolean)
+        .join('\n');
 }

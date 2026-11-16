@@ -37,7 +37,7 @@ export interface Update {
     update_id: number;
     message?: {
         message_id: number;
-        chat: { id: number };
+        chat: { id: number; type?: string };
         from?: { id: number; first_name: string };
         text?: string;
     };
@@ -84,4 +84,20 @@ export const editRich = (token: string, chat_id: number, message_id: number, htm
         chat_id,
         message_id,
         rich_message: { html },
+    });
+
+// Ответ в беседке, который видит только один участник
+export const sendRichEphemeral = (token: string, chat_id: number, html: string, receiver_user_id: number) =>
+    callApi(token, 'sendRichMessage', {
+        chat_id,
+        rich_message: { html },
+        ephemeral_message_parameters: { receiver_user_id },
+    });
+
+// Тихая реакция на сообщение: без текста, без ответа в чат
+export const setReaction = (token: string, chat_id: number, message_id: number, emoji: string) =>
+    callApi(token, 'setMessageReaction', {
+        chat_id,
+        message_id,
+        reaction: [{ type: 'emoji', emoji }],
     });

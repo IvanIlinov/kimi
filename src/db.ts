@@ -44,4 +44,14 @@ CREATE TABLE IF NOT EXISTS topic_log (
   to_status    TEXT NOT NULL,
   created_at   INTEGER NOT NULL         -- Unix-время в миллисекундах
 );
+
+CREATE TABLE IF NOT EXISTS meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 `);
+
+const taskCols = db.prepare('PRAGMA table_info(task_log)').all() as unknown as { name: string }[];
+if (!taskCols.some((c) => c.name === 'source')) {
+  db.exec("ALTER TABLE task_log ADD COLUMN source TEXT NOT NULL DEFAULT 'bot'");
+}

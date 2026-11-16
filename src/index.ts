@@ -8,18 +8,23 @@ import {
     getUpdates,
     sendMessage,
     sendRich,
+    setReaction
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
-import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
+import {
+    leadParts, planTasks, planTopics, rank,
+    TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct, WEEK_GOAL
+} from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import {
     cap, renderArena, renderArenaRich, renderStudentRich,
-    renderHelpProgress, renderJournal, renderProfile
+    renderHelpProgress, renderJournal, renderProfile, renderJournalRich
 } from './render.ts';
 import { getPersons, getWeekStats, getJournal } from './store.ts';
 import type { WeekStat } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
+import { startWeeklySummary } from './weekly.ts';
 
 
 
@@ -240,83 +245,27 @@ function weekLeaderLine(): string {
     return `👑 Лидер недели 👑 ${cap(name)} 👑\n👑 ${sgn(Math.round(weekPct(best)))}% ${sgn(best.tasks)} задач ${sgn(best.topics)} заданий`;
 }
 
+// Главная админа: приветствие и индикатор недели по каждому участнику (в порядке рейтинга)
+// 🟢 — норматив по задачам выполнен, 🟡 — хотя бы одна задача, 🔴 — не приступали
 function screenAdminHome(firstName: string): Reply {
-    const now = new Date();
-    const stable = stablePct(now);
-    const byId = new Map(getWeekStats().map((s) => [s.userId, s]));
+    const week = new Map(getWeekStats().map((s) => [s.userId, s]));
+    const icon = (r: Ranked) => {
+        const tasks = week.get(r.person.id)?.tasks ?? 0;
+        return tasks >= WEEK_GOAL ? '🟢' : tasks > 0 ? '🟡' : '🔴';
+    };
+    const row = all().map(icon).join(' ');
 
-    const rows = all().map((r) => {
-        const s = byId.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
-        return { name: cap(r.person.name), person: r.person, s, pct: weekPct(s) };
-    });
-
-    const active = rows.filter((x) => x.s.active);
-    const idle = rows.filter((x) => !x.s.active);
-    const tops = active.filter((x) => x.pct >= stable).sort((a, b) => b.pct - a.pct);
-    const lost = active.filter((x) => x.pct < stable).sort((a, b) => b.pct - a.pct);
-    const leader = [...active].sort((a, b) => b.s.topics - a.s.topics || b.s.tasks - a.s.tasks)[0];
-    const behind = rows.filter((x) => {
-        const lead = leadParts(x.person, now);
-        return (lead.topics ?? 0) < 0 || (lead.tasks ?? 0) < 0;
-    }).length;
-
-    // Текстовый вариант (запасной)
-    const line = (x: (typeof rows)[number]) =>
-        `${x.name}: ${sgn(Math.round(x.pct))}% ${sgn(x.s.tasks)} задач ${sgn(x.s.topics)} заданий`;
-    const parts: string[] = [
-        `👑 Привет, ${firstName}!!`,
-        '',
-        `Активны: ${active.length}/${rows.length}`,
-        `Отстают: ${behind}/${rows.length}`,
-    ];
-    if (leader) {
-        parts.push(
-            '',
-            `💎 Лидер ${leader.name}`,
-            `💎 ${sgn(Math.round(leader.pct))}% ${sgn(leader.s.tasks)} задач ${sgn(leader.s.topics)} заданий`,
-        );
-    }
-    if (tops.length) parts.push('', 'Топы', ...tops.map((x) => `⚡️ ${line(x)}`));
-    if (lost.length) parts.push('', 'Теряем', ...lost.map((x) => `🐼 ${line(x)}`));
-    if (idle.length) parts.push('', 'Не заходили', ...idle.map((x) => `🐾 ${x.name}`));
-
-    // Rich-вариант: таблицы с выравниванием, полоска прогресса и кнопки внутри сообщения
-    const ALIGN = ['left', 'left', 'right', 'right', 'right'];
-    const HEAD = ['Участник', 'Прогресс', 'Прирост', 'Задачи', 'Задания'];
-    const cells = (c: string[], bold = false) =>
-        `<tr>${c.map((v, i) => `<td align="${ALIGN[i]}">${bold ? `<b>${v}</b>` : v}</td>`).join('')}</tr>`;
-    const personRow = (x: (typeof rows)[number]) =>
-        cells([
-            esc(x.name),
-            homeBar(x.pct),
-            `${sgn(Math.round(x.pct))}%`,
-            sgn(x.s.tasks),
-            sgn(x.s.topics),
-        ]);
-    const table = (list: typeof rows) =>
-        `<table bordered striped compact>${cells(HEAD, true)}${list.map(personRow).join('')}</table>`;
-    const section = (title: string, list: typeof rows) =>
-        list.length ? `<h3>${title}</h3>${table(list)}` : '';
-
-    const richParts = [
-        `<h3>👑 Привет, ${esc(firstName)}!!</h3>`,
-        `<p>Активны <b>${active.length}/${rows.length}</b> · отстают <b>${behind}/${rows.length}</b></p>`,
-        leader
-            ? `<h3>💎 Лидер</h3>${`<table bordered striped compact>${cells(
-                [esc(leader.name), homeBar(leader.pct), `${sgn(Math.round(leader.pct))}%`, sgn(leader.s.tasks), sgn(leader.s.topics)],
-                true,
-            )}</table>`}`
-            : '',
-        section('⚡️ Топы', tops),
-        section('🐼 Теряем', lost),
-        idle.length ? `<h3>🐾 Не заходили</h3><p>${idle.map((x) => esc(x.name)).join(', ')}</p>` : '',
-        `<tg-button-row align="center"><tg-button type="callback_data" data="adm:home">🔄 Обновить</tg-button><tg-button type="callback_data" data="adm:log:0">📒 Журнал</tg-button></tg-button-row>`,
-        `<tg-button-row align="center"><tg-button type="callback_data" data="adm:arena">✨ Арена</tg-button></tg-button-row>`,
-    ];
+    const rich = [
+        `<h3>👑 Привет, ${esc(firstName)}!</h3>`,
+        '<p>&nbsp;</p>',
+        `<p>${row}</p>`,
+        '<p>&nbsp;</p>',
+        richButtons(ADMIN_KEYBOARD.inline_keyboard),
+    ].join('\n');
 
     return {
-        text: parts.join('\n'),
-        rich: richParts.filter(Boolean).join('\n'),
+        text: `👑 Привет, ${firstName}!\n\n${row}`,
+        rich,
         keyboard: ADMIN_KEYBOARD,
     };
 }
@@ -324,7 +273,7 @@ function screenAdminHome(firstName: string): Reply {
 const JOURNAL_PAGE = 15;
 
 function screenAdminLog(offset = 0): Reply {
-    const rows = getJournal(JOURNAL_PAGE + 1, offset); // +1, чтобы узнать, есть ли следующая страница
+    const rows = getJournal(JOURNAL_PAGE + 1, offset);
     const hasMore = rows.length > JOURNAL_PAGE;
     const entries = rows.slice(0, JOURNAL_PAGE);
 
@@ -332,8 +281,14 @@ function screenAdminLog(offset = 0): Reply {
     if (offset > 0) nav.push({ text: '◀ Новее', callback_data: `adm:log:${Math.max(0, offset - JOURNAL_PAGE)}` });
     if (hasMore) nav.push({ text: 'Старее ▶', callback_data: `adm:log:${offset + JOURNAL_PAGE}` });
 
-    const keyboardRows = nav.length ? [nav, ...ADMIN_KEYBOARD.inline_keyboard] : ADMIN_KEYBOARD.inline_keyboard;
-    return { text: renderJournal(entries), keyboard: { inline_keyboard: keyboardRows } };
+    const navRows: Btn[][] = nav.length ? [nav] : [];
+    const tabs = ADMIN_KEYBOARD.inline_keyboard;
+
+    return {
+        text: renderJournal(entries),
+        rich: renderJournalRich(entries, richButtons(navRows), richButtons(tabs)),
+        keyboard: { inline_keyboard: [...navRows, ...tabs] },
+    };
 }
 
 function screenSelf(viewerId: number, note = ''): Reply {
@@ -396,9 +351,15 @@ function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = '
 }
 
 
-function applyChange(personId: number, op: string, arg: string, actorTgId: number): string | null {
+function applyChange(
+    personId: number,
+    op: string,
+    arg: string,
+    actorTgId: number,
+    source: 'bot' | 'group' = 'bot',
+): string | null {
     try {
-        if (op === 'add') addTasks(personId, Number(arg));
+        if (op === 'add') addTasks(personId, Number(arg), source);
         else if (op === 'exam') setExam(personId, Number(arg));
         else if (op === 'topic') {
             const p = findById(personId)!.person;
@@ -625,6 +586,13 @@ async function handle(u: Update): Promise<void> {
     const viewerId = m.from.id;
     const text = m.text.trim();
 
+    // Беседка: отдельный обработчик, панель и вкладки здесь не используются
+    if (m.chat.type === 'group' || m.chat.type === 'supergroup') {
+        console.log('[group] chat id:', m.chat.id); // временно, чтобы узнать id беседки
+        await handleGroup(m, text);
+        return;
+    }
+
     await deleteQuietly(chatId, m.message_id); // ваши сообщения не остаются в чате
 
     // Снимаем старую reply-клавиатуру один раз
@@ -667,8 +635,45 @@ async function handle(u: Update): Promise<void> {
     await showPanel(chatId, respond(viewerId, actionFromText(text), m.from.first_name));
 }
 
+// В беседке принимаем только +N и =N от участников. Остальное игнорируем, гостей не трогаем.
+// Беседка: +N и =N от участников. Ответа в чат не отправляем: сообщение удаляется,
+// ошибки уходят участнику в личку.
+// Беседка: +N и =N от участников. Сообщение не удаляем, на успешную запись ставим реакцию.
+// Ошибки уходят участнику в личку.
+async function handleGroup(m: NonNullable<Update['message']>, text: string): Promise<void> {
+    const addMatch = text.match(/^([+-])\s*(\d+)$/);
+    const examMatch = text.match(/^=\s*(\d+)$/);
+    if (!addMatch && !examMatch) return;
+
+    const viewerId = m.from!.id;
+    const me = findByTg(viewerId);
+    if (!me) return; // гости не трогаем
+
+    const op = addMatch ? 'add' : 'exam';
+    const arg = addMatch
+        ? String(Number(addMatch[2]) * (addMatch[1] === '-' ? -1 : 1))
+        : examMatch![1];
+    const err = applyChange(me.person.id, op, arg, viewerId, 'group');
+
+    if (err) {
+        try {
+            await sendMessage(BOT_TOKEN, viewerId, `⚠️ ${err}`);
+        } catch (e) {
+            console.log('[group] личка не отправлена:', String(e));
+        }
+        return;
+    }
+
+    try {
+        await setReaction(BOT_TOKEN, m.chat.id, m.message_id, '✍');
+    } catch (e) {
+        console.log('[group] реакция не поставлена:', String(e));
+    }
+}
+
 const me = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
 console.log(`Бот @${me.username} запущен`);
+startWeeklySummary();
 
 let offset = 0;
 for (; ;) {

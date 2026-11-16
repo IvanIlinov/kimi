@@ -3,14 +3,14 @@ import { db } from './db.ts';
 const MAX_PER_STEP = 50; // за раз не больше 50 задач
 
 const insertLog = db.prepare(
-    'INSERT INTO task_log (user_id, amount, created_at) VALUES (?, ?, ?)',
+    'INSERT INTO task_log (user_id, amount, created_at, source) VALUES (?, ?, ?, ?)',
 );
 const totalOf = db.prepare(
     'SELECT COALESCE(SUM(amount), 0) AS total FROM task_log WHERE user_id = ? AND cancelled = 0',
 );
 
-// Добавляет (или убавляет, если amount < 0) решённые задачи. Возвращает новый итог.
-export function addTasks(userId: number, amount: number): number {
+// source: 'bot' — личка и панель, 'group' — беседка
+export function addTasks(userId: number, amount: number, source: 'bot' | 'group' = 'bot'): number {
     if (!Number.isInteger(amount) || amount === 0) {
         throw new Error('Число задач должно быть целым и не равным нулю');
     }
@@ -23,7 +23,7 @@ export function addTasks(userId: number, amount: number): number {
         throw new Error('Всего задач не может стать меньше нуля');
     }
 
-    insertLog.run(userId, amount, Date.now());
+    insertLog.run(userId, amount, Date.now(), source);
     return total + amount;
 }
 
