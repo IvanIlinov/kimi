@@ -254,12 +254,13 @@ const pctBar = (pct: number) => {
     return '▰'.repeat(n) + '▱'.repeat(BAR_CELLS - n);
 };
 
-// Шкала отклонения: ┃ — план, вправо впереди, влево позади
+// Половина шкалы отклонения: по 8 клеток с каждой стороны от ┃
+const DEV_HALF = 8;
+
 const devBar = (dev: number, range: number) => {
-    const half = BAR_CELLS / 2;
-    const n = Math.round(Math.min(1, Math.abs(dev) / range) * half);
-    const left = dev < 0 ? '▰'.repeat(n).padStart(half, '▱') : '▱'.repeat(half);
-    const right = dev > 0 ? '▰'.repeat(n).padEnd(half, '▱') : '▱'.repeat(half);
+    const n = Math.round(Math.min(1, Math.abs(dev) / range) * DEV_HALF);
+    const left = dev < 0 ? '▰'.repeat(n).padStart(DEV_HALF, '▱') : '▱'.repeat(DEV_HALF);
+    const right = dev > 0 ? '▰'.repeat(n).padEnd(DEV_HALF, '▱') : '▱'.repeat(DEV_HALF);
     return `${left}┃${right}`;
 };
 
