@@ -263,6 +263,9 @@ const devBar = (dev: number, range: number) => {
     return `${left}┃${right}`;
 };
 
+// Пустой блок между секциями: '' = компактно, '<p>&nbsp;</p>' = с отступом
+const GAP = '';
+
 export function renderStudentRich(
     r: Ranked,
     week: WeekStat | undefined,
@@ -275,7 +278,6 @@ export function renderStudentRich(
     const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
     const dot = (ok: boolean) => (ok ? '🟢' : '🔴');
     const sp = '&nbsp;&nbsp;&nbsp;';
-    const blank = '<p>&nbsp;</p>';
 
     // Шкала отклонения без подписи: шкала, значение и точка в одной строке
     const devLine = (dev: number | null, range: number) =>
@@ -285,15 +287,17 @@ export function renderStudentRich(
 
     return [
         `<h3>${escHtml(cap(p.name))} 🎖${r.place}</h3>`,
-        blank,
+        GAP,
         `<p> ${pctBar(r.pct)} ${r.pct}%</p>`,
         `<p> ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
-        blank,
-        `<table><tr><td align="center">📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📘 ${p.tasksTotal}</td></tr></table>`,
-        blank,
+        GAP,
+        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📘 ${p.tasksTotal}</p>`,
+        GAP,
         devLine(lead.topics, TOPIC_RANGE),
         devLine(lead.tasks, TASK_RANGE),
-        blank,
+        GAP,
         buttonsHtml,
-    ].join('\n');
+    ]
+        .filter(Boolean)
+        .join('\n');
 }
