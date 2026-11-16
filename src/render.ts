@@ -289,7 +289,7 @@ export function renderStudentRich(
         `<p> ${pctBar(r.pct)} ${r.pct}%</p>`,
         `<p> ${pctBar(Math.min(goal, 100))} ${goal}%</p>`,
         blank,
-        `<p>📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📒 ${p.tasksTotal}</p>`,
+        `<table><tr><td align="center">📕 ${p.exam ?? '—'}${sp}📒 ${p.studied.length}${sp}📘 ${p.tasksTotal}</td></tr></table>`,
         blank,
         devLine(lead.topics, TOPIC_RANGE),
         devLine(lead.tasks, TASK_RANGE),
