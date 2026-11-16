@@ -13,7 +13,7 @@ import type { CallbackQuery, Update } from './telegram.ts';
 import { leadParts, planTasks, planTopics, rank, TASKS_GOAL, TOPICS_TOTAL, sgn, weekPct } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import {
-    cap, renderArena, renderArenaRich,
+    cap, renderArena, renderArenaRich, renderStudentRich,
     renderHelpProgress, renderJournal, renderProfile
 } from './render.ts';
 import { getPersons, getWeekStats, getJournal } from './store.ts';
@@ -77,6 +77,23 @@ const PANEL_KEYBOARD = {
     ],
 };
 
+// Кнопки главной ученика (в Rich они встроены в сообщение, в тексте идут как reply_markup)
+const STUDENT_KB = {
+    inline_keyboard: [
+        [
+            { text: '+1', callback_data: 'add:1' },
+            { text: '+3', callback_data: 'add:3' },
+            { text: '+5', callback_data: 'add:5' },
+            { text: '+10', callback_data: 'add:10' },
+        ],
+        [
+            { text: '📘 Задания', callback_data: 'show:topics' },
+            { text: '✨ Арена', callback_data: 'show:arena' },
+            { text: '🧾 Шпаргалки', callback_data: 'show:cheat' },
+        ],
+    ],
+};
+
 // Нижние вкладки админа
 const ADMIN_TABS: Btn[] = [
     { text: '🏠 Главная', callback_data: 'adm:home' },
@@ -127,9 +144,9 @@ function arenaKeyboard(ranked: Ranked[], viewerId: number) {
     const shown = mine && !top.includes(mine) ? [...top, mine] : top;
 
     const rows: Btn[][] = [];
-    for (let i = 0; i < shown.length; i += 2) {
+    for (let i = 0; i < shown.length; i += 3) {
         rows.push(
-            shown.slice(i, i + 2).map((r) => ({
+            shown.slice(i, i + 3).map((r) => ({
                 text: cap(r.person.name),
                 callback_data: `show:user:${r.person.id}`,
             })),
@@ -302,7 +319,14 @@ function screenAdminLog(offset = 0): Reply {
 function screenSelf(viewerId: number, note = ''): Reply {
     const r = findByTg(viewerId);
     if (!r) return { text: NOT_MEMBER };
-    return { text: withNote(note, renderProfile(r, new Date())), keyboard: PANEL_KEYBOARD };
+    const now = new Date();
+    const week = getWeekStats().find((s) => s.userId === r.person.id);
+    const rich = renderStudentRich(r, week, now, richButtons(STUDENT_KB.inline_keyboard));
+    return {
+        text: withNote(note, renderProfile(r, now)),
+        rich: note ? `<p>${esc(note)}</p>\n${rich}` : rich,
+        keyboard: STUDENT_KB,
+    };
 }
 
 function screenUser(id: number, viewerId: number, note = ''): Reply {
@@ -371,6 +395,14 @@ function applyAction(viewerId: number, action: string, firstName = 'Вань!'):
             const r = findByTg(viewerId);
             if (!r) return { text: NOT_MEMBER };
             return screenTopics(r.person, 'topic', SELF_BACK);
+        }
+        if (a === 'cheat') {
+            const back = [[SELF_BACK]];
+            return {
+                text: '🧾 Шпаргалки скоро появятся',
+                rich: `<h3>🧾 Шпаргалки</h3>\n<p>Скоро появятся.</p>\n${richButtons(back)}`,
+                keyboard: { inline_keyboard: back },
+            };
         }
         return screenSelf(viewerId);
     }

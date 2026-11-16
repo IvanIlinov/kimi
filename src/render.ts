@@ -8,7 +8,8 @@ import {
     planTasks,
     planTopics,
     sgn,
-    weekPct
+    weekPct,
+    progressPct
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
 import type { WeekStat, JournalEntry } from './store.ts';
@@ -208,4 +209,53 @@ export function renderArenaRich(
         .join('\n');
 
     return ['<h3>✨ Арена</h3>', leader, body, buttonsHtml].filter(Boolean).join('\n');
+}
+
+// ---- Главная ученика (Rich) ----
+const BAR_CELLS = 20;
+const TOPIC_RANGE = 3; // шкала по заданиям: ±3 от плана — край
+const TASK_RANGE = 50; // шкала по задачам: ±50 от плана — край
+
+// Полоска прогресса 0..100%
+const pctBar = (pct: number) => {
+    const n = Math.max(0, Math.min(BAR_CELLS, Math.round((pct / 100) * BAR_CELLS)));
+    return '▰'.repeat(n) + '▱'.repeat(BAR_CELLS - n);
+};
+
+// Шкала отклонения: ┃ — план, вправо впереди, влево позади
+const devBar = (dev: number, range: number) => {
+    const half = BAR_CELLS / 2;
+    const n = Math.round(Math.min(1, Math.abs(dev) / range) * half);
+    const left = dev < 0 ? '▰'.repeat(n).padStart(half, '▱') : '▱'.repeat(half);
+    const right = dev > 0 ? '▰'.repeat(n).padEnd(half, '▱') : '▱'.repeat(half);
+    return `${left}┃${right}`;
+};
+
+export function renderStudentRich(
+    r: Ranked,
+    week: WeekStat | undefined,
+    now: Date,
+    buttonsHtml: string,
+): string {
+    const p = r.person;
+    const w = week ?? { userId: p.id, tasks: 0, topics: 0, active: false };
+    const lead = leadParts(p, now);
+    const goal = Math.round((w.tasks / WEEK_GOAL) * 100); // выполнение недели, может быть > 100
+    const gain = Math.round(weekPct(w)); // прирост прогресса за неделю
+    const dot = (ok: boolean) => (ok ? '🟢' : '🔴');
+
+    const devLine = (label: string, dev: number | null, range: number) =>
+        dev === null
+            ? `<p>${label}: ✅ 100%</p>`
+            : `<p>${label}: ${devBar(dev, range)} ${dot(dev >= 0)} ${sgn(dev)}</p>`;
+
+    return [
+        `<h3>🎯 ${escHtml(cap(p.name))} · 🎖${r.place}</h3>`,
+        `<p>Глобально: ${pctBar(r.pct)} ${r.pct}% ${dot(onTrack(r, now))}</p>`,
+        `<p>Неделя: ${pctBar(Math.min(goal, 100))} ${goal}% ${sgn(gain)}%</p>`,
+        `<p>📒 ${p.exam ?? '—'} пробник · 📒 ${p.studied.length} заданий · 📒 ${p.tasksTotal} задач</p>`,
+        devLine('Задания', lead.topics, TOPIC_RANGE),
+        devLine('Задачи', lead.tasks, TASK_RANGE),
+        buttonsHtml,
+    ].join('\n');
 }
