@@ -120,24 +120,24 @@ const adminUserRows = (id: number): Btn[][] => [
 const homeRows = (viewerId: number): Btn[][] =>
     isAdmin(viewerId) ? ADMIN_ROWS : isGuest(viewerId) ? [[ARENA_BACK]] : [[SELF_BACK]];
 
-// Кнопки арены: по одной на участника топ-10 и на смотрящего
-function arenaRows(ranked: Ranked[], viewerId: number): Btn[][] {
+// Кнопки арены: по одной на участника топ-10 и на смотрящего, отдельно нижние вкладки
+function arenaRows(ranked: Ranked[], viewerId: number): { names: Btn[][]; tabs: Btn[] | null } {
     const top = ranked.slice(0, 10);
     const mine = ranked.find((r) => r.person.tgId === viewerId);
     const shown = mine && !top.includes(mine) ? [...top, mine] : top;
 
-    const rows: Btn[][] = [];
+    const names: Btn[][] = [];
     for (let i = 0; i < shown.length; i += 3) {
-        rows.push(
+        names.push(
             shown.slice(i, i + 3).map((r) => ({
                 text: cap(r.person.name),
                 callback_data: `show:user:${r.person.id}`,
             })),
         );
     }
-    if (isAdmin(viewerId)) rows.push(ADMIN_TABS);
-    else if (!isGuest(viewerId)) rows.push([SELF_BACK]);
-    return rows;
+
+    const tabs = isAdmin(viewerId) ? ADMIN_TABS : !isGuest(viewerId) ? [SELF_BACK] : null;
+    return { names, tabs };
 }
 
 // ---- Статусы заданий ----
@@ -164,14 +164,17 @@ function screenArena(viewerId: number, note = '', mode: ArenaMode = 'global'): R
         { text: mode === 'month' ? '• 💯' : '💯', callback_data: 'show:arena:month' },
     ];
 
-    const rich = renderArenaRich(
-        ranked,
-        viewerId,
-        week,
-        richButtons([modeRow]),
-        richButtons(arenaRows(ranked, viewerId)),
-        mode,
-    );
+    // Кнопки с именами, отступ, затем вкладки основного меню
+    const { names, tabs } = arenaRows(ranked, viewerId);
+    const nav = [
+        richButtons(names),
+        tabs ? '<p>&nbsp;</p>' : '',
+        tabs ? richButtons([tabs]) : '',
+    ]
+        .filter(Boolean)
+        .join('\n');
+
+    const rich = renderArenaRich(ranked, viewerId, week, richButtons([modeRow]), nav, mode);
     return withNote(note, rich);
 }
 
