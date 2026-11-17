@@ -281,11 +281,11 @@ export function renderStudentRich(
     const hr = '<hr>';
 
     const notes = [
-        `Нарешано ${w.tasks} ${plural(w.tasks, ['задача', 'задачи', 'задач'])} из ${WEEK_GOAL}`,
-        `Изучили ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} из ${m.topics}`,
+        `Решил ${w.tasks} ${plural(w.tasks, ['задачу', 'задачи', 'задач'])} за эту неделю`,
+        `Изучил ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} (по плану ${m.topics})`,
         p.exam === null
-            ? `Пробник пока не внесён, цель ${m.exam} ${plural(m.exam, ['балл', 'балла', 'баллов'])}`
-            : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])} из ${m.exam}`,
+            ? `Пробник пока не внесён (по плану ${m.exam})`
+            : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])}!`,
     ].join('<br>');
 
     return [
