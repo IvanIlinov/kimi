@@ -4,13 +4,13 @@ import {
     TASKS_GOAL,
     TOPICS_TOTAL,
     WEEK_GOAL,
+    isSleeping,
     leadParts,
     monthGoal,
     planTasks,
     planTopics,
     sgn,
     weekPct,
-    isSleeping
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
 import type { JournalEntry, WeekStat } from './store.ts';
@@ -21,6 +21,7 @@ export const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&l
 // ---- Общие кирпичики ----
 
 const BLANK = '<p>&nbsp;</p>';
+const ARENA_CELLS = 10;
 
 const tr = (cells: string[], align: string[], bold = false) =>
     `<tr>${cells.map((c, i) => `<td align="${align[i]}">${bold ? `<b>${c}</b>` : c}</td>`).join('')}</tr>`;
@@ -48,10 +49,17 @@ const onTrack = (r: Ranked, now: Date) => {
     return (lead.topics ?? 0) >= 0 && (lead.tasks ?? 0) >= 0;
 };
 
-// Успеваемость по целям месяца
+// Топ-10 и сам смотрящий, если он не в топе
+const visible = (ranked: Ranked[], viewerId: number | undefined) => {
+    const top = ranked.slice(0, 10);
+    const mine = ranked.find((r) => r.person.tgId === viewerId);
+    return mine && !top.includes(mine) ? [...top, mine] : top;
+};
 
-// Насколько участник укладывается в цели месяца. Веса те же, что в общем прогрессе (40/40/20).
-// Каждая доля ограничена единицей: 100% значит, что все три цели месяца выполнены.
+// ---- Успеваемость по целям месяца ----
+
+// Веса те же, что в общем прогрессе (40/40/20). Каждая доля ограничена единицей:
+// 100% значит, что все три цели месяца выполнены.
 const monthPct = (r: Ranked, now: Date) => {
     const m = monthGoal(now);
     const p = r.person;
@@ -95,117 +103,6 @@ const monthRows = (
         })
         .join('');
 
-
-// ---- Арена ----
-
-const ARENA_CELLS = 10;
-
-export type ArenaMode = 'global' | 'week' | 'month';
-
-export function renderArenaRich(
-    ranked: Ranked[],
-    viewerId: number | undefined,
-    week: Map<number, WeekStat>,
-    modeHtml: string,
-    navHtml: string,
-    mode: ArenaMode = 'week',
-    now: Date = new Date(),
-): string {
-    if (ranked.length === 0) {
-        return ['<h3>✨ Арена</h3>', '<p>Пока никого нет.</p>', BLANK, modeHtml, BLANK, navHtml].join('\n');
-    }
-
-    const top = ranked.slice(0, 10);
-    const mine = ranked.find((r) => r.person.tgId === viewerId);
-    const shown = mine && !top.includes(mine) ? [...top, mine] : top;
-
-    let leader = '';
-    let body: string;
-
-    if (mode === 'week') {
-        // Лидер недели: по заданиям, при равенстве по задачам
-        const active = [...week.values()].filter((s) => s.active);
-        const best = [...active].sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
-        const bestName = best ? ranked.find((r) => r.person.id === best.userId)?.person.name : undefined;
-        if (best && bestName) {
-            leader = `<h3>👑 Лидер недели</h3>${table(
-                tr(
-                    [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
-                    ['left', 'right', 'right', 'right'],
-                    true,
-                ),
-            )}`;
-        }
-
-        const rows = shown
-            .map((r) => {
-                const w = week.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
-                return { name: escHtml(cap(r.person.name)), w, goal: Math.round((w.tasks / WEEK_GOAL) * 100) };
-            })
-            .sort((a, b) => b.w.tasks - a.w.tasks || b.w.topics - a.w.topics)
-            .map((x) =>
-                tr(
-                    [x.name, pctBar(x.goal, ARENA_CELLS), sgn(x.w.tasks), sgn(x.w.topics)],
-                    ['left', 'center', 'right', 'right'],
-                ),
-            )
-            .join('');
-        body = table(rows);
-    } else {
-        // Лидер года: первое место рейтинга.
-        // Имя, глобальный прогресс, успеваемость по целям месяца, пробник, задания, задачи
-        const r = ranked[0];
-        const p = r.person;
-        leader = `<h3>👑 Лидер года</h3>${table(
-            tr(
-                [
-                    escHtml(cap(p.name)),
-                    `${r.pct}%`,
-                    `${monthPct(r, now)}%`,
-                    `${p.exam ?? '—'}`,
-                    `${p.studied.length}`,
-                    `${p.tasksTotal}`,
-                ],
-                ['left', 'center', 'center', 'center', 'center', 'center'],
-            ),
-        )}`;
-
-        if (mode === 'global') {
-            const rows = shown
-                .map((x) =>
-                    tr(
-                        [
-                            escHtml(cap(x.person.name)),
-                            pctBar(x.pct, ARENA_CELLS),
-                            `${x.pct}%`,
-                            onTrack(x, now) ? '🟢' : '🔴',
-                        ],
-                        ['left', 'center', 'right', 'left'],
-                    ),
-                )
-                .join('');
-            body = table(rows);
-        } else {
-            // Месяц: успеваемость каждого по целям месяца, без номеров мест
-            body = table(monthRows(shown, now, undefined, false));
-        }
-    }
-
-    return [
-        '<h3>✨ Арена</h3>',
-        BLANK,
-        leader,
-        leader ? BLANK : '',
-        body,
-        BLANK,
-        modeHtml,
-        BLANK,
-        navHtml,
-    ]
-        .filter(Boolean)
-        .join('\n');
-}
-
 // ---- Главная админа ----
 
 export function renderAdminHomeRich(
@@ -222,6 +119,115 @@ export function renderAdminHomeRich(
         BLANK,
         buttonsHtml,
     ].join('\n');
+}
+
+// ---- Арена: глобально и успеваемость ----
+
+export type ArenaMode = 'global' | 'month';
+
+export function renderArenaRich(
+    ranked: Ranked[],
+    viewerId: number | undefined,
+    modeHtml: string,
+    navHtml: string,
+    mode: ArenaMode = 'month',
+    now: Date = new Date(),
+): string {
+    if (ranked.length === 0) {
+        return ['<h3>✨ Арена</h3>', '<p>Пока никого нет.</p>', BLANK, modeHtml, BLANK, navHtml].join('\n');
+    }
+
+    const shown = visible(ranked, viewerId);
+
+    // Лидер года: первое место рейтинга.
+    // Имя, глобальный прогресс, успеваемость по целям месяца, пробник, задания, задачи
+    const r = ranked[0];
+    const p = r.person;
+    const leader = `<h3>👑 Лидер года</h3>${table(
+        tr(
+            [
+                escHtml(cap(p.name)),
+                `${r.pct}%`,
+                `${monthPct(r, now)}%`,
+                `${p.exam ?? '—'}`,
+                `${p.studied.length}`,
+                `${p.tasksTotal}`,
+            ],
+            ['left', 'center', 'center', 'center', 'center', 'center'],
+        ),
+    )}`;
+
+    let body: string;
+    if (mode === 'global') {
+        body = table(
+            shown
+                .map((x) =>
+                    tr(
+                        [
+                            escHtml(cap(x.person.name)),
+                            pctBar(x.pct, ARENA_CELLS),
+                            `${x.pct}%`,
+                            onTrack(x, now) ? '🟢' : '🔴',
+                        ],
+                        ['left', 'center', 'right', 'left'],
+                    ),
+                )
+                .join(''),
+        );
+    } else {
+        body = table(monthRows(shown, now, undefined, false));
+    }
+
+    return ['<h3>✨ Арена</h3>', BLANK, leader, BLANK, body, BLANK, modeHtml, BLANK, navHtml].join('\n');
+}
+
+// ---- Неделя ----
+
+export function renderWeekRich(
+    ranked: Ranked[],
+    viewerId: number | undefined,
+    week: Map<number, WeekStat>,
+    navHtml: string,
+): string {
+    if (ranked.length === 0) {
+        return ['<h3>📅 Неделя</h3>', '<p>Пока никого нет.</p>', BLANK, navHtml].join('\n');
+    }
+
+    const shown = visible(ranked, viewerId);
+
+    // Лидер недели: по заданиям, при равенстве по задачам
+    const active = [...week.values()].filter((s) => s.active);
+    const best = [...active].sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
+    const bestName = best ? ranked.find((r) => r.person.id === best.userId)?.person.name : undefined;
+    const leader =
+        best && bestName
+            ? `<h3>👑 Лидер недели</h3>${table(
+                tr(
+                    [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
+                    ['left', 'right', 'right', 'right'],
+                    true,
+                ),
+            )}`
+            : '';
+
+    // Полоска выполнения (задачи / норма), затем задачи и задания за неделю
+    const rows = shown
+        .map((r) => {
+            const w = week.get(r.person.id) ?? { userId: r.person.id, tasks: 0, topics: 0, active: false };
+            return { name: escHtml(cap(r.person.name)), w, goal: Math.round((w.tasks / WEEK_GOAL) * 100) };
+        })
+        .sort((a, b) => b.w.tasks - a.w.tasks || b.w.topics - a.w.topics)
+        .map((x) =>
+            tr(
+                [x.name, pctBar(x.goal, ARENA_CELLS), sgn(x.w.tasks), sgn(x.w.topics)],
+                ['left', 'center', 'right', 'right'],
+            ),
+        )
+        .join('');
+
+    return ['<h3>📅 Неделя</h3>', BLANK, leader, leader ? BLANK : '', table(rows), BLANK, navHtml]
+        .filter(Boolean)
+        .join('\n');
 }
 
 // ---- Справка ----
@@ -251,7 +257,7 @@ export function renderHelpRich(now: Date, buttonsHtml: string): string {
     ].join('\n');
 }
 
-// ---- Главная ученика ----
+// ---- Профиль ученика ----
 
 const GLOBAL_CELLS = 6;
 const WEEK_CELLS = 10;

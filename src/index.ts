@@ -10,19 +10,20 @@ import {
     setReaction,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
-import { rank, WEEK_GOAL } from './logic.ts';
+import { rank } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import {
     cap,
     escHtml,
+    renderAdminHomeRich,
     renderArenaRich,
     renderHelpRich,
     renderJournalRich,
     renderStudentRich,
-    renderAdminHomeRich
+    renderWeekRich,
 } from './render.ts';
 import type { ArenaMode } from './render.ts';
-import { getJournal, getPersons, getWeekStats, getLastActivity } from './store.ts';
+import { getJournal, getLastActivity, getPersons, getWeekStats } from './store.ts';
 import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 import { startWeeklySummary } from './weekly.ts';
@@ -33,7 +34,7 @@ type Btn = { text: string; callback_data: string };
 type Reply = string; // готовый Rich-HTML
 
 const NOT_MEMBER = 'В Арене супер интересно!';
-const GUEST_VIEW = -1;
+const BLANK = '<p>&nbsp;</p>';
 
 const ADMIN_HELP = [
     '/add <tg_id> <имя>',
@@ -47,6 +48,8 @@ const ADMIN_HELP = [
 ];
 
 const ICON: Record<TopicStatus, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
+
+const GUEST_VIEW = -1; // фиктивный id для режима «глазами гостя»: не участник и не админ
 
 const isAdmin = (id: number) => ADMIN_IDS.includes(id);
 const all = () => rank(getPersons());
@@ -77,10 +80,29 @@ const notice = (text: string, rows: Btn[][] = []) =>
 const addRow = (base: string): Btn[] =>
     [-1, 1, 5, 10].map((n) => ({ text: n > 0 ? `+${n}` : `${n}`, callback_data: `${base}:${n}` }));
 
-const ARENA_BACK: Btn = { text: '← Арена', callback_data: 'show:arena' };
 const SELF_BACK: Btn = { text: '← Профиль', callback_data: 'show:me' };
 
-// Главная ученика
+// ---- Нижнее меню (только эмодзи, своё у каждой роли) ----
+
+const T_HOME: Btn = { text: '🏠', callback_data: 'adm:home' };
+const T_PROFILE: Btn = { text: '👤', callback_data: 'show:me' };
+const T_WEEK: Btn = { text: '📅', callback_data: 'show:week' };
+const T_LOG: Btn = { text: '📒', callback_data: 'adm:log' };
+const T_ARENA: Btn = { text: '✨', callback_data: 'show:arena' };
+const T_MEMBERS: Btn = { text: '👥', callback_data: 'show:members' };
+
+const MENU_ADMIN: Btn[] = [T_HOME, T_WEEK, T_LOG, T_ARENA, T_MEMBERS];
+const MENU_STUDENT: Btn[] = [T_PROFILE, T_WEEK, T_ARENA, T_MEMBERS];
+const MENU_GUEST: Btn[] = [T_WEEK, T_ARENA, T_MEMBERS];
+
+const menuFor = (viewerId: number): Btn[] =>
+    isAdmin(viewerId) ? MENU_ADMIN : isGuest(viewerId) ? MENU_GUEST : MENU_STUDENT;
+const menuHtml = (viewerId: number) => richButtons([menuFor(viewerId)]);
+
+// Куда вести человека из служебных сообщений
+const homeRows = (viewerId: number): Btn[][] => [menuFor(viewerId)];
+
+// Профиль ученика: добавление задач, задания и шпаргалки
 const STUDENT_ROWS: Btn[][] = [
     [
         { text: '+1', callback_data: 'add:1' },
@@ -89,55 +111,36 @@ const STUDENT_ROWS: Btn[][] = [
         { text: '+10', callback_data: 'add:10' },
     ],
     [
-        { text: '📘 Задания', callback_data: 'show:topics' },
-        { text: '✨ Арена', callback_data: 'show:arena' },
-        { text: '🧾 Шпаргалки', callback_data: 'show:cheat' },
+        { text: '📘', callback_data: 'show:topics' },
+        { text: '🧾', callback_data: 'show:cheat' },
     ],
 ];
-
-// Нижние вкладки админа
-const ADMIN_TABS: Btn[] = [
-    { text: '🏠 Главная', callback_data: 'adm:home' },
-    { text: '📒 Журнал', callback_data: 'adm:log' },
-    { text: '✨ Арена', callback_data: 'show:arena' },
-];
-const ADMIN_ROWS: Btn[][] = [ADMIN_TABS];
-
-// Под профилем чужого участника (для обычного ученика)
-const BACK_ROWS: Btn[][] = [[ARENA_BACK], [{ text: '👤 Профиль', callback_data: 'show:me' }]];
 
 // Под профилем участника для админа
 const adminUserRows = (id: number): Btn[][] => [
     addRow(`a:${id}:add`),
     [
-        { text: '📘 Задания', callback_data: `a:${id}:topics` },
-        { text: '🔄 Обновить', callback_data: `a:${id}:me` },
+        { text: '📘', callback_data: `a:${id}:topics` },
+        { text: '🔄', callback_data: `a:${id}:me` },
     ],
-    [ARENA_BACK],
 ];
 
-// Куда вести человека из служебных сообщений
-const homeRows = (viewerId: number): Btn[][] =>
-    isAdmin(viewerId) ? ADMIN_ROWS : isGuest(viewerId) ? [[ARENA_BACK]] : [[SELF_BACK]];
-
-// Кнопки арены: по одной на участника топ-10 и на смотрящего, отдельно нижние вкладки
-function arenaRows(ranked: Ranked[], viewerId: number): { names: Btn[][]; tabs: Btn[] | null } {
+// Кнопки с именами: топ-10 и сам смотрящий, по три в ряд
+function memberRows(ranked: Ranked[], viewerId: number): Btn[][] {
     const top = ranked.slice(0, 10);
     const mine = ranked.find((r) => r.person.tgId === viewerId);
     const shown = mine && !top.includes(mine) ? [...top, mine] : top;
 
-    const names: Btn[][] = [];
+    const rows: Btn[][] = [];
     for (let i = 0; i < shown.length; i += 3) {
-        names.push(
+        rows.push(
             shown.slice(i, i + 3).map((r) => ({
                 text: cap(r.person.name),
                 callback_data: `show:user:${r.person.id}`,
             })),
         );
     }
-
-    const tabs = isAdmin(viewerId) ? ADMIN_TABS : !isGuest(viewerId) ? [SELF_BACK] : null;
-    return { names, tabs };
+    return rows;
 }
 
 // ---- Статусы заданий ----
@@ -153,36 +156,36 @@ const nextStatus = (s: TopicStatus): TopicStatus =>
 
 // ---- Экраны ----
 
-function screenArena(viewerId: number, note = '', mode: ArenaMode = 'week'): Reply {
-    const ranked = all();
-    const week = new Map(getWeekStats().map((s) => [s.userId, s]));
-
-    // Переключатель режима: только эмодзи
+function screenArena(viewerId: number, note = '', mode: ArenaMode = 'month'): Reply {
     const modeRow: Btn[] = [
         { text: '🌍', callback_data: 'show:arena:global' },
-        { text: '📅', callback_data: 'show:arena:week' },
         { text: '💯', callback_data: 'show:arena:month' },
     ];
-
-    // Кнопки с именами, отступ, затем вкладки основного меню
-    const { names, tabs } = arenaRows(ranked, viewerId);
-    const nav = [
-        richButtons(names),
-        tabs ? '<p>&nbsp;</p>' : '',
-        tabs ? richButtons([tabs]) : '',
-    ]
-        .filter(Boolean)
-        .join('\n');
-
-    const rich = renderArenaRich(ranked, viewerId, week, richButtons([modeRow]), nav, mode);
+    const rich = renderArenaRich(all(), viewerId, richButtons([modeRow]), menuHtml(viewerId), mode);
     return withNote(note, rich);
 }
 
-// Главная админа: приветствие и индикатор недели по каждому участнику (в порядке рейтинга)
-// 🟢 — норматив по задачам выполнен, 🟡 — хотя бы одна задача, 🔴 — не приступали
+function screenWeek(viewerId: number, note = ''): Reply {
+    const week = new Map(getWeekStats().map((s) => [s.userId, s]));
+    return withNote(note, renderWeekRich(all(), viewerId, week, menuHtml(viewerId)));
+}
+
+function screenMembers(viewerId: number, note = ''): Reply {
+    const html = [
+        '<h3>👥 Участники</h3>',
+        BLANK,
+        richButtons(memberRows(all(), viewerId)),
+        BLANK,
+        menuHtml(viewerId),
+    ]
+        .filter(Boolean)
+        .join('\n');
+    return withNote(note, html);
+}
+
 // Главная админа: цели месяца и успеваемость каждого участника
 function screenAdminHome(firstName: string): Reply {
-    return renderAdminHomeRich(firstName, all(), richButtons(ADMIN_ROWS), getLastActivity());
+    return renderAdminHomeRich(firstName, all(), richButtons([MENU_ADMIN]), getLastActivity());
 }
 
 const JOURNAL_PAGE = 15;
@@ -196,30 +199,37 @@ function screenAdminLog(offset = 0): Reply {
     if (offset > 0) nav.push({ text: '◀ Новее', callback_data: `adm:log:${Math.max(0, offset - JOURNAL_PAGE)}` });
     if (hasMore) nav.push({ text: 'Старее ▶', callback_data: `adm:log:${offset + JOURNAL_PAGE}` });
 
-    return renderJournalRich(entries, richButtons(nav.length ? [nav] : []), richButtons(ADMIN_ROWS));
+    return renderJournalRich(entries, richButtons(nav.length ? [nav] : []), richButtons([MENU_ADMIN]));
 }
 
 function screenSelf(viewerId: number, note = ''): Reply {
     const r = findByTg(viewerId);
     if (!r) return notice(NOT_MEMBER);
     const week = getWeekStats().find((s) => s.userId === r.person.id);
-    return withNote(note, renderStudentRich(r, week, new Date(), richButtons(STUDENT_ROWS)));
+    const buttons = [richButtons(STUDENT_ROWS), BLANK, menuHtml(viewerId)].join('\n');
+    return withNote(note, renderStudentRich(r, week, new Date(), buttons));
 }
 
 function screenUser(id: number, viewerId: number, note = ''): Reply {
     const r = findById(id);
-    if (!r) return notice('Участник не найден.');
+    if (!r) return notice('Участник не найден.', homeRows(viewerId));
     const week = getWeekStats().find((s) => s.userId === r.person.id);
 
     const admin = isAdmin(viewerId);
-    const rows = admin ? adminUserRows(id) : isGuest(viewerId) ? [[ARENA_BACK]] : BACK_ROWS;
-    const buttons = (admin ? '<p>👑 Режим админа</p>\n' : '') + richButtons(rows);
+    const buttons = [
+        admin ? '<p>👑 Режим админа</p>' : '',
+        admin ? richButtons(adminUserRows(id)) : '',
+        admin ? BLANK : '',
+        menuHtml(viewerId),
+    ]
+        .filter(Boolean)
+        .join('\n');
 
     return withNote(note, renderStudentRich(r, week, new Date(), buttons));
 }
 
 // prefix определяет, чьи задания меняются: 'topic' или 'a:<id>:topic'
-function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = ''): Reply {
+function screenTopics(p: Person, prefix: string, back: Btn, viewerId: number, note = '', title = ''): Reply {
     // Сетка заданий: 27 кнопок по 8 в ряд
     const cells: Btn[] = Array.from({ length: 27 }, (_, i) => {
         const n = i + 1;
@@ -231,10 +241,12 @@ function screenTopics(p: Person, prefix: string, back: Btn, note = '', title = '
     return [
         `<h3>📘 Задания${escHtml(title)}</h3>`,
         note ? `<p>${escHtml(note)}</p>` : '',
-        '<p>&nbsp;</p>',
+        BLANK,
         richButtons(grid),
-        '<p>&nbsp;</p>',
+        BLANK,
         richButtons([[back]]),
+        BLANK,
+        menuHtml(viewerId),
     ]
         .filter(Boolean)
         .join('\n');
@@ -263,36 +275,43 @@ function applyChange(
     }
 }
 
+// Что видит гость
+const GUEST_OK = ['arena', 'user', 'week', 'members'];
+
 // Единое место, где меняются данные и собирается ответ на действие из кнопки или текста
 function applyAction(viewerId: number, action: string, firstName: string): Reply {
     const [kind, a, b, c] = action.split(':');
 
     if (isAdmin(viewerId) && (kind === 'adm' || (kind === 'show' && (a === undefined || a === 'me')))) {
         if (kind === 'adm' && a === 'log') return screenAdminLog(Number(b) || 0);
-        if (kind === 'adm' && a === 'arena') return screenArena(viewerId);
-        if (kind === 'adm' || kind === 'show') return screenAdminHome(firstName);
+        return screenAdminHome(firstName);
     }
 
-    // Гость видит только арену и профили участников, всё остальное возвращает в арену
-    if (isGuest(viewerId) && !(kind === 'show' && (a === 'arena' || a === 'user'))) {
+    // Гость видит только арену, неделю и участников, всё остальное возвращает в арену
+    if (isGuest(viewerId) && !(kind === 'show' && GUEST_OK.includes(a ?? ''))) {
         return screenArena(viewerId, kind === 'show' ? '' : 'Это доступно только участникам рейтинга.');
     }
 
-    if (a === 'help') return renderHelpRich(new Date(), richButtons([[SELF_BACK]]));
+    if (a === 'help') return renderHelpRich(new Date(), menuHtml(viewerId));
 
     if (kind === 'show') {
-        if (a === 'arena') {
-            const mode: ArenaMode = b === 'global' ? 'global' : b === 'month' ? 'month' : 'week';
-            return screenArena(viewerId, '', mode);
-        }
+        if (a === 'arena') return screenArena(viewerId, '', b === 'global' ? 'global' : 'month');
+        if (a === 'week') return screenWeek(viewerId);
+        if (a === 'members') return screenMembers(viewerId);
         if (a === 'user') return screenUser(Number(b), viewerId);
         if (a === 'topics') {
             const r = findByTg(viewerId);
             if (!r) return notice(NOT_MEMBER);
-            return screenTopics(r.person, 'topic', SELF_BACK);
+            return screenTopics(r.person, 'topic', SELF_BACK, viewerId);
         }
         if (a === 'cheat') {
-            return `<h3>🧾 Шпаргалки</h3>\n<p>Скоро появятся.</p>\n${richButtons([[SELF_BACK]])}`;
+            return [
+                '<h3>🧾 Шпаргалки</h3>',
+                '<p>Скоро появятся.</p>',
+                richButtons([[SELF_BACK]]),
+                BLANK,
+                menuHtml(viewerId),
+            ].join('\n');
         }
         return screenSelf(viewerId);
     }
@@ -303,7 +322,7 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         if (!r) return notice(NOT_MEMBER);
         const err = applyChange(r.person.id, kind, a, viewerId);
         if (kind === 'topic') {
-            return screenTopics(findById(r.person.id)!.person, 'topic', SELF_BACK, warn(err));
+            return screenTopics(findById(r.person.id)!.person, 'topic', SELF_BACK, viewerId, warn(err));
         }
         return screenSelf(viewerId, warn(err));
     }
@@ -313,17 +332,17 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         if (!isAdmin(viewerId)) return notice('Недостаточно прав.');
         const id = Number(a);
         const target = findById(id);
-        if (!target) return notice('Участник не найден.');
+        if (!target) return notice('Участник не найден.', homeRows(viewerId));
 
         const back: Btn = { text: '← Игрок', callback_data: `a:${id}:me` };
         const title = `: ${target.person.name}`;
 
         if (b === 'me') return screenUser(id, viewerId);
-        if (b === 'topics') return screenTopics(target.person, `a:${id}:topic`, back, '', title);
+        if (b === 'topics') return screenTopics(target.person, `a:${id}:topic`, back, viewerId, '', title);
 
         const err = applyChange(id, b, c, viewerId);
         if (b === 'topic') {
-            return screenTopics(findById(id)!.person, `a:${id}:topic`, back, warn(err), title);
+            return screenTopics(findById(id)!.person, `a:${id}:topic`, back, viewerId, warn(err), title);
         }
         return screenUser(id, viewerId, warn(err));
     }
@@ -368,7 +387,7 @@ function adminCommand(viewerId: number, text: string): Reply | null {
                 return [
                     '<h3>Команды админа</h3>',
                     `<p>${ADMIN_HELP.map(escHtml).join('<br>')}</p>`,
-                    richButtons(ADMIN_ROWS),
+                    richButtons([MENU_ADMIN]),
                 ].join('\n');
         }
     } catch (e) {
@@ -397,7 +416,7 @@ function actionFromText(text: string): string {
 const panel = new Map<number, number>(); // chatId -> message_id единственной панели
 const keyboardCleared = new Set<number>(); // чаты, где уже убрали старую reply-клавиатуру
 
-// adminTgId -> tgId участника, которого админ сейчас смотрит
+// adminTgId -> tgId участника (или GUEST_VIEW), которого админ сейчас смотрит
 const viewAsMap = new Map<number, number>();
 
 // Ответ с учётом режима просмотра. В режиме просмотра изменения отключены.
