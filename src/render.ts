@@ -253,6 +253,7 @@ export function renderHelpRich(now: Date, buttonsHtml: string): string {
         '<hr>',
         '<p><b>⚡️ Сегодня</b></p>',
         `<p>• заданий ${planTopics(now)}<br>• задач ${planTasks(now)}</p>`,
+        BLANK,
         buttonsHtml,
     ].join('\n');
 }
@@ -299,6 +300,7 @@ export function renderStudentRich(
         `<p>📗 ${monthBar(p.studied.length, m.topics)} ${p.studied.length}/${m.topics}</p>`,
         `<p>📘 ${monthBar(p.tasksTotal, m.tasks)} ${p.tasksTotal}/${m.tasks}</p>`,
         `<p>📕 ${monthBar(p.exam ?? 0, m.exam)} ${p.exam ?? '—'}/${m.exam}</p>`,
+        BLANK,
         buttonsHtml,
     ].join('\n');
 }
