@@ -78,21 +78,20 @@ const notice = (text: string, rows: Btn[][] = []) =>
     [`<p>${escHtml(text)}</p>`, richButtons(rows)].filter(Boolean).join('\n');
 
 const addRow = (base: string): Btn[] =>
-    [-1, 1, 5, 10].map((n) => ({ text: n > 0 ? `+${n}` : `${n}`, callback_data: `${base}:${n}` }));
-
-const SELF_BACK: Btn = { text: '← Профиль', callback_data: 'show:me' };
+    [-1, 1, 3, 5, 10].map((n) => ({ text: n > 0 ? `+${n}` : `${n}`, callback_data: `${base}:${n}` }));
 
 // ---- Нижнее меню (только эмодзи, своё у каждой роли) ----
 
 const T_HOME: Btn = { text: '🏠', callback_data: 'adm:home' };
 const T_PROFILE: Btn = { text: '👤', callback_data: 'show:me' };
 const T_WEEK: Btn = { text: '📅', callback_data: 'show:week' };
+const T_TOPICS: Btn = { text: '📘', callback_data: 'show:topics' };
 const T_LOG: Btn = { text: '📒', callback_data: 'adm:log' };
 const T_ARENA: Btn = { text: '✨', callback_data: 'show:arena' };
 const T_MEMBERS: Btn = { text: '👥', callback_data: 'show:members' };
 
 const MENU_ADMIN: Btn[] = [T_HOME, T_WEEK, T_LOG, T_ARENA, T_MEMBERS];
-const MENU_STUDENT: Btn[] = [T_PROFILE, T_WEEK, T_ARENA, T_MEMBERS];
+const MENU_STUDENT: Btn[] = [T_PROFILE, T_WEEK, T_TOPICS, T_ARENA, T_MEMBERS];
 const MENU_GUEST: Btn[] = [T_WEEK, T_ARENA, T_MEMBERS];
 
 const menuFor = (viewerId: number): Btn[] =>
@@ -102,23 +101,8 @@ const menuHtml = (viewerId: number) => richButtons([menuFor(viewerId)]);
 // Куда вести человека из служебных сообщений
 const homeRows = (viewerId: number): Btn[][] => [menuFor(viewerId)];
 
-// Профиль ученика: добавление задач, задания и шпаргалки
-const STUDENT_ROWS: Btn[][] = [
-    [
-        { text: '+1', callback_data: 'add:1' },
-        { text: '+3', callback_data: 'add:3' },
-        { text: '+5', callback_data: 'add:5' },
-        { text: '+10', callback_data: 'add:10' },
-    ],
-    [
-        { text: '📘', callback_data: 'show:topics' },
-        { text: '🧾', callback_data: 'show:cheat' },
-    ],
-];
-
 // Под профилем участника для админа
 const adminUserRows = (id: number): Btn[][] => [
-    addRow(`a:${id}:add`),
     [
         { text: '📘', callback_data: `a:${id}:topics` },
         { text: '🔄', callback_data: `a:${id}:me` },
@@ -206,8 +190,7 @@ function screenSelf(viewerId: number, note = ''): Reply {
     const r = findByTg(viewerId);
     if (!r) return notice(NOT_MEMBER);
     const week = getWeekStats().find((s) => s.userId === r.person.id);
-    const buttons = [richButtons(STUDENT_ROWS), BLANK, menuHtml(viewerId)].join('\n');
-    return withNote(note, renderStudentRich(r, week, new Date(), buttons));
+    return withNote(note, renderStudentRich(r, week, new Date(), menuHtml(viewerId)));
 }
 
 function screenUser(id: number, viewerId: number, note = ''): Reply {
@@ -228,8 +211,17 @@ function screenUser(id: number, viewerId: number, note = ''): Reply {
     return withNote(note, renderStudentRich(r, week, new Date(), buttons));
 }
 
-// prefix определяет, чьи задания меняются: 'topic' или 'a:<id>:topic'
-function screenTopics(p: Person, prefix: string, back: Btn, viewerId: number, note = '', title = ''): Reply {
+// prefix определяет, чьи задания меняются: 'topic' или 'a:<id>:topic'.
+// addBase — основа кнопок добавления задач: 'add' или 'a:<id>:add'. back — кнопка назад (если нужна).
+function screenTopics(
+    p: Person,
+    prefix: string,
+    addBase: string,
+    back: Btn | null,
+    viewerId: number,
+    note = '',
+    title = '',
+): Reply {
     // Сетка заданий: 27 кнопок по 8 в ряд
     const cells: Btn[] = Array.from({ length: 27 }, (_, i) => {
         const n = i + 1;
@@ -241,11 +233,12 @@ function screenTopics(p: Person, prefix: string, back: Btn, viewerId: number, no
     return [
         `<h3>📘 Задания${escHtml(title)}</h3>`,
         note ? `<p>${escHtml(note)}</p>` : '',
+        richButtons([addRow(addBase)]),
         BLANK,
         richButtons(grid),
         BLANK,
-        richButtons([[back]]),
-        BLANK,
+        back ? richButtons([[back]]) : '',
+        back ? BLANK : '',
         menuHtml(viewerId),
     ]
         .filter(Boolean)
@@ -302,16 +295,7 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         if (a === 'topics') {
             const r = findByTg(viewerId);
             if (!r) return notice(NOT_MEMBER);
-            return screenTopics(r.person, 'topic', SELF_BACK, viewerId);
-        }
-        if (a === 'cheat') {
-            return [
-                '<h3>🧾 Шпаргалки</h3>',
-                '<p>Скоро появятся.</p>',
-                richButtons([[SELF_BACK]]),
-                BLANK,
-                menuHtml(viewerId),
-            ].join('\n');
+            return screenTopics(r.person, 'topic', 'add', null, viewerId);
         }
         return screenSelf(viewerId);
     }
@@ -321,8 +305,8 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         const r = findByTg(viewerId);
         if (!r) return notice(NOT_MEMBER);
         const err = applyChange(r.person.id, kind, a, viewerId);
-        if (kind === 'topic') {
-            return screenTopics(findById(r.person.id)!.person, 'topic', SELF_BACK, viewerId, warn(err));
+        if (kind === 'topic' || kind === 'add') {
+            return screenTopics(findById(r.person.id)!.person, 'topic', 'add', null, viewerId, warn(err));
         }
         return screenSelf(viewerId, warn(err));
     }
@@ -338,11 +322,11 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         const title = `: ${target.person.name}`;
 
         if (b === 'me') return screenUser(id, viewerId);
-        if (b === 'topics') return screenTopics(target.person, `a:${id}:topic`, back, viewerId, '', title);
+        if (b === 'topics') return screenTopics(target.person, `a:${id}:topic`, `a:${id}:add`, back, viewerId, '', title);
 
         const err = applyChange(id, b, c, viewerId);
-        if (b === 'topic') {
-            return screenTopics(findById(id)!.person, `a:${id}:topic`, back, viewerId, warn(err), title);
+        if (b === 'topic' || b === 'add') {
+            return screenTopics(findById(id)!.person, `a:${id}:topic`, `a:${id}:add`, back, viewerId, warn(err), title);
         }
         return screenUser(id, viewerId, warn(err));
     }
