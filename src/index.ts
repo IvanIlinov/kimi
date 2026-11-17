@@ -92,7 +92,10 @@ const T_MEMBERS: Btn = { text: '👥', callback_data: 'show:members' };
 
 const MENU_ADMIN: Btn[] = [T_HOME, T_WEEK, T_LOG, T_ARENA, T_MEMBERS];
 const MENU_STUDENT: Btn[] = [T_PROFILE, T_WEEK, T_TOPICS, T_ARENA, T_MEMBERS];
-const MENU_GUEST: Btn[] = [T_WEEK, T_ARENA, T_MEMBERS];
+// Гость: арена разложена по двум вкладкам, стартовая — список профилей
+const T_MONTH: Btn = { text: '💯', callback_data: 'show:arena:month' };
+const T_GLOBAL: Btn = { text: '🌍', callback_data: 'show:arena:global' };
+const MENU_GUEST: Btn[] = [T_MEMBERS, T_WEEK, T_MONTH, T_GLOBAL];
 
 const menuFor = (viewerId: number): Btn[] =>
     isAdmin(viewerId) ? MENU_ADMIN : isGuest(viewerId) ? MENU_GUEST : MENU_STUDENT;
@@ -145,7 +148,9 @@ function screenArena(viewerId: number, note = '', mode: ArenaMode = 'month'): Re
         { text: '🌍', callback_data: 'show:arena:global' },
         { text: '💯', callback_data: 'show:arena:month' },
     ];
-    const rich = renderArenaRich(all(), viewerId, richButtons([modeRow]), menuHtml(viewerId), mode);
+    // У гостя режимы вынесены в нижнее меню, переключатель на экране не нужен
+    const modeHtml = isGuest(viewerId) ? '' : richButtons([modeRow]);
+    const rich = renderArenaRich(all(), viewerId, modeHtml, menuHtml(viewerId), mode);
     return withNote(note, rich);
 }
 
@@ -280,9 +285,9 @@ function applyAction(viewerId: number, action: string, firstName: string): Reply
         return screenAdminHome(firstName);
     }
 
-    // Гость видит только арену, неделю и участников, всё остальное возвращает в арену
+    // Гость видит только арену, неделю и участников, всё остальное возвращает к списку профилей
     if (isGuest(viewerId) && !(kind === 'show' && GUEST_OK.includes(a ?? ''))) {
-        return screenArena(viewerId, kind === 'show' ? '' : 'Это доступно только участникам рейтинга.');
+        return screenMembers(viewerId, kind === 'show' ? '' : 'Это доступно только участникам рейтинга.');
     }
 
     if (a === 'help') return renderHelpRich(new Date(), menuHtml(viewerId));

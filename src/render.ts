@@ -178,7 +178,16 @@ export function renderArenaRich(
         body = table(monthRows(shown, now, undefined, false));
     }
 
-    return ['<h3>✨ Арена</h3>', BLANK, leader, BLANK, body, BLANK, modeHtml, BLANK, navHtml].join('\n');
+    return [
+        '<h3>✨ Арена</h3>',
+        BLANK,
+        leader,
+        BLANK,
+        body,
+        BLANK,
+        ...(modeHtml ? [modeHtml, BLANK] : []), // у гостя переключателя нет
+        navHtml,
+    ].join('\n');
 }
 
 // ---- Неделя ----
@@ -281,11 +290,11 @@ export function renderStudentRich(
     const hr = '<hr>';
 
     const notes = [
-        `Решил ${w.tasks} ${plural(w.tasks, ['задачу', 'задачи', 'задач'])} за эту неделю`,
-        `Изучил ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} (по плану ${m.topics})`,
+        `Нарешано ${w.tasks} ${plural(w.tasks, ['задача', 'задачи', 'задач'])} из ${WEEK_GOAL}`,
+        `Изучили ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} из ${m.topics}`,
         p.exam === null
-            ? `Пробник пока не внесён (по плану ${m.exam})`
-            : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])}!`,
+            ? `Пробник пока не внесён, цель ${m.exam} ${plural(m.exam, ['балл', 'балла', 'баллов'])}`
+            : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])} из ${m.exam}`,
     ].join('<br>');
 
     return [
