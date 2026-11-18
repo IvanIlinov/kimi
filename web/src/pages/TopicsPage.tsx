@@ -6,7 +6,6 @@ import { Card, Empty, Label, Loading, Screen } from '../components/ui';
 import { haptic } from '../lib/telegram';
 
 const AMOUNTS = [-1, 1, 3, 5, 10];
-const DOT = { done: '🟢', learning: '🟡', todo: '🔴' } as const;
 
 export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     const { data, error, setData } = useApi<SelfData>('/api/self');
@@ -67,7 +66,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                             disabled={readOnly || busy}
                             onClick={() => run(`/api/self/topics/${i + 1}/cycle`)}
                         >
-                            <span>{DOT[status]}</span>
+                            <span class={`status-dot ${status}`} aria-hidden="true" />
                             <b>{i + 1}</b>
                         </button>
                     ))}

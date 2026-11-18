@@ -5,10 +5,10 @@ import type { AdminMember, AdminJournalEntry, TopicStatus } from '../api/types';
 import { Card, Empty, Label, Loading, Screen } from '../components/ui';
 import { haptic } from '../lib/telegram';
 
-const STATUS: Record<TopicStatus, { icon: string; next: TopicStatus }> = {
-    done: { icon: '🟢', next: 'todo' },
-    learning: { icon: '🟡', next: 'done' },
-    todo: { icon: '🔴', next: 'learning' },
+const STATUS: Record<TopicStatus, { next: TopicStatus }> = {
+    done: { next: 'todo' },
+    learning: { next: 'done' },
+    todo: { next: 'learning' },
 };
 
 const STATUS_NAME: Record<TopicStatus, string> = {
@@ -261,7 +261,7 @@ function MemberEditor({ member, busy, run }: {
                                 title={STATUS_NAME[status]}
                                 onClick={() => run(`${base}/topics/${i + 1}`, { status: STATUS[status].next })}
                             >
-                                <span>{STATUS[status].icon}</span>
+                                <span class={`status-dot ${status}`} aria-hidden="true" />
                                 <b>{i + 1}</b>
                             </button>
                         ))}

@@ -16,25 +16,25 @@ import { insideTelegram, useBackButton } from './lib/telegram';
 type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'month' | 'global' | 'adminMembers' | 'adminJournal' | 'adminPreview';
 
 const STUDENT_TABS: Tab<TabId>[] = [
-    { id: 'profile', icon: '👤', label: 'Профиль' },
-    { id: 'week', icon: '📅', label: 'Главная' },
-    { id: 'topics', icon: '📘', label: 'Задания' },
-    { id: 'arena', icon: '✨', label: 'Арена' },
-    { id: 'members', icon: '👥', label: 'Участники' },
+    { id: 'profile', icon: 'user-round', label: 'Профиль' },
+    { id: 'week', icon: 'calendar-days', label: 'Главная' },
+    { id: 'topics', icon: 'target', label: 'Задания' },
+    { id: 'arena', icon: 'swords', label: 'Арена' },
+    { id: 'members', icon: 'users-round', label: 'Участники' },
 ];
 
 const GUEST_TABS: Tab<TabId>[] = [
-    { id: 'members', icon: '👥', label: 'Профили' },
-    { id: 'week', icon: '📅', label: 'Главная' },
-    { id: 'month', icon: '💯', label: 'Успеваемость' },
-    { id: 'global', icon: '🌍', label: 'Глобальный прогресс' },
+    { id: 'members', icon: 'users-round', label: 'Профили' },
+    { id: 'week', icon: 'calendar-days', label: 'Главная' },
+    { id: 'month', icon: 'calendar-range', label: 'Успеваемость' },
+    { id: 'global', icon: 'trophy', label: 'Глобальный прогресс' },
 ];
 
 const ADMIN_TABS: Tab<TabId>[] = [
-    { id: 'week', icon: '📅', label: 'Главная' },
-    { id: 'adminMembers', icon: '👥', label: 'Участники' },
-    { id: 'adminJournal', icon: '📋', label: 'Журнал' },
-    { id: 'adminPreview', icon: '👁️', label: 'Предпросмотр' },
+    { id: 'week', icon: 'calendar-days', label: 'Главная' },
+    { id: 'adminMembers', icon: 'users-round', label: 'Участники' },
+    { id: 'adminJournal', icon: 'clipboard-list', label: 'Журнал' },
+    { id: 'adminPreview', icon: 'eye', label: 'Предпросмотр' },
 ];
 
 type Preview =

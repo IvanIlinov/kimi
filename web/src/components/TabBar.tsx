@@ -1,4 +1,5 @@
 import { haptic } from '../lib/telegram';
+import { NavIcon } from './NavIcon';
 
 export interface Tab<Id extends string> {
     id: Id;
@@ -24,7 +25,7 @@ export function TabBar<Id extends string>({ tabs, active, onChange }: {
                         onChange(t.id);
                     }}
                 >
-                    {t.icon}
+                    <NavIcon name={t.icon} />
                 </button>
             ))}
         </nav>

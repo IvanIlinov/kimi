@@ -1,24 +1,35 @@
-/* Дизайн-токены: все цвета, радиусы и отступы живут здесь */
+/* Единая игровая палитра Арены */
 :root {
-    --bg: #0a0b0d;
-    --bg-glow: #1a1d23;
-    --surface: rgba(255, 255, 255, 0.045);
-    --surface-strong: rgba(255, 255, 255, 0.09);
-    --border: rgba(255, 255, 255, 0.08);
-    --text: #f4f5f7;
-    --muted: #8b8f98;
+    color-scheme: dark;
 
-    --good: #34e3a3;
-    --warn: #f5b02e;
-    --bad: #ff5468;
+    --bg: #101411;
+    --bg-glow: #1c2a20;
+    --surface: #1b241e;
+    --surface-strong: #263329;
+    --border: rgba(210, 255, 220, 0.10);
 
-    --radius-lg: 24px;
+    --text: #f2f7f1;
+    --muted: #9ba99d;
+
+    --good: #39e58c;
+    --warn: #ffcc66;
+    --bad: #ff647c;
+    --blue: #55c8ff;
+    --violet: #b69aff;
+
+    --good-soft: rgba(57, 229, 140, 0.13);
+    --warn-soft: rgba(255, 204, 102, 0.13);
+    --bad-soft: rgba(255, 100, 124, 0.13);
+    --blue-soft: rgba(85, 200, 255, 0.13);
+    --violet-soft: rgba(182, 154, 255, 0.13);
+
+    --radius-lg: 23px;
     --radius-md: 16px;
-    --radius-sm: 10px;
+    --radius-sm: 11px;
 
-    --gap: 12px;
-    --pad: 16px;
+    --gap: 13px;
+    --pad: 17px;
 
-    --font-ui: -apple-system, 'SF Pro Text', 'Inter', system-ui, sans-serif;
-    --font-display: ui-serif, 'New York', 'Iowan Old Style', Georgia, serif;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
 }

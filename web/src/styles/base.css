@@ -3,20 +3,23 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
+html, body {
     margin: 0;
     min-height: 100%;
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-ui);
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
 }
 
 body {
-    background: radial-gradient(120% 55% at 50% -8%, var(--bg-glow) 0%, var(--bg) 62%) no-repeat, var(--bg);
+    background:
+        radial-gradient(100% 42% at 0% 0%, rgba(57, 229, 140, 0.10), transparent 72%),
+        radial-gradient(85% 38% at 100% 8%, rgba(85, 200, 255, 0.07), transparent 72%),
+        var(--bg);
+    background-attachment: fixed;
 }
 
 button {
@@ -30,7 +33,12 @@ button {
 
 button:disabled {
     cursor: default;
-    opacity: 0.55;
+    opacity: 0.48;
+}
+
+button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--good);
+    outline-offset: 3px;
 }
 
 input {
@@ -43,14 +51,25 @@ input {
     flex-direction: column;
     gap: var(--gap);
     max-width: 520px;
+    min-height: 100dvh;
     margin: 0 auto;
-    padding: calc(env(safe-area-inset-top, 0px) + 20px) var(--pad) calc(env(safe-area-inset-bottom, 0px) + 110px);
+    padding: calc(env(safe-area-inset-top, 0px) + 22px) var(--pad) calc(env(safe-area-inset-bottom, 0px) + 112px);
 }
 
 .display {
-    margin: 4px 4px 6px;
+    margin: 3px 3px 9px;
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 32px;
-    letter-spacing: -0.01em;
+    font-weight: 750;
+    font-size: 31px;
+    line-height: 1.15;
+    letter-spacing: -0.045em;
+}
+
+p {
+    line-height: 1.5;
+}
+
+::selection {
+    color: #07130c;
+    background: var(--good);
 }

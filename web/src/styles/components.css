@@ -1,17 +1,18 @@
-/* ---- Карточки ---- */
+/* ---- Карточки и общие элементы ---- */
 .card {
     padding: var(--pad);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: linear-gradient(145deg, rgba(34, 47, 37, 0.96), rgba(24, 32, 27, 0.96));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.13);
 }
 
 .label {
-    margin-bottom: 10px;
-    color: var(--muted);
+    margin-bottom: 11px;
+    color: #bdcbbf;
     font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.015em;
 }
 
 .between {
@@ -21,18 +22,15 @@
     gap: 10px;
 }
 
-.between .label {
-    margin-bottom: 10px;
-}
+.between .label { margin-bottom: 10px; }
 
-.muted {
+.muted, .empty {
     color: var(--muted);
     font-size: 13px;
 }
 
 .empty {
-    margin: 8px 0;
-    color: var(--muted);
+    margin: 9px 0;
     text-align: center;
 }
 
@@ -51,12 +49,10 @@
 }
 
 @keyframes shimmer {
-    to {
-        background-position: -200% 0;
-    }
+    to { background-position: -200% 0; }
 }
 
-/* ---- Сегментная шкала ---- */
+/* ---- Прогресс ---- */
 .seg {
     display: flex;
     flex: 1;
@@ -69,135 +65,130 @@
     flex: 1;
     max-width: 8px;
     height: 100%;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.13);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .seg i.on.good {
     background: var(--good);
-    box-shadow: 0 0 10px rgba(52, 227, 163, 0.35);
+    box-shadow: 0 0 9px rgba(57, 229, 140, 0.3);
 }
 
 .seg i.on.warn {
     background: var(--warn);
-    box-shadow: 0 0 10px rgba(245, 176, 46, 0.3);
+    box-shadow: 0 0 9px rgba(255, 204, 102, 0.25);
 }
 
 .seg i.on.bad {
     background: var(--bad);
-    box-shadow: 0 0 10px rgba(255, 84, 104, 0.3);
+    box-shadow: 0 0 9px rgba(255, 100, 124, 0.25);
 }
 
 .metric {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 12px;
+    margin-top: 13px;
 }
 
 .metric-name {
     width: 48px;
+    flex: none;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .metric-val {
     min-width: 58px;
     text-align: right;
     font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-/* ---- Статусные пилюли ---- */
 .pill {
     display: inline-flex;
     align-items: center;
-    padding: 3px 10px;
-    border-radius: 999px;
+    padding: 4px 10px;
     border: 1px solid transparent;
-    font-size: 12px;
-    font-weight: 600;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
     white-space: nowrap;
 }
 
 .pill.good {
     color: var(--good);
-    background: rgba(52, 227, 163, 0.12);
-    border-color: rgba(52, 227, 163, 0.25);
+    background: var(--good-soft);
+    border-color: rgba(57, 229, 140, 0.23);
 }
 
 .pill.bad {
     color: var(--bad);
-    background: rgba(255, 84, 104, 0.12);
-    border-color: rgba(255, 84, 104, 0.25);
+    background: var(--bad-soft);
+    border-color: rgba(255, 100, 124, 0.23);
 }
 
-/* ---- Списки ---- */
-.list {
-    padding: 6px;
-}
+/* ---- Списки и рейтинги ---- */
+.list { padding: 7px; }
 
 .row {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 12px 10px;
+    padding: 13px 10px;
     border-radius: var(--radius-md);
     text-align: left;
+    transition: background 0.16s ease;
 }
 
-.row:not(:disabled):active {
-    background: var(--surface-strong);
-}
+.row:not(:disabled):active { background: var(--surface-strong); }
 
 .row-name {
     width: 76px;
     flex: none;
-    font-weight: 600;
     overflow: hidden;
+    font-weight: 650;
     text-overflow: ellipsis;
 }
 
-.row-bar {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-}
-
-.row-right {
-    flex: none;
-}
+.row-bar { display: flex; flex: 1; min-width: 0; }
+.row-right { flex: none; }
 
 .stats {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     font-variant-numeric: tabular-nums;
 }
 
+.leader {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(182, 154, 255, 0.22);
+    background:
+        radial-gradient(90% 100% at 100% 0%, rgba(182, 154, 255, 0.13), transparent 70%),
+        linear-gradient(145deg, #252638, #1b241e);
+}
+
 .leader strong {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 500;
+    font-size: 23px;
+    font-weight: 750;
+    letter-spacing: -0.03em;
 }
 
 .leader-name {
     display: block;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .kpis {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 9px;
 }
 
-.kpi {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
+.kpi { display: flex; flex-direction: column; gap: 3px; }
 
 .kpi b {
     font-size: 17px;
@@ -206,40 +197,44 @@
 
 .kpi span {
     color: var(--muted);
-    font-size: 10.5px;
+    font-size: 10px;
+    line-height: 1.25;
 }
 
-.notes p {
-    margin: 0;
-}
+.notes p { margin: 0; }
+.notes p + p { margin-top: 7px; }
 
-.notes p + p {
-    margin-top: 6px;
-}
-
-/* ---- Чипы и переключатель ---- */
-.chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
+/* ---- Кнопки и переключатели ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .chip {
-    padding: 10px 16px;
+    min-height: 40px;
+    padding: 9px 16px;
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: var(--surface);
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.045);
+    font-weight: 650;
+    transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
 }
 
 .chip:not(:disabled):active {
+    transform: scale(0.97);
     background: var(--surface-strong);
 }
 
 .chip.primary {
-    color: #06130d;
+    color: #092013;
     background: var(--good);
     border-color: transparent;
+    box-shadow: 0 4px 15px rgba(57, 229, 140, 0.16);
+}
+
+.chip.primary:not(:disabled):active { background: #62f0a5; }
+
+.chip.danger {
+    color: var(--bad);
+    border-color: rgba(255, 100, 124, 0.3);
+    background: var(--bad-soft);
 }
 
 .amounts {
@@ -248,9 +243,7 @@
     gap: 8px;
 }
 
-.amounts .chip {
-    padding: 12px 0;
-}
+.amounts .chip { padding: 10px 0; }
 
 .segmented {
     display: inline-flex;
@@ -263,13 +256,16 @@
 }
 
 .segmented button {
-    padding: 8px 22px;
+    min-width: 54px;
+    min-height: 40px;
+    padding: 8px 18px;
     border-radius: 999px;
-    font-size: 16px;
+    font-size: 17px;
 }
 
 .segmented button.on {
-    background: var(--surface-strong);
+    color: var(--good);
+    background: var(--good-soft);
 }
 
 /* ---- Сетка заданий ---- */
@@ -283,97 +279,130 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 5px;
+    min-height: 59px;
     padding: 8px 0;
     border: 1px solid var(--border);
     border-radius: 14px;
-    background: var(--surface);
+    background: rgba(255, 255, 255, 0.035);
     font-size: 12px;
+    transition: transform 0.14s ease, background 0.14s ease;
 }
+
+.cell:not(:disabled):active { transform: scale(0.95); }
 
 .cell b {
     font-variant-numeric: tabular-nums;
+    font-size: 12px;
 }
 
 .cell.done {
-    border-color: rgba(52, 227, 163, 0.35);
-    background: rgba(52, 227, 163, 0.1);
+    color: var(--good);
+    border-color: rgba(57, 229, 140, 0.32);
+    background: var(--good-soft);
 }
 
 .cell.learning {
-    border-color: rgba(245, 176, 46, 0.35);
-    background: rgba(245, 176, 46, 0.1);
+    color: var(--warn);
+    border-color: rgba(255, 204, 102, 0.32);
+    background: var(--warn-soft);
 }
 
-.exam {
-    display: flex;
-    gap: 8px;
+.cell.todo {
+    color: #d6a2aa;
+    border-color: rgba(255, 100, 124, 0.18);
 }
 
-.exam input {
-    flex: 1;
+.status-dot {
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bad);
+    box-shadow: 0 0 8px rgba(255, 100, 124, 0.28);
+}
+
+.status-dot.done {
+    background: var(--good);
+    box-shadow: 0 0 8px rgba(57, 229, 140, 0.35);
+}
+
+.status-dot.learning {
+    background: var(--warn);
+    box-shadow: 0 0 8px rgba(255, 204, 102, 0.3);
+}
+
+/* ---- Поля ввода ---- */
+.exam { display: flex; align-items: center; gap: 8px; }
+
+.exam input, .admin-input {
+    width: 100%;
     min-width: 0;
-    padding: 10px 14px;
+    padding: 11px 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--surface);
+    background: rgba(7, 13, 9, 0.42);
+    color: var(--text);
     outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.exam input:focus {
-    border-color: rgba(255, 255, 255, 0.25);
+.exam input { flex: 1; }
+
+.admin-input { margin-bottom: 9px; }
+
+.exam input:focus, .admin-input:focus {
+    border-color: rgba(57, 229, 140, 0.6);
+    background: rgba(7, 13, 9, 0.65);
 }
 
-/* ---- Нижняя панель ---- */
+/* ---- Нижняя навигация ---- */
 .tabbar {
     position: fixed;
     left: 50%;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
     z-index: 10;
     display: flex;
     gap: 4px;
+    max-width: calc(100vw - 24px);
     padding: 6px;
     transform: translateX(-50%);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(210, 255, 220, 0.14);
     border-radius: 999px;
-    background: rgba(24, 26, 31, 0.78);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background: rgba(20, 29, 23, 0.91);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 48px;
     width: 52px;
+    min-width: 42px;
     height: 46px;
     border-radius: 999px;
-    font-size: 20px;
-    transition: background 0.15s;
+    color: #9ba99d;
+    transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
+
+.tab svg { width: 21px; height: 21px; }
+
+.tab:active { transform: scale(0.92); }
 
 .tab.active {
-    background: var(--surface-strong);
+    color: var(--good);
+    background: var(--good-soft);
+    box-shadow: inset 0 0 0 1px rgba(57, 229, 140, 0.15);
 }
 
-/* ---- Административный раздел ---- */
-.admin-input {
-    width: 100%;
-    min-width: 0;
-    margin-bottom: 9px;
-    padding: 11px 13px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    color: inherit;
-    outline: none;
-}
-
-.admin-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
+/* ---- Администрирование ---- */
 .admin-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 
 .admin-member {
@@ -382,20 +411,23 @@
     justify-content: space-between;
     gap: 12px;
     width: 100%;
-    padding: 11px;
+    padding: 12px;
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
     text-align: left;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .admin-member.selected,
 .admin-member:active {
-    background: var(--surface-strong);
+    border-color: rgba(57, 229, 140, 0.2);
+    background: var(--good-soft);
 }
 
 .admin-member span:first-child {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
 }
 
@@ -409,31 +441,17 @@
     font-size: 12px;
 }
 
-.admin-journal {
-    display: flex;
-    flex-direction: column;
-}
+.admin-journal { display: flex; flex-direction: column; }
 
 .journal-entry {
-    padding: 12px 0;
+    padding: 13px 0;
     border-bottom: 1px solid var(--border);
 }
 
-.journal-entry:last-child {
-    border-bottom: 0;
-}
+.journal-entry:last-child { border-bottom: 0; }
+.journal-entry p { margin: 7px 0; }
 
-.journal-entry p {
-    margin: 7px 0;
-}
-
-.chip.danger {
-    color: var(--bad);
-    border-color: rgba(255, 84, 104, 0.3);
-}
-
-
-/* ---- Предпросмотр ученика ---- */
+/* ---- Предпросмотр ---- */
 .preview-banner {
     position: sticky;
     top: 0;
@@ -443,13 +461,20 @@
     justify-content: space-between;
     gap: 10px;
     padding: 9px 14px;
-    background: var(--surface-strong);
     border-bottom: 1px solid var(--border);
+    background: rgba(38, 51, 41, 0.96);
     font-size: 13px;
+    backdrop-filter: blur(14px);
 }
 
 .preview-banner span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+@media (max-width: 370px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    .tabbar { gap: 2px; }
+    .tab { min-width: 38px; width: 45px; }
 }
