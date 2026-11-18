@@ -1,4 +1,23 @@
+# Dependencies
 node_modules/
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+
+# Local databases and data
 data/
 *.db
+*.db-shm
+*.db-wal
+
+# Build output
+dist/
+web/dist/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store

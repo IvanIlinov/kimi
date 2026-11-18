@@ -113,11 +113,39 @@ export function monthGoal(now: Date) {
     const idx = (m - 8 + 12) % 12; // 0 = сентябрь
     return MONTH_GOALS[Math.min(idx, MONTH_GOALS.length - 1)];
 }
-
 // Давно не было действий: на начало 8-го дня без действия (по Москве) и дальше.
 // Нет ни одного действия вообще: тоже true.
 export function isSleeping(lastMs: number | undefined, now: Date): boolean {
     if (lastMs === undefined) return true;
     const day = (ms: number) => Math.floor((ms + 3 * 3600e3) / 864e5);
     return day(now.getTime()) - day(lastMs) >= 8;
+}
+
+// ---- Общие метрики: используются и ботом, и API ----
+
+// Насколько участник укладывается в цели месяца. Веса те же, что в общем прогрессе (40/40/20).
+// Каждая доля ограничена единицей: 100% значит, что все три цели месяца выполнены.
+export function monthPct(r: Ranked, now: Date): number {
+    const m = monthGoal(now);
+    const p = r.person;
+    const share = (value: number, goal: number) => Math.min(1, value / goal);
+    return Math.round(
+        100 *
+            (0.4 * share(p.studied.length, m.topics) +
+                0.4 * share(p.tasksTotal, m.tasks) +
+                0.2 * share(p.exam ?? 0, m.exam)),
+    );
+}
+
+// Не отстаём ни по заданиям, ни по задачам
+export function onTrack(r: Ranked, now: Date): boolean {
+    const lead = leadParts(r.person, now);
+    return (lead.topics ?? 0) >= 0 && (lead.tasks ?? 0) >= 0;
+}
+
+// Топ-10 и сам смотрящий, если он не в топе
+export function visible(ranked: Ranked[], viewerTgId: number | undefined): Ranked[] {
+    const top = ranked.slice(0, 10);
+    const mine = ranked.find((r) => r.person.tgId === viewerTgId);
+    return mine && !top.includes(mine) ? [...top, mine] : top;
 }

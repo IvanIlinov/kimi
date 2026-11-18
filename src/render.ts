@@ -5,11 +5,13 @@ import {
     TOPICS_TOTAL,
     WEEK_GOAL,
     isSleeping,
-    leadParts,
     monthGoal,
+    monthPct,
+    onTrack,
     planTasks,
     planTopics,
     sgn,
+    visible,
     weekPct,
 } from './logic.ts';
 import type { Ranked } from './logic.ts';
@@ -43,34 +45,7 @@ const plural = (n: number, [one, few, many]: [string, string, string]) => {
     return many;
 };
 
-// 🟢 — не отстаём ни по заданиям, ни по задачам; иначе 🔴
-const onTrack = (r: Ranked, now: Date) => {
-    const lead = leadParts(r.person, now);
-    return (lead.topics ?? 0) >= 0 && (lead.tasks ?? 0) >= 0;
-};
-
-// Топ-10 и сам смотрящий, если он не в топе
-const visible = (ranked: Ranked[], viewerId: number | undefined) => {
-    const top = ranked.slice(0, 10);
-    const mine = ranked.find((r) => r.person.tgId === viewerId);
-    return mine && !top.includes(mine) ? [...top, mine] : top;
-};
-
 // ---- Успеваемость по целям месяца ----
-
-// Веса те же, что в общем прогрессе (40/40/20). Каждая доля ограничена единицей:
-// 100% значит, что все три цели месяца выполнены.
-const monthPct = (r: Ranked, now: Date) => {
-    const m = monthGoal(now);
-    const p = r.person;
-    const share = (value: number, goal: number) => Math.min(1, value / goal);
-    return Math.round(
-        100 *
-        (0.4 * share(p.studied.length, m.topics) +
-            0.4 * share(p.tasksTotal, m.tasks) +
-            0.2 * share(p.exam ?? 0, m.exam)),
-    );
-};
 
 // Невидимая таблица из трёх полей по центру: цели месяца (задания, задачи, пробник)
 const goalsTable = (now: Date) => {
@@ -93,8 +68,8 @@ const monthRows = (
                 lastActive && isSleeping(lastActive.get(r.person.id), now)
                     ? '💤'
                     : onTrack(r, now)
-                        ? '🟢'
-                        : '🔴';
+                      ? '🟢'
+                      : '🔴';
             const name = escHtml(cap(r.person.name));
             return tr(
                 [withPlace ? `${r.place} ${name}` : name, pctBar(pct, ARENA_CELLS), `${pct}%`, status],
@@ -211,12 +186,12 @@ export function renderWeekRich(
     const leader =
         best && bestName
             ? `<h3>👑 Лидер недели</h3>${table(
-                tr(
-                    [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
-                    ['left', 'right', 'right', 'right'],
-                    true,
-                ),
-            )}`
+                  tr(
+                      [escHtml(cap(bestName)), `${sgn(Math.round(weekPct(best)))}%`, sgn(best.tasks), sgn(best.topics)],
+                      ['left', 'right', 'right', 'right'],
+                      true,
+                  ),
+              )}`
             : '';
 
     // Полоска выполнения (задачи / норма), затем задачи и задания за неделю

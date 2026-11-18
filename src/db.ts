@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const DB_PATH = 'data/arena.db';
+const DB_PATH = process.env.DB_PATH ?? 'data/arena.db';
 
 mkdirSync(dirname(DB_PATH), { recursive: true });
 

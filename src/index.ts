@@ -28,8 +28,10 @@ import { addTasks, setExam, setTopicStatus } from './write.ts';
 import { addUser, removeUser, renameUser } from './admin.ts';
 import { startWeeklySummary } from './weekly.ts';
 import { startTagSync, syncTag } from './tags.ts';
+import { nextStatus, statusOf } from './status.ts';
+import type { TopicStatus } from './status.ts';
+import { startApi } from './api/server.ts';
 
-type TopicStatus = 'done' | 'learning' | 'todo';
 type Btn = { text: string; callback_data: string };
 type Reply = string; // готовый Rich-HTML
 
@@ -129,17 +131,6 @@ function memberRows(ranked: Ranked[], viewerId: number): Btn[][] {
     }
     return rows;
 }
-
-// ---- Статусы заданий ----
-
-function statusOf(p: Person, topic: number): TopicStatus {
-    if (p.studied.includes(topic)) return 'done';
-    if (p.learning.includes(topic)) return 'learning';
-    return 'todo';
-}
-
-const nextStatus = (s: TopicStatus): TopicStatus =>
-    s === 'todo' ? 'learning' : s === 'learning' ? 'done' : 'todo';
 
 // ---- Экраны ----
 
@@ -582,6 +573,7 @@ const bot = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
 console.log(`Бот @${bot.username} запущен`);
 startWeeklySummary();
 startTagSync();
+startApi();
 
 let offset = 0;
 for (; ;) {

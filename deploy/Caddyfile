@@ -1,0 +1,5 @@
+# /etc/caddy/Caddyfile
+# Caddy сам получает и продлевает HTTPS-сертификат. Адрес вида ...sslip.io указывает на ваш IP.
+82-148-234-108.sslip.io {
+    reverse_proxy 127.0.0.1:3000
+}

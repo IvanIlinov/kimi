@@ -1,0 +1,354 @@
+/* ---- Карточки ---- */
+.card {
+    padding: var(--pad);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.label {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.between .label {
+    margin-bottom: 10px;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.empty {
+    margin: 8px 0;
+    color: var(--muted);
+    text-align: center;
+}
+
+.warn {
+    margin: 10px 0 0;
+    color: var(--warn);
+    font-size: 13px;
+}
+
+.skeleton {
+    height: 160px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(100deg, var(--surface) 30%, var(--surface-strong) 50%, var(--surface) 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.3s linear infinite;
+}
+
+@keyframes shimmer {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* ---- Сегментная шкала ---- */
+.seg {
+    display: flex;
+    flex: 1;
+    gap: 3px;
+    align-items: center;
+    height: 22px;
+}
+
+.seg i {
+    flex: 1;
+    max-width: 8px;
+    height: 100%;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.13);
+}
+
+.seg i.on.good {
+    background: var(--good);
+    box-shadow: 0 0 10px rgba(52, 227, 163, 0.35);
+}
+
+.seg i.on.warn {
+    background: var(--warn);
+    box-shadow: 0 0 10px rgba(245, 176, 46, 0.3);
+}
+
+.seg i.on.bad {
+    background: var(--bad);
+    box-shadow: 0 0 10px rgba(255, 84, 104, 0.3);
+}
+
+.metric {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.metric-name {
+    width: 48px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.metric-val {
+    min-width: 58px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* ---- Статусные пилюли ---- */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pill.good {
+    color: var(--good);
+    background: rgba(52, 227, 163, 0.12);
+    border-color: rgba(52, 227, 163, 0.25);
+}
+
+.pill.bad {
+    color: var(--bad);
+    background: rgba(255, 84, 104, 0.12);
+    border-color: rgba(255, 84, 104, 0.25);
+}
+
+/* ---- Списки ---- */
+.list {
+    padding: 6px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 10px;
+    border-radius: var(--radius-md);
+    text-align: left;
+}
+
+.row:not(:disabled):active {
+    background: var(--surface-strong);
+}
+
+.row-name {
+    width: 76px;
+    flex: none;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.row-bar {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+.row-right {
+    flex: none;
+}
+
+.stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.leader strong {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.leader-name {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kpi b {
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi span {
+    color: var(--muted);
+    font-size: 10.5px;
+}
+
+.notes p {
+    margin: 0;
+}
+
+.notes p + p {
+    margin-top: 6px;
+}
+
+/* ---- Чипы и переключатель ---- */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    font-weight: 600;
+}
+
+.chip:not(:disabled):active {
+    background: var(--surface-strong);
+}
+
+.chip.primary {
+    color: #06130d;
+    background: var(--good);
+    border-color: transparent;
+}
+
+.amounts {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.amounts .chip {
+    padding: 12px 0;
+}
+
+.segmented {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+}
+
+.segmented button {
+    padding: 8px 22px;
+    border-radius: 999px;
+    font-size: 16px;
+}
+
+.segmented button.on {
+    background: var(--surface-strong);
+}
+
+/* ---- Сетка заданий ---- */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    font-size: 12px;
+}
+
+.cell b {
+    font-variant-numeric: tabular-nums;
+}
+
+.cell.done {
+    border-color: rgba(52, 227, 163, 0.35);
+    background: rgba(52, 227, 163, 0.1);
+}
+
+.cell.learning {
+    border-color: rgba(245, 176, 46, 0.35);
+    background: rgba(245, 176, 46, 0.1);
+}
+
+.exam {
+    display: flex;
+    gap: 8px;
+}
+
+.exam input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    outline: none;
+}
+
+.exam input:focus {
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---- Нижняя панель ---- */
+.tabbar {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    transform: translateX(-50%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(24, 26, 31, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.tab {
+    width: 52px;
+    height: 46px;
+    border-radius: 999px;
+    font-size: 20px;
+    transition: background 0.15s;
+}
+
+.tab.active {
+    background: var(--surface-strong);
+}
