@@ -8,6 +8,7 @@ import {
     sendMessage,
     sendRich,
     setReaction,
+    setChatMenuButton,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
 import { rank } from './logic.ts';
@@ -571,6 +572,10 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
 
 const bot = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
 console.log(`Бот @${bot.username} запущен`);
+
+await setChatMenuButton(BOT_TOKEN, 'https://kimi-production.vercel.app');
+console.log('[telegram] кнопка Mini App настроена');
+
 startWeeklySummary();
 startTagSync();
 startApi();

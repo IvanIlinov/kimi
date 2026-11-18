@@ -97,3 +97,13 @@ export const setReaction = (token: string, chat_id: number, message_id: number, 
 // Тег участника беседки: до 16 символов, без эмодзи. Пустая строка — удалить.
 export const setMemberTag = (token: string, chat_id: number, user_id: number, tag: string) =>
     callApi(token, 'setChatMemberTag', { chat_id, user_id, tag });
+
+// Постоянная кнопка Mini App в меню Telegram
+export const setChatMenuButton = (token: string, url: string) =>
+    callApi(token, 'setChatMenuButton', {
+        menu_button: {
+            type: 'web_app',
+            text: 'Открыть',
+            web_app: { url },
+        },
+    });
