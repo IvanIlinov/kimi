@@ -252,8 +252,8 @@ function applyChange(
     source: 'bot' | 'group' = 'bot',
 ): string | null {
     try {
-        if (op === 'add') addTasks(personId, Number(arg), source);
-        else if (op === 'exam') setExam(personId, Number(arg));
+        if (op === 'add') addTasks(personId, Number(arg), source, actorTgId);
+        else if (op === 'exam') setExam(personId, Number(arg), actorTgId);
         else if (op === 'topic') {
             const p = findById(personId)!.person;
             const n = Number(arg);
@@ -359,7 +359,7 @@ function adminCommand(viewerId: number, text: string): Reply | null {
             case '/exam': {
                 const id = Number(rest[0]);
                 if (!findById(id)) throw new Error('Участник не найден');
-                setExam(id, Number(rest[1]));
+                setExam(id, Number(rest[1]), viewerId);
                 return screenArena(viewerId, '✅ Пробник обновлён');
             }
             case '/start':

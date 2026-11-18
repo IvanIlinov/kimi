@@ -30,14 +30,14 @@ export function registerSelf(router: Router): void {
 
     router.post('/api/self/tasks', ({ viewer, body }) => {
         const r = me(viewer);
-        guard(() => addTasks(r.person.id, Number(asObject(body).amount), 'bot'));
+        guard(() => addTasks(r.person.id, Number(asObject(body).amount), 'bot', viewer.tgId));
         return selfDto(me(viewer));
     });
 
     router.post('/api/self/exam', ({ viewer, body }) => {
         const r = me(viewer);
         const value = asObject(body).value;
-        guard(() => setExam(r.person.id, value === null ? null : Number(value)));
+        guard(() => setExam(r.person.id, value === null ? null : Number(value), viewer.tgId));
         return selfDto(me(viewer));
     });
 

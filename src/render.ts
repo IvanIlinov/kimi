@@ -311,7 +311,9 @@ export function renderJournalRich(entries: JournalEntry[], navHtml: string, tabs
             const time = mskTime(e.at);
             const who = escHtml(cap(e.name)) + (e.source === 'group' ? ' ⛺' : '');
             if (e.kind === 'task') {
-                return tr([time, who, `${sgn(e.amount)} задач`], ['left', 'left', 'right']);
+                const byAdmin = e.actorTgId !== null && e.actorTgId !== e.tgId;
+                const actorMark = byAdmin || e.source === 'admin' ? ' 👑' : '';
+                return tr([time, who + actorMark, `${sgn(e.amount)} задач`], ['left', 'left', 'right']);
             }
             // Отметка 👑, если статус меняли не сам участник
             const byAdmin = e.actorTgId !== null && e.actorTgId !== e.tgId ? ' 👑' : '';

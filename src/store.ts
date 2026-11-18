@@ -24,7 +24,14 @@ export function getPersons(): Person[] {
         .prepare(`
             SELECT user_id,
                    SUM(amount) AS total,
-                   SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) AS week
+                   SUM(CASE
+                       WHEN created_at >= ?
+                        AND source <> 'admin'
+                        AND (actor_tg_id IS NULL OR actor_tg_id = (
+                            SELECT tg_id FROM users WHERE id = task_log.user_id
+                        ))
+                       THEN amount ELSE 0
+                   END) AS week
             FROM task_log
             WHERE cancelled = 0
             GROUP BY user_id
@@ -81,10 +88,14 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
 
     const taskRows = db
         .prepare(`
-            SELECT user_id, SUM(amount) AS total, COUNT(*) AS n
-            FROM task_log
-            WHERE cancelled = 0 AND created_at >= ?
-            GROUP BY user_id
+            SELECT t.user_id, SUM(t.amount) AS total, COUNT(*) AS n
+            FROM task_log t
+            JOIN users u ON u.id = t.user_id
+            WHERE t.cancelled = 0
+              AND t.created_at >= ?
+              AND t.source <> 'admin'
+              AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+            GROUP BY t.user_id
         `)
         .all(from) as unknown as { user_id: number; total: number; n: number }[];
 
@@ -101,9 +112,11 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
                    SUM(CASE WHEN to_status = 'done' THEN 1 ELSE 0 END)
                  - SUM(CASE WHEN from_status = 'done' THEN 1 ELSE 0 END) AS delta,
                    COUNT(*) AS n
-            FROM topic_log
-            WHERE created_at >= ?
-            GROUP BY user_id
+            FROM topic_log t
+            JOIN users u ON u.id = t.user_id
+            WHERE t.created_at >= ?
+              AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+            GROUP BY t.user_id
         `)
         .all(from) as unknown as { user_id: number; delta: number; n: number }[];
 
@@ -126,7 +139,7 @@ export interface JournalEntry {
     from: string;
     to: string;
     actorTgId: number | null;
-    source: 'bot' | 'group';
+    source: 'bot' | 'group' | 'admin';
 }
 
 export function getJournal(limit: number, offset: number): JournalEntry[] {
@@ -137,7 +150,7 @@ export function getJournal(limit: number, offset: number): JournalEntry[] {
             FROM (
                 SELECT created_at AS at, user_id, 'task' AS kind, amount,
                        NULL AS topic_no, NULL AS from_status, NULL AS to_status,
-                       NULL AS actor_tg_id, source
+                       actor_tg_id, source
                 FROM task_log
                 WHERE cancelled = 0
                 UNION ALL
@@ -166,7 +179,7 @@ export function getJournal(limit: number, offset: number): JournalEntry[] {
         from: r.from_status ?? '',
         to: r.to_status ?? '',
         actorTgId: r.actor_tg_id,
-        source: r.source === 'group' ? 'group' : 'bot',
+        source: r.source === 'group' ? 'group' : r.source === 'admin' ? 'admin' : 'bot',
     }));
 }
 
@@ -176,13 +189,184 @@ export function getLastActivity(): Map<number, number> {
         .prepare(`
             SELECT user_id, MAX(at) AS last
             FROM (
-                SELECT user_id, created_at AS at FROM task_log WHERE cancelled = 0
+                SELECT t.user_id, t.created_at AS at
+                FROM task_log t
+                JOIN users u ON u.id = t.user_id
+                WHERE t.cancelled = 0
+                  AND t.source <> 'admin'
+                  AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
                 UNION ALL
-                SELECT user_id, created_at AS at FROM topic_log
+                SELECT t.user_id, t.created_at AS at
+                FROM topic_log t
+                JOIN users u ON u.id = t.user_id
+                WHERE t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id
             )
             GROUP BY user_id
         `)
         .all() as unknown as { user_id: number; last: number }[];
 
     return new Map(rows.map((r) => [r.user_id, Number(r.last)]));
+}
+
+export interface AdminMember {
+    id: number;
+    tgId: number;
+    name: string;
+    exam: number | null;
+    removed: boolean;
+    tasksTotal: number;
+    topics: string[];
+}
+
+export function getAdminMembers(): AdminMember[] {
+    const users = db.prepare(`
+        SELECT id, tg_id, name, exam, removed
+        FROM users
+        ORDER BY removed ASC, name COLLATE NOCASE ASC
+    `).all() as unknown as {
+        id: number;
+        tg_id: number;
+        name: string;
+        exam: number | null;
+        removed: number;
+    }[];
+
+    const statuses = db.prepare(`
+        SELECT user_id, topic_no, status
+        FROM topic_status
+        ORDER BY topic_no
+    `).all() as unknown as {
+        user_id: number;
+        topic_no: number;
+        status: string;
+    }[];
+
+    const totals = db.prepare(`
+        SELECT user_id, COALESCE(SUM(amount), 0) AS total
+        FROM task_log
+        WHERE cancelled = 0
+        GROUP BY user_id
+    `).all() as unknown as {
+        user_id: number;
+        total: number;
+    }[];
+
+    const totalsById = new Map(totals.map((r) => [r.user_id, Number(r.total)]));
+
+    return users.map((u) => ({
+        id: u.id,
+        tgId: u.tg_id,
+        name: u.name,
+        exam: u.exam,
+        removed: Boolean(u.removed),
+        tasksTotal: totalsById.get(u.id) ?? 0,
+        topics: statuses
+            .filter((s) => s.user_id === u.id)
+            .sort((a, b) => a.topic_no - b.topic_no)
+            .map((s) => s.status),
+    }));
+}
+
+export interface AdminJournalEntry {
+    id: number;
+    at: number;
+    kind: 'task' | 'topic' | 'exam' | 'admin';
+    targetId: number | null;
+    targetName: string;
+    targetTgId: number | null;
+    actorTgId: number | null;
+    details: string;
+}
+
+export function getAdminJournal(limit: number, offset: number): AdminJournalEntry[] {
+    const rows = db.prepare(`
+        SELECT *
+        FROM (
+            SELECT
+                t.id AS id,
+                t.created_at AS at,
+                'task' AS kind,
+                u.id AS target_id,
+                u.name AS target_name,
+                u.tg_id AS target_tg_id,
+                t.actor_tg_id AS actor_tg_id,
+                CASE
+                    WHEN t.source = 'admin' THEN 'Корректировка задач: ' || t.amount
+                    WHEN t.source = 'group' THEN 'Задачи из группы: ' || t.amount
+                    ELSE 'Изменение задач: ' || t.amount
+                END AS details
+            FROM task_log t
+            JOIN users u ON u.id = t.user_id
+            WHERE t.cancelled = 0
+
+            UNION ALL
+
+            SELECT
+                t.id,
+                t.created_at,
+                'topic',
+                u.id,
+                u.name,
+                u.tg_id,
+                t.actor_tg_id,
+                'Задание ' || t.topic_no || ': ' ||
+                    t.from_status || ' → ' || t.to_status
+            FROM topic_log t
+            JOIN users u ON u.id = t.user_id
+
+            UNION ALL
+
+            SELECT
+                e.id,
+                e.created_at,
+                'exam',
+                u.id,
+                u.name,
+                u.tg_id,
+                e.actor_tg_id,
+                'Пробник: ' || COALESCE(CAST(e.from_exam AS TEXT), '—') ||
+                    ' → ' || COALESCE(CAST(e.to_exam AS TEXT), '—')
+            FROM exam_log e
+            JOIN users u ON u.id = e.user_id
+
+            UNION ALL
+
+            SELECT
+                a.id,
+                a.created_at,
+                'admin',
+                a.target_user_id,
+                COALESCE(u.name, '—'),
+                u.tg_id,
+                a.actor_tg_id,
+                a.action || CASE
+                    WHEN a.details = '' THEN ''
+                    ELSE ': ' || a.details
+                END
+            FROM admin_log a
+            LEFT JOIN users u ON u.id = a.target_user_id
+        )
+        ORDER BY at DESC, id DESC, kind ASC
+        LIMIT ? OFFSET ?
+    `).all(limit, offset) as unknown as {
+        id: number;
+        at: number;
+        kind: AdminJournalEntry['kind'];
+        target_id: number | null;
+        target_name: string;
+        target_tg_id: number | null;
+        actor_tg_id: number | null;
+        details: string;
+    }[];
+
+    return rows.map((r) => ({
+        id: r.id,
+        at: Number(r.at),
+        kind: r.kind,
+        targetId: r.target_id,
+        targetName: r.target_name,
+        targetTgId: r.target_tg_id,
+        actorTgId: r.actor_tg_id,
+        details: r.details,
+    }));
 }

@@ -50,3 +50,24 @@ export interface SelfData {
     exam: number | null;
     limits: { topics: number; tasks: number; exam: number };
 }
+
+export interface AdminMember {
+    id: number;
+    tgId: number;
+    name: string;
+    exam: number | null;
+    removed: boolean;
+    tasksTotal: number;
+    topics: TopicStatus[];
+}
+
+export interface AdminJournalEntry {
+    id: number;
+    at: number;
+    kind: 'task' | 'topic' | 'exam' | 'admin';
+    targetId: number | null;
+    targetName: string;
+    targetTgId: number | null;
+    actorTgId: number | null;
+    details: string;
+}

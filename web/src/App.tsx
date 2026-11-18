@@ -1,48 +1,82 @@
 import { useState } from 'preact/hooks';
 import { useApi } from './api/useApi';
+import { setPreviewAs } from './api/client';
 import type { Me } from './api/types';
 import { TabBar } from './components/TabBar';
 import type { Tab } from './components/TabBar';
 import { Empty, Loading, Screen } from './components/ui';
 import { ArenaPage } from './pages/ArenaPage';
+import { AdminPage } from './pages/AdminPage';
 import { MembersPage } from './pages/MembersPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { TopicsPage } from './pages/TopicsPage';
 import { WeekPage } from './pages/WeekPage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
-type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'month' | 'global';
+type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'month' | 'global' | 'adminMembers' | 'adminJournal' | 'adminPreview';
 
-// Как в боте: у ученика пять вкладок, у гостя четыре и стартовая — список профилей
 const STUDENT_TABS: Tab<TabId>[] = [
     { id: 'profile', icon: '👤', label: 'Профиль' },
-    { id: 'week', icon: '📅', label: 'Неделя' },
+    { id: 'week', icon: '📅', label: 'Главная' },
     { id: 'topics', icon: '📘', label: 'Задания' },
     { id: 'arena', icon: '✨', label: 'Арена' },
     { id: 'members', icon: '👥', label: 'Участники' },
 ];
+
 const GUEST_TABS: Tab<TabId>[] = [
     { id: 'members', icon: '👥', label: 'Профили' },
-    { id: 'week', icon: '📅', label: 'Неделя' },
+    { id: 'week', icon: '📅', label: 'Главная' },
     { id: 'month', icon: '💯', label: 'Успеваемость' },
     { id: 'global', icon: '🌍', label: 'Глобальный прогресс' },
 ];
 
+const ADMIN_TABS: Tab<TabId>[] = [
+    { id: 'week', icon: '📅', label: 'Главная' },
+    { id: 'adminMembers', icon: '👥', label: 'Участники' },
+    { id: 'adminJournal', icon: '📋', label: 'Журнал' },
+    { id: 'adminPreview', icon: '👁️', label: 'Предпросмотр' },
+];
+
 export function App() {
-    const me = useApi<Me>('/api/me');
+    const [preview, setPreview] = useState<{ id: number; name: string } | null>(null);
+    const me = useApi<Me>(preview ? `/api/me?preview=${preview.id}` : '/api/me');
     const [tab, setTab] = useState<TabId | null>(null);
-    const [openId, setOpenId] = useState<number | null>(null); // открытый чужой профиль
+    const [openId, setOpenId] = useState<number | null>(null);
 
     useBackButton(openId !== null ? () => setOpenId(null) : null);
 
-    if (!insideTelegram) {
-        return <Screen title="Арена"><Empty text="Откройте Арену через Telegram-бота" /></Screen>;
+    const startPreview = (id: number, name: string) => {
+        setPreviewAs(String(id));
+        setPreview({ id, name });
+        setOpenId(null);
+        setTab('week');
+    };
+
+    const stopPreview = () => {
+        setPreviewAs(null);
+        setPreview(null);
+        setOpenId(null);
+        setTab('adminPreview');
+    };
+
+    if (!insideTelegram) return <Screen title="Арена"><Empty text="Откройте Арену через Telegram-бота" /></Screen>;
+    if (me.error) {
+        return (
+            <Screen title="Арена">
+                <Empty text={me.error} />
+                {preview && <button class="chip" onClick={stopPreview}>Выйти из предпросмотра</button>}
+            </Screen>
+        );
     }
-    if (me.error) return <Screen title="Арена"><Empty text={me.error} /></Screen>;
     if (!me.data) return <Screen title="Арена"><Loading /></Screen>;
 
-    const tabs = me.data.personId !== null ? STUDENT_TABS : GUEST_TABS;
-    const active = tab ?? tabs[0].id;
+    const tabs = preview
+        ? STUDENT_TABS
+        : me.data.role === 'admin'
+            ? ADMIN_TABS
+            : me.data.personId !== null ? STUDENT_TABS : GUEST_TABS;
+
+    const active = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
     const open = (id: number) => setOpenId(id);
 
     const go = (id: TabId) => {
@@ -51,10 +85,14 @@ export function App() {
     };
 
     let page;
-    if (openId !== null) page = <ProfilePage id={openId} />;
-    else if (active === 'profile') page = <ProfilePage id="me" />;
+    if (preview && active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} />;
+    else if (openId !== null) page = <ProfilePage id={openId} />;
     else if (active === 'week') page = <WeekPage onOpen={open} />;
-    else if (active === 'topics') page = <TopicsPage />;
+    else if (active === 'adminMembers') page = <AdminPage section="members" />;
+    else if (active === 'adminJournal') page = <AdminPage section="journal" />;
+    else if (active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} />;
+    else if (active === 'profile') page = <ProfilePage id="me" />;
+    else if (active === 'topics') page = <TopicsPage readOnly={preview !== null} />;
     else if (active === 'arena') page = <ArenaPage onOpen={open} />;
     else if (active === 'month') page = <ArenaPage fixedMode="month" onOpen={open} />;
     else if (active === 'global') page = <ArenaPage fixedMode="global" onOpen={open} />;
@@ -62,6 +100,12 @@ export function App() {
 
     return (
         <>
+            {preview && (
+                <div class="preview-banner">
+                    <span>Предпросмотр ученика: <b>{preview.name}</b></span>
+                    <button class="chip" onClick={stopPreview}>Выйти</button>
+                </div>
+            )}
             {page}
             <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} />
         </>

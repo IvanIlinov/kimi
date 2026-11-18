@@ -8,7 +8,7 @@ import { haptic } from '../lib/telegram';
 const AMOUNTS = [-1, 1, 3, 5, 10];
 const DOT = { done: '🟢', learning: '🟡', todo: '🔴' } as const;
 
-export function TopicsPage() {
+export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     const { data, error, setData } = useApi<SelfData>('/api/self');
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState('');
@@ -18,7 +18,7 @@ export function TopicsPage() {
 
     // Любое изменение: запрос, обновление данных из ответа, вибрация, ошибка текстом
     async function run(path: string, body?: unknown) {
-        if (busy) return;
+        if (readOnly || busy) return;
         setBusy(true);
         setNote('');
         try {
@@ -34,6 +34,7 @@ export function TopicsPage() {
 
     return (
         <Screen title="Задания">
+            {readOnly && <p class="muted">Режим предпросмотра — изменения отключены.</p>}
             <Card>
                 <div class="between">
                     <Label>Задачи</Label>
@@ -46,7 +47,7 @@ export function TopicsPage() {
                         <button
                             key={n}
                             class="chip"
-                            disabled={busy}
+                            disabled={readOnly || busy}
                             onClick={() => run('/api/self/tasks', { amount: n })}
                         >
                             {n > 0 ? `+${n}` : n}
@@ -63,7 +64,7 @@ export function TopicsPage() {
                         <button
                             key={i}
                             class={`cell ${status}`}
-                            disabled={busy}
+                            disabled={readOnly || busy}
                             onClick={() => run(`/api/self/topics/${i + 1}/cycle`)}
                         >
                             <span>{DOT[status]}</span>
@@ -73,15 +74,16 @@ export function TopicsPage() {
                 </div>
             </Card>
 
-            <ExamCard exam={data.exam} max={data.limits.exam} busy={busy} onSave={(v) => run('/api/self/exam', { value: v })} />
+            <ExamCard exam={data.exam} max={data.limits.exam} busy={busy} readOnly={readOnly} onSave={(v) => run('/api/self/exam', { value: v })} />
         </Screen>
     );
 }
 
-function ExamCard({ exam, max, busy, onSave }: {
+function ExamCard({ exam, max, busy, readOnly, onSave }: {
     exam: number | null;
     max: number;
     busy: boolean;
+    readOnly: boolean;
     onSave: (value: number) => void;
 }) {
     const [value, setValue] = useState(exam === null ? '' : String(exam));
@@ -93,6 +95,7 @@ function ExamCard({ exam, max, busy, onSave }: {
             <div class="exam">
                 <input
                     type="number"
+                    disabled={readOnly}
                     inputMode="numeric"
                     min={0}
                     max={max}
@@ -100,7 +103,7 @@ function ExamCard({ exam, max, busy, onSave }: {
                     placeholder={`0–${max}`}
                     onInput={(e) => setValue((e.target as HTMLInputElement).value)}
                 />
-                <button class="chip primary" disabled={busy || !valid} onClick={() => onSave(Number(value))}>
+                <button class="chip primary" disabled={readOnly || busy || !valid} onClick={() => onSave(Number(value))}>
                     Сохранить
                 </button>
             </div>

@@ -2,6 +2,12 @@ import { initData } from '../lib/telegram';
 
 const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
+let previewAs: string | null = null;
+
+export function setPreviewAs(id: string | null): void {
+    previewAs = id;
+}
+
 export class ApiError extends Error {
     status: number;
     constructor(status: number, message: string) {
@@ -18,6 +24,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
             method: opts.method ?? 'GET',
             headers: {
                 Authorization: `tma ${initData}`,
+                ...(previewAs !== null ? { 'X-Arena-Preview': previewAs } : {}),
                 ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
             },
             body: hasBody ? JSON.stringify(opts.body) : undefined,

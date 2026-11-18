@@ -10,6 +10,7 @@ export const db = new DatabaseSync(DB_PATH);
 
 db.exec('PRAGMA foreign_keys = ON;');
 
+// Базовая схема. CREATE IF NOT EXISTS безопасен при повторном запуске.
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id       INTEGER PRIMARY KEY,
@@ -38,11 +39,11 @@ CREATE TABLE IF NOT EXISTS task_log (
 CREATE TABLE IF NOT EXISTS topic_log (
   id           INTEGER PRIMARY KEY,
   user_id      INTEGER NOT NULL REFERENCES users(id),
-  actor_tg_id  INTEGER,                 -- кто сделал: Telegram id ученика или админа
+  actor_tg_id  INTEGER,
   topic_no     INTEGER NOT NULL,
   from_status  TEXT NOT NULL,
   to_status    TEXT NOT NULL,
-  created_at   INTEGER NOT NULL         -- Unix-время в миллисекундах
+  created_at   INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS meta (
@@ -51,7 +52,45 @@ CREATE TABLE IF NOT EXISTS meta (
 );
 `);
 
-const taskCols = db.prepare('PRAGMA table_info(task_log)').all() as unknown as { name: string }[];
-if (!taskCols.some((c) => c.name === 'source')) {
-  db.exec("ALTER TABLE task_log ADD COLUMN source TEXT NOT NULL DEFAULT 'bot'");
+// Проверяет наличие колонки и добавляет её только при необходимости.
+function addColumnIfMissing(
+    table: string,
+    column: string,
+    definition: string,
+): void {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all() as {
+        name: string;
+    }[];
+
+    if (!columns.some((item) => item.name === column)) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    }
 }
+
+// Источник записи и Telegram ID того, кто её создал.
+addColumnIfMissing('task_log', 'source', "TEXT NOT NULL DEFAULT 'bot'");
+addColumnIfMissing('task_log', 'actor_tg_id', 'INTEGER');
+
+// История изменений балла пробника.
+db.exec(`
+CREATE TABLE IF NOT EXISTS exam_log (
+  id           INTEGER PRIMARY KEY,
+  user_id      INTEGER NOT NULL REFERENCES users(id),
+  actor_tg_id  INTEGER,
+  from_exam    INTEGER,
+  to_exam      INTEGER,
+  created_at   INTEGER NOT NULL
+);
+`);
+
+// Аудит административных действий.
+db.exec(`
+CREATE TABLE IF NOT EXISTS admin_log (
+  id              INTEGER PRIMARY KEY,
+  actor_tg_id     INTEGER NOT NULL,
+  target_user_id  INTEGER REFERENCES users(id),
+  action          TEXT NOT NULL,
+  details         TEXT NOT NULL DEFAULT '',
+  created_at      INTEGER NOT NULL
+);
+`);

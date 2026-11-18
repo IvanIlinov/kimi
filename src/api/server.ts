@@ -2,11 +2,13 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { ALLOWED_ORIGINS, API_HOST, API_PORT, BOT_TOKEN } from '../config.ts';
 import { verifyInitData } from './auth.ts';
-import { resolveViewer } from './context.ts';
+import { loadRanked, resolveViewer } from './context.ts';
+import type { Viewer } from './context.ts';
 import { HttpError } from './errors.ts';
 import { Router } from './router.ts';
 import { registerRead } from './routes/read.ts';
 import { registerSelf } from './routes/self.ts';
+import { registerAdmin } from './routes/admin.ts';
 
 const MAX_BODY = 10_000;
 
@@ -14,6 +16,8 @@ const router = new Router();
 router.get('/api/health', () => ({ ok: true }));
 registerRead(router);
 registerSelf(router);
+registerAdmin(router);
+
 
 function send(res: ServerResponse, status: number, payload: unknown): void {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -41,7 +45,7 @@ function applyCors(req: IncomingMessage, res: ServerResponse): void {
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Vary', 'Origin');
-        res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+        res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Arena-Preview');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.setHeader('Access-Control-Max-Age', '600');
     }
@@ -74,12 +78,47 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     if (!route) throw new HttpError(404, 'Не найдено');
 
     // Здоровье сервиса проверяется без подписи, остальное только с ней
-    let viewer = null;
+    let viewer: Viewer | null = null;
     if (url.pathname !== '/api/health') {
         const header = req.headers.authorization ?? '';
         const user = header.startsWith('tma ') ? verifyInitData(header.slice(4), BOT_TOKEN) : null;
         if (!user) throw new HttpError(401, 'Нужно открыть через Telegram');
         viewer = resolveViewer(user);
+
+        const previewHeader = req.headers['x-arena-preview'];
+
+        if (previewHeader !== undefined) {
+            if (req.method !== 'GET') {
+                throw new HttpError(403, 'В предпросмотре изменения запрещены');
+            }
+
+            if (viewer.role !== 'admin') {
+                throw new HttpError(403, 'Предпросмотр доступен только администратору');
+            }
+
+            if (
+                typeof previewHeader !== 'string' ||
+                !/^[1-9][0-9]*$/.test(previewHeader) ||
+                !Number.isSafeInteger(Number(previewHeader))
+            ) {
+                throw new HttpError(400, 'Некорректный профиль предпросмотра');
+            }
+
+            const person = loadRanked()
+                .find((r) => r.person.id === Number(previewHeader))
+                ?.person;
+
+            if (!person) {
+                throw new HttpError(404, 'Участник не найден');
+            }
+
+            viewer = {
+                tgId: person.tgId,
+                firstName: person.name,
+                role: 'student',
+                personId: person.id,
+            };
+        }
     }
 
     const body = req.method === 'POST' ? await readJson(req) : {};
