@@ -6,9 +6,9 @@ import { Card, Empty, Label, Loading, Screen } from '../components/ui';
 import { haptic } from '../lib/telegram';
 
 const STATUS: Record<TopicStatus, { icon: string; next: TopicStatus }> = {
-    done: { icon: '🟢', next: 'learning' },
-    learning: { icon: '🟡', next: 'todo' },
-    todo: { icon: '🔴', next: 'done' },
+    done: { icon: '🟢', next: 'todo' },
+    learning: { icon: '🟡', next: 'done' },
+    todo: { icon: '🔴', next: 'learning' },
 };
 
 const STATUS_NAME: Record<TopicStatus, string> = {
@@ -19,17 +19,19 @@ const STATUS_NAME: Record<TopicStatus, string> = {
 
 type Section = 'members' | 'journal' | 'preview';
 
-export function AdminPage({ section, onPreview }: {
+export function AdminPage({ section, onPreview, onGuestPreview }: {
     section: Section;
     onPreview?: (id: number, name: string) => void;
+    onGuestPreview?: () => void;
 }) {
     if (section === 'journal') return <JournalPage />;
-    if (section === 'preview') return <PreviewPage onPreview={onPreview!} />;
+    if (section === 'preview') return <PreviewPage onPreview={onPreview!} onGuestPreview={onGuestPreview!} />;
     return <MembersAdminPage />;
 }
 
-function PreviewPage({ onPreview }: {
+function PreviewPage({ onPreview, onGuestPreview }: {
     onPreview: (id: number, name: string) => void;
+    onGuestPreview: () => void;
 }) {
     const { data, error } = useApi<AdminMember[]>('/api/admin/members');
 
@@ -39,7 +41,12 @@ function PreviewPage({ onPreview }: {
     const active = data.filter((member) => !member.removed);
 
     return (
-        <Screen title="Предпросмотр ученика">
+        <Screen title="Предпросмотр">
+            <Card>
+                <Label>Как видит Арену гость</Label>
+                <p class="muted">Режим родителя: профили, главная, успеваемость и глобальный прогресс. Данные доступны только для просмотра.</p>
+                <button class="chip primary" onClick={onGuestPreview}>Посмотреть как гость</button>
+            </Card>
             <Card>
                 <Label>Как видит Арену ученик</Label>
                 <p class="muted">Выберите участника. Откроется весь интерфейс с его данными, без возможности что-либо изменить.</p>

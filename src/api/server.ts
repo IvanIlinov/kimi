@@ -96,28 +96,41 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
                 throw new HttpError(403, 'Предпросмотр доступен только администратору');
             }
 
-            if (
-                typeof previewHeader !== 'string' ||
-                !/^[1-9][0-9]*$/.test(previewHeader) ||
-                !Number.isSafeInteger(Number(previewHeader))
-            ) {
+            if (typeof previewHeader !== 'string') {
                 throw new HttpError(400, 'Некорректный профиль предпросмотра');
             }
 
-            const person = loadRanked()
-                .find((r) => r.person.id === Number(previewHeader))
-                ?.person;
+            if (previewHeader === 'guest') {
+                // Отдельный виртуальный гость: не привязываем его к ID администратора.
+                viewer = {
+                    tgId: -1,
+                    firstName: 'Гость',
+                    role: 'guest',
+                    personId: null,
+                };
+            } else {
+                if (
+                    !/^[1-9][0-9]*$/.test(previewHeader) ||
+                    !Number.isSafeInteger(Number(previewHeader))
+                ) {
+                    throw new HttpError(400, 'Некорректный профиль предпросмотра');
+                }
 
-            if (!person) {
-                throw new HttpError(404, 'Участник не найден');
+                const person = loadRanked()
+                    .find((r) => r.person.id === Number(previewHeader))
+                    ?.person;
+
+                if (!person) {
+                    throw new HttpError(404, 'Участник не найден');
+                }
+
+                viewer = {
+                    tgId: person.tgId,
+                    firstName: person.name,
+                    role: 'student',
+                    personId: person.id,
+                };
             }
-
-            viewer = {
-                tgId: person.tgId,
-                firstName: person.name,
-                role: 'student',
-                personId: person.id,
-            };
         }
     }
 

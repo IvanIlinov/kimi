@@ -37,9 +37,13 @@ const ADMIN_TABS: Tab<TabId>[] = [
     { id: 'adminPreview', icon: '👁️', label: 'Предпросмотр' },
 ];
 
+type Preview =
+    | { mode: 'student'; id: number; name: string }
+    | { mode: 'guest' };
+
 export function App() {
-    const [preview, setPreview] = useState<{ id: number; name: string } | null>(null);
-    const me = useApi<Me>(preview ? `/api/me?preview=${preview.id}` : '/api/me');
+    const [preview, setPreview] = useState<Preview | null>(null);
+    const me = useApi<Me>(preview ? `/api/me?preview=${preview.mode === 'guest' ? 'guest' : preview.id}` : '/api/me');
     const [tab, setTab] = useState<TabId | null>(null);
     const [openId, setOpenId] = useState<number | null>(null);
 
@@ -47,9 +51,16 @@ export function App() {
 
     const startPreview = (id: number, name: string) => {
         setPreviewAs(String(id));
-        setPreview({ id, name });
+        setPreview({ mode: 'student', id, name });
         setOpenId(null);
         setTab('week');
+    };
+
+    const startGuestPreview = () => {
+        setPreviewAs('guest');
+        setPreview({ mode: 'guest' });
+        setOpenId(null);
+        setTab('members');
     };
 
     const stopPreview = () => {
@@ -70,11 +81,13 @@ export function App() {
     }
     if (!me.data) return <Screen title="Арена"><Loading /></Screen>;
 
-    const tabs = preview
-        ? STUDENT_TABS
-        : me.data.role === 'admin'
-            ? ADMIN_TABS
-            : me.data.personId !== null ? STUDENT_TABS : GUEST_TABS;
+    const tabs = preview?.mode === 'guest'
+        ? GUEST_TABS
+        : preview
+            ? STUDENT_TABS
+            : me.data.role === 'admin'
+                ? ADMIN_TABS
+                : me.data.personId !== null ? STUDENT_TABS : GUEST_TABS;
 
     const active = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
     const open = (id: number) => setOpenId(id);
@@ -85,12 +98,11 @@ export function App() {
     };
 
     let page;
-    if (preview && active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} />;
-    else if (openId !== null) page = <ProfilePage id={openId} />;
+    if (openId !== null) page = <ProfilePage id={openId} />;
     else if (active === 'week') page = <WeekPage onOpen={open} />;
     else if (active === 'adminMembers') page = <AdminPage section="members" />;
     else if (active === 'adminJournal') page = <AdminPage section="journal" />;
-    else if (active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} />;
+    else if (active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'profile') page = <ProfilePage id="me" />;
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null} />;
     else if (active === 'arena') page = <ArenaPage onOpen={open} />;
@@ -102,7 +114,11 @@ export function App() {
         <>
             {preview && (
                 <div class="preview-banner">
-                    <span>Предпросмотр ученика: <b>{preview.name}</b></span>
+                    <span>
+                        {preview.mode === 'guest'
+                            ? 'Предпросмотр гостя'
+                            : <>Предпросмотр ученика: <b>{preview.name}</b></>}
+                    </span>
                     <button class="chip" onClick={stopPreview}>Выйти</button>
                 </div>
             )}
