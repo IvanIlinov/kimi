@@ -11,7 +11,7 @@ process.env.DB_PATH = join(tempDir, 'test.db');
 const { db } = await import('./db.ts');
 const { addUser, renameUser, removeUser, restoreUser } = await import('./admin.ts');
 const { setTasksTotal, setExam, setTopicStatus } = await import('./write.ts');
-const { getAdminMembers, getAdminJournal } = await import('./store.ts');
+const { getAdminMembers, getAdminJournal, getWeekStats } = await import('./store.ts');
 
 after(() => {
     db.close();
@@ -92,7 +92,24 @@ test('административные операции работают на и
         'done',
     );
 
+
     assert.throws(() => setTopicStatus(alice, 28, 'done', 900001));
+
+    // В недельный прогресс попадает только закрепление.
+    const weekly = () => getWeekStats().find((item) => item.userId === alice)?.topics ?? 0;
+
+    assert.equal(weekly(), 0);
+
+    // Переход в reinforced даёт +1.
+    setTopicStatus(alice, 1, 'reinforced', 700001);
+    assert.equal(weekly(), 1);
+
+    // Выход из reinforced убирает этот прогресс.
+    setTopicStatus(alice, 1, 'todo', 700001);
+    assert.equal(weekly(), 0);
+
+    // Возвращаем зелёный статус для проверки сохранения данных при удалении.
+    setTopicStatus(alice, 1, 'done', 900001);
 
     // Мягкое удаление сохраняет данные, восстановление возвращает участника.
     removeUser(alice);
@@ -137,5 +154,9 @@ test('административные операции работают на и
 
     assert.ok(aliceJournal.length > 0);
     assert.ok(aliceJournal.every((entry) => entry.targetTgId === 700001));
-    assert.ok(aliceJournal.every((entry) => entry.actorTgId === 900001));
+    assert.ok(aliceJournal.some((entry) => entry.actorTgId === 900001));
+    assert.ok(aliceJournal.some((entry) => entry.actorTgId === 700001));
+    assert.ok(aliceJournal.every(
+        (entry) => entry.actorTgId === 900001 || entry.actorTgId === 700001,
+    ));
 });

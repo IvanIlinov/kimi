@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS topic_status (
   user_id  INTEGER NOT NULL REFERENCES users(id),
   topic_no INTEGER NOT NULL CHECK (topic_no BETWEEN 1 AND 27),
-  status   TEXT NOT NULL CHECK (status IN ('done', 'learning', 'todo')),
+  status   TEXT NOT NULL CHECK (status IN ('done', 'learning', 'todo', 'reinforced')),
   PRIMARY KEY (user_id, topic_no)
 );
 
@@ -51,6 +51,35 @@ CREATE TABLE IF NOT EXISTS meta (
   value TEXT NOT NULL
 );
 `);
+
+// Добавляет статус reinforced в CHECK старой таблицы, сохраняя все записи.
+const topicStatusSchema = db.prepare(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'topic_status'",
+).get() as { sql: string } | undefined;
+
+if (!topicStatusSchema?.sql.toLowerCase().includes("'reinforced'")) {
+    db.exec('BEGIN IMMEDIATE');
+    try {
+        db.exec(`
+            CREATE TABLE topic_status_new (
+                user_id  INTEGER NOT NULL REFERENCES users(id),
+                topic_no INTEGER NOT NULL CHECK (topic_no BETWEEN 1 AND 27),
+                status   TEXT NOT NULL CHECK (status IN ('done', 'learning', 'todo', 'reinforced')),
+                PRIMARY KEY (user_id, topic_no)
+            );
+
+            INSERT INTO topic_status_new (user_id, topic_no, status)
+            SELECT user_id, topic_no, status FROM topic_status;
+
+            DROP TABLE topic_status;
+            ALTER TABLE topic_status_new RENAME TO topic_status;
+        `);
+        db.exec('COMMIT');
+    } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+    }
+}
 
 // Проверяет наличие колонки и добавляет её только при необходимости.
 function addColumnIfMissing(

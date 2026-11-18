@@ -12,8 +12,8 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState('');
 
-    if (error) return <Screen title="Задания"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Задания"><Loading /></Screen>;
+    if (error) return <Screen title="Задания" className="layout-topics"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Задания" className="layout-topics"><Loading /></Screen>;
 
     // Любое изменение: запрос, обновление данных из ответа, вибрация, ошибка текстом
     async function run(path: string, body?: unknown) {
@@ -32,7 +32,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     }
 
     return (
-        <Screen title="Задания">
+        <Screen title="Задания" className="layout-topics">
             {readOnly && <p class="muted">Режим предпросмотра — изменения отключены.</p>}
             <Card>
                 <div class="between">

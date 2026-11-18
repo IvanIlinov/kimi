@@ -3,7 +3,7 @@ import { db } from './db.ts';
 interface Input {
     name: string;
     tgId: number;
-    studied: number[];
+    done: number[];
     learning: number[];
     tasksTotal: number;
     tasksWeek: number;
@@ -15,14 +15,14 @@ const range = (from: number, to: number) =>
     Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 const PEOPLE: Input[] = [
-    { name: 'ваня', tgId: 2024854134, studied: [...range(1, 18), 22, 23], learning: [19, 20, 21], tasksTotal: 590, tasksWeek: 0, exam: 75, comment: '' },
-    { name: 'егор', tgId: 7468044193, studied: [1, 3, 4, 5, 6, 7, 11, 12, 14, 17, 18, 22], learning: [9], tasksTotal: 90, tasksWeek: 0, exam: 43, comment: '' },
-    { name: 'лёша', tgId: 6850523714, studied: [1, 2, 3, 4, 5, 6, 7, 11, 12, 14, 16, 18, 22], learning: [17, 9, 8], tasksTotal: 90, tasksWeek: 0, exam: 54, comment: '' },
-    { name: 'ника', tgId: 785826438, studied: [1, 3, 4, 6, 7, 11, 12, 18, 22], learning: [17, 9, 8], tasksTotal: 40, tasksWeek: 0, exam: 0, comment: '' },
-    { name: 'кирилл', tgId: 1961889124, studied: [1, 4, 7, 11], learning: [18, 22], tasksTotal: 30, tasksWeek: 0, exam: 0, comment: '' },
-    { name: 'вова', tgId: 1814782338, studied: [1, 4, 7, 11, 18, 22], learning: [6], tasksTotal: 55, tasksWeek: 0, exam: 40, comment: '' },
-    { name: 'саня', tgId: 1782801806, studied: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13], learning: [18, 12, 22], tasksTotal: 55, tasksWeek: 0, exam: 40, comment: '' },
-    { name: 'андрей', tgId: 1809349886, studied: [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 23], learning: [16, 17], tasksTotal: 105, tasksWeek: 0, exam: 56, comment: '' },
+    { name: 'ваня', tgId: 2024854134, done: [...range(1, 18), 22, 23], learning: [19, 20, 21], tasksTotal: 590, tasksWeek: 0, exam: 75, comment: '' },
+    { name: 'егор', tgId: 7468044193, done: [1, 3, 4, 5, 6, 7, 11, 12, 14, 17, 18, 22], learning: [9], tasksTotal: 90, tasksWeek: 0, exam: 43, comment: '' },
+    { name: 'лёша', tgId: 6850523714, done: [1, 2, 3, 4, 5, 6, 7, 11, 12, 14, 16, 18, 22], learning: [17, 9, 8], tasksTotal: 90, tasksWeek: 0, exam: 54, comment: '' },
+    { name: 'ника', tgId: 785826438, done: [1, 3, 4, 6, 7, 11, 12, 18, 22], learning: [17, 9, 8], tasksTotal: 40, tasksWeek: 0, exam: 0, comment: '' },
+    { name: 'кирилл', tgId: 1961889124, done: [1, 4, 7, 11], learning: [18, 22], tasksTotal: 30, tasksWeek: 0, exam: 0, comment: '' },
+    { name: 'вова', tgId: 1814782338, done: [1, 4, 7, 11, 18, 22], learning: [6], tasksTotal: 55, tasksWeek: 0, exam: 40, comment: '' },
+    { name: 'саня', tgId: 1782801806, done: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13], learning: [18, 12, 22], tasksTotal: 55, tasksWeek: 0, exam: 40, comment: '' },
+    { name: 'андрей', tgId: 1809349886, done: [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 23], learning: [16, 17], tasksTotal: 105, tasksWeek: 0, exam: 56, comment: '' },
 ];
 
 // 1 сентября 2026, 00:00 по Москве (UTC+3)
@@ -36,7 +36,7 @@ function buildStatuses(p: Input): Map<number, 'done' | 'learning'> {
         if (map.has(topic)) throw new Error(`${p.name}: задание ${topic} указано дважды (${map.get(topic)} и ${status})`);
         map.set(topic, status);
     };
-    p.studied.forEach((t) => add(t, 'done'));
+    p.done.forEach((t) => add(t, 'done'));
     p.learning.forEach((t) => add(t, 'learning'));
     return map;
 }

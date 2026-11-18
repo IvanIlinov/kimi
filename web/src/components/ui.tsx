@@ -53,9 +53,13 @@ export function Row({ name, bar, right, onClick }: {
     );
 }
 
-export function Screen({ title, children }: { title: string; children: ComponentChildren }) {
+export function Screen({ title, children, className = '' }: {
+    title: string;
+    children: ComponentChildren;
+    className?: string;
+}) {
     return (
-        <main class="page">
+        <main class={`page ${className}`}>
             <h1 class="display">{title}</h1>
             {children}
         </main>

@@ -2,7 +2,7 @@
 
 export type Role = 'admin' | 'student' | 'guest';
 export type Standing = 'ontrack' | 'behind';
-export type TopicStatus = 'done' | 'learning' | 'todo';
+export type TopicStatus = 'done' | 'learning' | 'todo' | 'reinforced';
 
 export interface Me {
     role: Role;

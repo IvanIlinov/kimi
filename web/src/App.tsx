@@ -113,14 +113,9 @@ export function App() {
     return (
         <>
             {preview && (
-                <div class="preview-banner">
-                    <span>
-                        {preview.mode === 'guest'
-                            ? 'Предпросмотр гостя'
-                            : <>Предпросмотр ученика: <b>{preview.name}</b></>}
-                    </span>
-                    <button class="chip" onClick={stopPreview}>Выйти</button>
-                </div>
+                <button class="preview-exit" onClick={stopPreview}>
+                    Выйти из просмотра
+                </button>
             )}
             {page}
             <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} />

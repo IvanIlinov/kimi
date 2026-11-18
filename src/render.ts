@@ -125,7 +125,7 @@ export function renderArenaRich(
                 `${r.pct}%`,
                 `${monthPct(r, now)}%`,
                 `${p.exam ?? '—'}`,
-                `${p.studied.length}`,
+                `${p.reinforced.length}`,
                 `${p.tasksTotal}`,
             ],
             ['left', 'center', 'center', 'center', 'center', 'center'],
@@ -266,7 +266,7 @@ export function renderStudentRich(
 
     const notes = [
         `Нарешано ${w.tasks} ${plural(w.tasks, ['задача', 'задачи', 'задач'])} из ${WEEK_GOAL}`,
-        `Изучили ${p.studied.length} ${plural(p.studied.length, ['задание', 'задания', 'заданий'])} из ${m.topics}`,
+        `Закрепили ${p.reinforced.length} ${plural(p.reinforced.length, ['задание', 'задания', 'заданий'])} из ${m.topics}`,
         p.exam === null
             ? `Пробник пока не внесён, цель ${m.exam} ${plural(m.exam, ['балл', 'балла', 'баллов'])}`
             : `Сейчас пишем пробник на ${p.exam} ${plural(p.exam, ['балл', 'балла', 'баллов'])} из ${m.exam}`,
@@ -281,7 +281,7 @@ export function renderStudentRich(
         `<blockquote>${notes}</blockquote>`,
         hr,
         '<p><b>Month</b></p>',
-        `<p>📗 ${monthBar(p.studied.length, m.topics)} ${p.studied.length}/${m.topics}</p>`,
+        `<p>📗 ${monthBar(p.reinforced.length, m.topics)} ${p.reinforced.length}/${m.topics}</p>`,
         `<p>📘 ${monthBar(p.tasksTotal, m.tasks)} ${p.tasksTotal}/${m.tasks}</p>`,
         `<p>📕 ${monthBar(p.exam ?? 0, m.exam)} ${p.exam ?? '—'}/${m.exam}</p>`,
         BLANK,
@@ -291,7 +291,7 @@ export function renderStudentRich(
 
 // ---- Журнал ----
 
-const JOURNAL_ICON: Record<string, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
+const JOURNAL_ICON: Record<string, string> = { done: '🟢', reinforced: '🔵', learning: '🟡', todo: '🔴' };
 
 // Время по Москве: 15.11 15:42
 const mskTime = (ms: number) => {

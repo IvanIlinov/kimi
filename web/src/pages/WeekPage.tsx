@@ -6,11 +6,11 @@ import { cap, sgn } from '../lib/format';
 export function WeekPage({ onOpen }: { onOpen: (id: number) => void }) {
     const { data, error } = useApi<Week>('/api/week');
 
-    if (error) return <Screen title="Неделя"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Неделя"><Loading /></Screen>;
+    if (error) return <Screen title="Неделя" className="layout-ranking"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Неделя" className="layout-ranking"><Loading /></Screen>;
 
     return (
-        <Screen title="Неделя">
+        <Screen title="Неделя" className="layout-ranking">
             {data.leader && (
                 <Card class="leader">
                     <Label>👑 Лидер недели</Label>

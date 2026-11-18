@@ -45,7 +45,7 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
         standing: standing(r, now),
         week: { tasks: w.tasks, topics: w.topics, goalPct: Math.round((w.tasks / WEEK_GOAL) * 100) },
         month: {
-            topics: { value: p.studied.length, goal: m.topics },
+            topics: { value: p.reinforced.length, goal: m.topics },
             tasks: { value: p.tasksTotal, goal: m.tasks },
             exam: { value: p.exam, goal: m.exam },
         },
@@ -100,7 +100,7 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
                   pct: first.pct,
                   monthPct: monthPct(first, now),
                   exam: first.person.exam,
-                  topics: first.person.studied.length,
+                  topics: first.person.reinforced.length,
                   tasks: first.person.tasksTotal,
               }
             : null,

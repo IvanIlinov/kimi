@@ -10,12 +10,12 @@ export function ArenaPage({ fixedMode, onOpen }: { fixedMode?: ArenaMode; onOpen
     const mode = fixedMode ?? picked;
     const { data, error } = useApi<Arena>(`/api/arena?mode=${mode}`);
 
-    if (error) return <Screen title="Арена"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Арена"><Loading /></Screen>;
+    if (error) return <Screen title="Арена" className="layout-ranking"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Арена" className="layout-ranking"><Loading /></Screen>;
 
     const l = data.leader;
     return (
-        <Screen title="Арена">
+        <Screen title="Арена" className="layout-ranking">
             {!fixedMode && (
                 <div class="segmented" role="tablist">
                     <button class={mode === 'global' ? 'on' : ''} onClick={() => setPicked('global')}>🌍</button>

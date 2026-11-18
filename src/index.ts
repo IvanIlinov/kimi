@@ -50,7 +50,7 @@ const ADMIN_HELP = [
     '/id — узнать свой Telegram id',
 ];
 
-const ICON: Record<TopicStatus, string> = { done: '🟢', learning: '🟡', todo: '🔴' };
+const ICON: Record<TopicStatus, string> = { done: '🟢', reinforced: '🔵', learning: '🟡', todo: '🔴' };
 
 const GUEST_VIEW = -1; // фиктивный id для режима «глазами гостя»: не участник и не админ
 

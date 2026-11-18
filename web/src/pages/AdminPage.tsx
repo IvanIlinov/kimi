@@ -4,17 +4,20 @@ import { useApi } from '../api/useApi';
 import type { AdminMember, AdminJournalEntry, TopicStatus } from '../api/types';
 import { Card, Empty, Label, Loading, Screen } from '../components/ui';
 import { haptic } from '../lib/telegram';
+import { cap } from '../lib/format';
 
 const STATUS: Record<TopicStatus, { next: TopicStatus }> = {
-    done: { next: 'todo' },
-    learning: { next: 'done' },
     todo: { next: 'learning' },
+    learning: { next: 'done' },
+    done: { next: 'reinforced' },
+    reinforced: { next: 'todo' },
 };
 
 const STATUS_NAME: Record<TopicStatus, string> = {
-    done: 'Готово',
-    learning: 'Изучает',
     todo: 'Не начато',
+    learning: 'Изучается',
+    done: 'Изучено',
+    reinforced: 'Закреплено',
 };
 
 type Section = 'members' | 'journal' | 'preview';
@@ -35,13 +38,13 @@ function PreviewPage({ onPreview, onGuestPreview }: {
 }) {
     const { data, error } = useApi<AdminMember[]>('/api/admin/members');
 
-    if (error) return <Screen title="Предпросмотр"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Предпросмотр"><Loading /></Screen>;
+    if (error) return <Screen title="Предпросмотр" className="layout-preview"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Предпросмотр" className="layout-preview"><Loading /></Screen>;
 
     const active = data.filter((member) => !member.removed);
 
     return (
-        <Screen title="Предпросмотр">
+        <Screen title="Предпросмотр" className="layout-preview">
             <Card>
                 <Label>Как видит Арену гость</Label>
                 <p class="muted">Режим родителя: профили, главная, успеваемость и глобальный прогресс. Данные доступны только для просмотра.</p>
@@ -62,7 +65,7 @@ function PreviewPage({ onPreview, onGuestPreview }: {
                             onClick={() => onPreview(member.id, member.name)}
                         >
                             <span>
-                                <b>{member.name}</b>
+                                <b>{cap(member.name)}</b>
                                 <small>{member.tasksTotal} задач · пробник: {member.exam ?? '—'}</small>
                             </span>
                             <span class="muted">Открыть ›</span>
@@ -100,15 +103,15 @@ function MembersAdminPage() {
         }
     }
 
-    if (error) return <Screen title="Участники"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Участники"><Loading /></Screen>;
+    if (error) return <Screen title="Участники" className="layout-admin"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Участники" className="layout-admin"><Loading /></Screen>;
 
     const selected = data.find((m) => m.id === selectedId) ?? null;
     const active = data.filter((m) => !m.removed);
     const removed = data.filter((m) => m.removed);
 
     return (
-        <Screen title="Участники">
+        <Screen title="Участники" className="layout-admin">
             <Card>
                 <div class="between">
                     <Label>Добавить участника</Label>
@@ -144,6 +147,7 @@ function MembersAdminPage() {
                 {note && <p class="warn">{note}</p>}
             </Card>
 
+            <div class="admin-members-scroll">
             <Card>
                 <Label>Активные участники · {active.length}</Label>
                 {active.length === 0 && <Empty text="Пока нет участников" />}
@@ -155,7 +159,7 @@ function MembersAdminPage() {
                             onClick={() => setSelectedId(m.id)}
                         >
                             <span>
-                                <b>{m.name}</b>
+                                <b>{cap(m.name)}</b>
                                 <small>{m.tasksTotal} задач · пробник: {m.exam ?? '—'}</small>
                             </span>
                             <span class="muted">›</span>
@@ -175,7 +179,7 @@ function MembersAdminPage() {
                                 onClick={() => setSelectedId(m.id)}
                             >
                                 <span>
-                                    <b>{m.name}</b>
+                                    <b>{cap(m.name)}</b>
                                     <small>Telegram ID: {m.tgId}</small>
                                 </span>
                                 <span class="muted">›</span>
@@ -184,23 +188,36 @@ function MembersAdminPage() {
                     </div>
                 </Card>
             )}
+            </div>
 
             {selected && (
-                <MemberEditor
-                    key={selected.id}
-                    member={selected}
-                    busy={busy}
-                    run={run}
-                />
+                <div class="modal-backdrop" onClick={() => setSelectedId(null)}>
+                    <div
+                        class="modal-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Карточка участника"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <MemberEditor
+                            key={selected.id}
+                            member={selected}
+                            busy={busy}
+                            run={run}
+                            onClose={() => setSelectedId(null)}
+                        />
+                    </div>
+                </div>
             )}
         </Screen>
     );
 }
 
-function MemberEditor({ member, busy, run }: {
+function MemberEditor({ member, busy, run, onClose }: {
     member: AdminMember;
     busy: boolean;
     run: (path: string, body?: unknown) => Promise<boolean>;
+    onClose: () => void;
 }) {
     const [name, setName] = useState(member.name);
     const [tasks, setTasks] = useState(String(member.tasksTotal));
@@ -215,13 +232,16 @@ function MemberEditor({ member, busy, run }: {
         <Card>
             <div class="between">
                 <Label>Карточка участника</Label>
-                <span class="muted">ID: {member.id}</span>
+                <div class="chips">
+                    <span class="muted">ID: {member.id}</span>
+                    <button class="chip modal-close" onClick={onClose} aria-label="Закрыть">✕</button>
+                </div>
             </div>
             <p class="muted">Telegram ID: {member.tgId}</p>
 
             <Label>Имя</Label>
             {member.removed ? (
-                <p>{member.name}</p>
+                <p>{cap(member.name)}</p>
             ) : (
                 <div class="exam">
                     <input class="admin-input" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
@@ -313,7 +333,7 @@ function JournalPage() {
     }, []);
 
     return (
-        <Screen title="Журнал">
+        <Screen title="Журнал" className="layout-journal">
             <Card>
                 <Label>История изменений</Label>
                 {error && <p class="warn">{error}</p>}
@@ -323,7 +343,7 @@ function JournalPage() {
                     {entries.map((entry) => (
                         <article class="journal-entry" key={`${entry.kind}-${entry.id}`}>
                             <div class="between">
-                                <b>{entry.targetName}</b>
+                                <b>{cap(entry.targetName)}</b>
                                 <span class="muted">{new Date(entry.at).toLocaleString('ru-RU')}</span>
                             </div>
                             <p>{entry.details}</p>

@@ -6,7 +6,7 @@ import { getAdminMembers, getAdminJournal } from '../../store.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
 
-type Status = 'done' | 'learning' | 'todo';
+type Status = 'done' | 'learning' | 'todo' | 'reinforced';
 
 function requireAdmin(viewer: { role: string }): void {
     if (viewer.role !== 'admin') {
@@ -235,7 +235,7 @@ export function registerAdmin(router: Router): void {
                 if (!Number.isInteger(topicNo) || topicNo < 1 || topicNo > 27) {
                     throw new Error('Номер задания должен быть от 1 до 27');
                 }
-                if (status !== 'done' && status !== 'learning' && status !== 'todo') {
+                if (status !== 'done' && status !== 'learning' && status !== 'todo' && status !== 'reinforced') {
                     throw new Error('Неизвестный статус задания');
                 }
 

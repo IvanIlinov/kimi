@@ -11,7 +11,8 @@ export interface Person {
     exam: number | null; // балл пробника, пока не внесён: null
     tasksTotal: number; // решено всего
     tasksWeek: number; // решено на этой неделе
-    studied: number[]; // номера изученных заданий (1..27)
+    done: number[]; // изучено, но ещё не закреплено
+    reinforced: number[]; // окончательно освоено
     learning: number[]; // номера заданий, которые изучаются сейчас
     comment: string;
 }
@@ -28,7 +29,7 @@ const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
 // Прогресс в процентах: 100%, когда 27 заданий, 900 задач и 100 баллов.
 export function progressPct(p: Person): number {
     const k =
-        0.4 * clamp01(p.studied.length / TOPICS_TOTAL) +
+        0.4 * clamp01(p.reinforced.length / TOPICS_TOTAL) +
         0.4 * clamp01(p.tasksTotal / TASKS_GOAL) +
         0.2 * clamp01((p.exam ?? 0) / EXAM_MAX);
     return Math.round(k * 100);
@@ -36,7 +37,7 @@ export function progressPct(p: Person): number {
 
 // Очки рейтинга (ХП).
 export function xp(p: Person): number {
-    return 100 * p.studied.length + p.tasksTotal + 3 * (p.exam ?? 0);
+    return 100 * p.reinforced.length + p.tasksTotal + 3 * (p.exam ?? 0);
 }
 
 // Дата по Москве (UTC+3, без перехода на летнее время).
@@ -82,7 +83,7 @@ export function rank(people: Person[]): Ranked[] {
 
 export function leadParts(p: Person, now: Date): { topics: number | null; tasks: number | null } {
     return {
-        topics: p.studied.length >= TOPICS_TOTAL ? null : p.studied.length - planTopics(now),
+        topics: p.reinforced.length >= TOPICS_TOTAL ? null : p.reinforced.length - planTopics(now),
         tasks: p.tasksTotal >= TASKS_GOAL ? null : p.tasksTotal - planTasks(now),
     };
 }
@@ -131,7 +132,7 @@ export function monthPct(r: Ranked, now: Date): number {
     const share = (value: number, goal: number) => Math.min(1, value / goal);
     return Math.round(
         100 *
-            (0.4 * share(p.studied.length, m.topics) +
+            (0.4 * share(p.reinforced.length, m.topics) +
                 0.4 * share(p.tasksTotal, m.tasks) +
                 0.2 * share(p.exam ?? 0, m.exam)),
     );

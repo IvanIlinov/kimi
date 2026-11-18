@@ -16,7 +16,7 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
             : `Сейчас пишем пробник на ${m.exam.value} ${plural(m.exam.value, ['балл', 'балла', 'баллов'])}!`;
 
     return (
-        <Screen title={`${cap(p.name)} 🎖${p.place}`}>
+        <Screen title={`${cap(p.name)} 🎖${p.place}`} className="layout-profile">
             <Card>
                 <div class="between">
                     <Label>Прогресс</Label>
@@ -46,7 +46,7 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
                     Решил {w.tasks} {plural(w.tasks, ['задачу', 'задачи', 'задач'])} за эту неделю
                 </p>
                 <p>
-                    Изучил {m.topics.value} {plural(m.topics.value, ['задание', 'задания', 'заданий'])} (по плану{' '}
+                    Закрепил {m.topics.value} {plural(m.topics.value, ['задание', 'задания', 'заданий'])} (по плану{' '}
                     {m.topics.goal})
                 </p>
                 <p>{examLine}</p>

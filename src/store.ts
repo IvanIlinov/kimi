@@ -51,7 +51,8 @@ export function getPersons(): Person[] {
             name: u.name,
             exam: u.exam,
             comment: u.comment,
-            studied: pick('done'),
+            done: pick('done'),
+            reinforced: pick('reinforced'),
             learning: pick('learning'),
             tasksTotal: Number(t?.total ?? 0),
             tasksWeek: Number(t?.week ?? 0),
@@ -69,7 +70,7 @@ export function weekStartMs(now: number): number {
 export interface WeekStat {
     userId: number;
     tasks: number;   // решено задач за неделю (с учётом отмен)
-    topics: number;  // изменение числа изученных заданий за неделю
+    topics: number;  // изменение числа закреплённых заданий за неделю
     active: boolean; // было ли хоть одно действие
 }
 
@@ -105,12 +106,12 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
         s.active ||= Number(r.n) > 0;
     }
 
-    // Изучено: +1 при переходе в done, −1 при уходе из done
+    // Закреплено: +1 при переходе в reinforced, −1 при уходе из reinforced
     const topicRows = db
         .prepare(`
             SELECT user_id,
-                   SUM(CASE WHEN to_status = 'done' THEN 1 ELSE 0 END)
-                 - SUM(CASE WHEN from_status = 'done' THEN 1 ELSE 0 END) AS delta,
+                   SUM(CASE WHEN to_status = 'reinforced' THEN 1 ELSE 0 END)
+                 - SUM(CASE WHEN from_status = 'reinforced' THEN 1 ELSE 0 END) AS delta,
                    COUNT(*) AS n
             FROM topic_log t
             JOIN users u ON u.id = t.user_id

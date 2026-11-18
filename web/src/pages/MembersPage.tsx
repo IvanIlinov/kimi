@@ -6,11 +6,11 @@ import { cap } from '../lib/format';
 export function MembersPage({ onOpen }: { onOpen: (id: number) => void }) {
     const { data, error } = useApi<Member[]>('/api/members');
 
-    if (error) return <Screen title="Участники"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Участники"><Loading /></Screen>;
+    if (error) return <Screen title="Участники" className="layout-members"><Empty text={error} /></Screen>;
+    if (!data) return <Screen title="Участники" className="layout-members"><Loading /></Screen>;
 
     return (
-        <Screen title="Участники">
+        <Screen title="Участники" className="layout-members">
             <Card class="chips">
                 {data.length === 0 && <Empty text="Пока никого нет" />}
                 {data.map((m) => (

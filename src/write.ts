@@ -104,7 +104,7 @@ export function setExam(
     }
 }
 
-const STATUSES = ['done', 'learning', 'todo'] as const;
+const STATUSES = ['done', 'learning', 'todo', 'reinforced'] as const;
 type Status = (typeof STATUSES)[number];
 
 const getStatus = db.prepare('SELECT status FROM topic_status WHERE user_id = ? AND topic_no = ?');
