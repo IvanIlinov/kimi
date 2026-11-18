@@ -1,4 +1,4 @@
-import { ADMIN_IDS, BOT_TOKEN } from './config.ts';
+import { ADMIN_IDS, BOT_TOKEN, MINIAPP_URL } from './config.ts';
 import {
     answerCallbackQuery,
     callApi,
@@ -573,9 +573,10 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
 const bot = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
 console.log(`Бот @${bot.username} запущен`);
 
-await setChatMenuButton(BOT_TOKEN, 'https://kimi-production.vercel.app');
-console.log('[telegram] кнопка Mini App настроена');
-
+if (MINIAPP_URL) {
+    await setChatMenuButton(BOT_TOKEN, MINIAPP_URL);
+    console.log('[telegram] кнопка Mini App настроена');
+}
 startWeeklySummary();
 startTagSync();
 startApi();

@@ -5,6 +5,7 @@ function need(name: string): string {
 }
 
 export const BOT_TOKEN = need('BOT_TOKEN');
+export const MINIAPP_URL = process.env.MINIAPP_URL ?? '';
 export const ADMIN_IDS = need('ADMIN_IDS').split(',').map((s) => Number(s.trim()));
 export const GROUP_CHAT_ID = Number(process.env.GROUP_CHAT_ID ?? 0);
 // API для MiniApp. API_PORT=0 или не задан: API выключен.
