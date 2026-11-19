@@ -4,13 +4,17 @@ import { Card, Empty, Label, Loading, Row, Screen, SegmentBar } from '../compone
 import { cap, sgn } from '../lib/format';
 
 export function WeekPage({ onOpen }: { onOpen: (id: number) => void }) {
+    return <Screen title="Неделя" className="layout-ranking"><WeekResults onOpen={onOpen} /></Screen>;
+}
+
+export function WeekResults({ onOpen }: { onOpen: (id: number) => void }) {
     const { data, error } = useApi<Week>('/api/week');
 
-    if (error) return <Screen title="Неделя" className="layout-ranking"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Неделя" className="layout-ranking"><Loading /></Screen>;
+    if (error) return <Empty text={error} />;
+    if (!data) return <Loading />;
 
     return (
-        <Screen title="Неделя" className="layout-ranking">
+        <>
             {data.leader && (
                 <Card class="leader">
                     <Label>👑 Лидер недели</Label>
@@ -42,6 +46,6 @@ export function WeekPage({ onOpen }: { onOpen: (id: number) => void }) {
                     />
                 ))}
             </Card>
-        </Screen>
+        </>
     );
 }

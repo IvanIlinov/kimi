@@ -3,29 +3,43 @@ import { useApi } from '../api/useApi';
 import type { Arena, ArenaMode } from '../api/types';
 import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
 import { cap } from '../lib/format';
+import { WeekResults } from './WeekPage';
 
-// fixedMode задан у гостя (режимы вынесены в нижнее меню), у ученика есть переключатель
-export function ArenaPage({ fixedMode, onOpen }: { fixedMode?: ArenaMode; onOpen: (id: number) => void }) {
-    const [picked, setPicked] = useState<ArenaMode>('month');
-    const mode = fixedMode ?? picked;
+const MODES = [
+    { id: 'global', label: 'Глобальный' },
+    { id: 'month', label: 'Месяц' },
+    { id: 'week', label: 'Неделя' },
+] as const;
+
+export function ArenaPage({ onOpen }: { onOpen: (id: number) => void }) {
+    const [mode, setMode] = useState<(typeof MODES)[number]['id']>('global');
+
+    return (
+        <Screen title="Рейтинг" className="layout-ranking">
+            <div class="segmented" role="group" aria-label="Период рейтинга">
+                {MODES.map(({ id, label }) => (
+                    <button key={id} type="button" class={mode === id ? 'on' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>
+                        {label}
+                    </button>
+                ))}
+            </div>
+            {mode === 'week' ? <WeekResults onOpen={onOpen} /> : <ArenaResults key={mode} mode={mode} onOpen={onOpen} />}
+        </Screen>
+    );
+}
+
+function ArenaResults({ mode, onOpen }: { mode: ArenaMode; onOpen: (id: number) => void }) {
     const { data, error } = useApi<Arena>(`/api/arena?mode=${mode}`);
 
-    if (error) return <Screen title="Арена" className="layout-ranking"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Арена" className="layout-ranking"><Loading /></Screen>;
+    if (error) return <Empty text={error} />;
+    if (!data) return <Loading />;
 
     const l = data.leader;
     return (
-        <Screen title="Арена" className="layout-ranking">
-            {!fixedMode && (
-                <div class="segmented" role="tablist">
-                    <button class={mode === 'global' ? 'on' : ''} onClick={() => setPicked('global')}>🌍</button>
-                    <button class={mode === 'month' ? 'on' : ''} onClick={() => setPicked('month')}>💯</button>
-                </div>
-            )}
-
+        <>
             {l && (
                 <Card class="leader">
-                    <Label>👑 Лидер года</Label>
+                    <Label>{mode === 'global' ? 'Лидер по общему прогрессу' : 'Лидер месяца'}</Label>
                     <strong class="leader-name">{cap(l.name)}</strong>
                     <div class="kpis">
                         <Kpi label="Прогресс" value={`${l.pct}%`} />
@@ -54,7 +68,7 @@ export function ArenaPage({ fixedMode, onOpen }: { fixedMode?: ArenaMode; onOpen
                     />
                 ))}
             </Card>
-        </Screen>
+        </>
     );
 }
 

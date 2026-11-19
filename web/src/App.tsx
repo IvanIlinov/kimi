@@ -13,25 +13,25 @@ import { TopicsPage } from './pages/TopicsPage';
 import { WeekPage } from './pages/WeekPage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
-type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'month' | 'global' | 'adminMembers' | 'adminJournal' | 'adminPreview';
+type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'adminMembers' | 'adminJournal' | 'adminPreview';
 
 const STUDENT_TABS: Tab<TabId>[] = [
     { id: 'profile', icon: 'user-round', label: 'Профиль' },
     { id: 'week', icon: 'calendar-days', label: 'Главная' },
     { id: 'topics', icon: 'target', label: 'Задания' },
-    { id: 'arena', icon: 'swords', label: 'Арена' },
+    { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
     { id: 'members', icon: 'users-round', label: 'Участники' },
 ];
 
 const GUEST_TABS: Tab<TabId>[] = [
     { id: 'members', icon: 'users-round', label: 'Профили' },
     { id: 'week', icon: 'calendar-days', label: 'Главная' },
-    { id: 'month', icon: 'calendar-range', label: 'Успеваемость' },
-    { id: 'global', icon: 'trophy', label: 'Глобальный прогресс' },
+    { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
 ];
 
 const ADMIN_TABS: Tab<TabId>[] = [
     { id: 'week', icon: 'calendar-days', label: 'Главная' },
+    { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
     { id: 'adminMembers', icon: 'users-round', label: 'Участники' },
     { id: 'adminJournal', icon: 'clipboard-list', label: 'Журнал' },
     { id: 'adminPreview', icon: 'eye', label: 'Предпросмотр' },
@@ -106,8 +106,6 @@ export function App() {
     else if (active === 'profile') page = <ProfilePage id="me" />;
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null} />;
     else if (active === 'arena') page = <ArenaPage onOpen={open} />;
-    else if (active === 'month') page = <ArenaPage fixedMode="month" onOpen={open} />;
-    else if (active === 'global') page = <ArenaPage fixedMode="global" onOpen={open} />;
     else page = <MembersPage onOpen={open} />;
 
     return (

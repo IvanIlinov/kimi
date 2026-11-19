@@ -59,24 +59,21 @@ export interface WeekDto {
 }
 
 export function weekDto(ranked: Ranked[], viewerTgId: number, week: Map<number, WeekStat>): WeekDto {
-    // Лидер недели: по заданиям, при равенстве по задачам
-    const best = [...week.values()]
-        .filter((s) => s.active)
-        .sort((a, b) => b.topics - a.topics || b.tasks - a.tasks)[0];
-    const bestPerson = best ? ranked.find((r) => r.person.id === best.userId)?.person : undefined;
-
-    const rows = visible(ranked, viewerTgId)
-        .map((r) => {
-            const w = week.get(r.person.id) ?? emptyWeek(r.person.id);
-            return { id: r.person.id, name: r.person.name, tasks: w.tasks, topics: w.topics, goalPct: Math.round((w.tasks / WEEK_GOAL) * 100) };
-        })
-        .sort((a, b) => b.tasks - a.tasks || b.topics - a.topics);
-
+    const ordered = ranked
+        .map(({ person }) => ({ person, stat: week.get(person.id) ?? emptyWeek(person.id) }))
+        .sort((a, b) => b.stat.tasks - a.stat.tasks || b.stat.topics - a.stat.topics);
+    const first = ordered[0];
+    const rows = visible(ordered, viewerTgId).map(({ person, stat }) => ({
+        id: person.id,
+        name: person.name,
+        tasks: stat.tasks,
+        topics: stat.topics,
+        goalPct: Math.round((stat.tasks / WEEK_GOAL) * 100),
+    }));
     return {
-        leader:
-            best && bestPerson
-                ? { name: bestPerson.name, pct: Math.round(weekPct(best)), tasks: best.tasks, topics: best.topics }
-                : null,
+        leader: first
+            ? { name: first.person.name, pct: Math.round(weekPct(first.stat)), tasks: first.stat.tasks, topics: first.stat.topics }
+            : null,
         rows,
     };
 }
@@ -85,29 +82,32 @@ export type ArenaMode = 'global' | 'month';
 
 export interface ArenaDto {
     mode: ArenaMode;
-    // Лидер года: первое место рейтинга
+    // Первое место в выбранном режиме
     leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
     rows: { id: number; name: string; pct: number; standing: Standing }[];
 }
 
 export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, now: Date): ArenaDto {
-    const first = ranked[0];
+    const ordered = ranked
+        .map((r) => ({ ...r, monthPct: monthPct(r, now) }))
+        .sort((a, b) => mode === 'global' ? b.pct - a.pct : b.monthPct - a.monthPct);
+    const first = ordered[0];
     return {
         mode,
         leader: first
             ? {
                   name: first.person.name,
                   pct: first.pct,
-                  monthPct: monthPct(first, now),
+                  monthPct: first.monthPct,
                   exam: first.person.exam,
                   topics: first.person.reinforced.length,
                   tasks: first.person.tasksTotal,
               }
             : null,
-        rows: visible(ranked, viewerTgId).map((r) => ({
+        rows: visible(ordered, viewerTgId).map((r) => ({
             id: r.person.id,
             name: r.person.name,
-            pct: mode === 'global' ? r.pct : monthPct(r, now),
+            pct: mode === 'global' ? r.pct : r.monthPct,
             standing: standing(r, now),
         })),
     };

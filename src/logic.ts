@@ -145,7 +145,7 @@ export function onTrack(r: Ranked, now: Date): boolean {
 }
 
 // Топ-10 и сам смотрящий, если он не в топе
-export function visible(ranked: Ranked[], viewerTgId: number | undefined): Ranked[] {
+export function visible<T extends { person: Person }>(ranked: T[], viewerTgId: number | undefined): T[] {
     const top = ranked.slice(0, 10);
     const mine = ranked.find((r) => r.person.tgId === viewerTgId);
     return mine && !top.includes(mine) ? [...top, mine] : top;
