@@ -616,16 +616,24 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
 
 // ---- Запуск ----
 
-const bot = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
-console.log(`Бот @${bot.username} запущен`);
+startApi();
 
-if (MINIAPP_URL) {
-    await setChatMenuButton(BOT_TOKEN, MINIAPP_URL);
-    console.log('[telegram] кнопка Mini App настроена');
+for (;;) {
+    try {
+        const bot = await callApi<{ username: string }>(BOT_TOKEN, 'getMe');
+        if (MINIAPP_URL) {
+            await setChatMenuButton(BOT_TOKEN, MINIAPP_URL);
+            console.log('[telegram] кнопка Mini App настроена');
+        }
+        console.log(`Бот @${bot.username} запущен`);
+        break;
+    } catch (e) {
+        console.error('[telegram] запуск не удался:', e);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
 }
 startWeeklySummary();
 startTagSync();
-startApi();
 
 let offset = 0;
 for (; ;) {
