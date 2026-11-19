@@ -14,7 +14,7 @@ const STATUS_LABEL = {
 
 const AMOUNTS = [-1, 1, 3, 5, 10];
 
-export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
+export function TopicsPage({ readOnly = false, correction = false }: { readOnly?: boolean; correction?: boolean }) {
     const { data, error, setData } = useApi<SelfData>('/api/self');
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState('');
@@ -42,7 +42,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
         <Screen hideTitle title="Задания" className="layout-topics">
             {readOnly && <p class="muted">Режим предпросмотра — изменения отключены.</p>}
             <Card>
-                <Label>Задачи</Label>
+                <div class="between"><Label>Задачи</Label>{correction && <b>Всего: {data.tasksTotal}</b>}</div>
                 <div class="amounts">
                     {AMOUNTS.map((n) => (
                         <button

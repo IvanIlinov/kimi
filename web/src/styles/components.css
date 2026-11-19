@@ -452,16 +452,6 @@
     font-size: 12px;
 }
 
-.admin-journal { display: flex; flex-direction: column; }
-
-.journal-entry {
-    padding: 13px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.journal-entry:last-child { border-bottom: 0; }
-.journal-entry p { margin: 7px 0; }
-
 /* ---- Предпросмотр ---- */
 .preview-banner {
     position: sticky;
@@ -548,7 +538,6 @@
 .layout-ranking .display,
 .layout-profile .display,
 .layout-admin .display,
-.layout-journal .display,
 .layout-members .display {
     flex: 0 0 auto;
     margin-top: 0;
@@ -631,23 +620,37 @@
 .layout-admin .chip { min-height: 34px; padding: 6px 13px; }
 .layout-admin .label { margin-bottom: 7px; }
 
-.layout-journal { gap: 9px; }
-.layout-journal > .card {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.layout-journal .admin-journal {
+.history-days {
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
 }
-.layout-journal .journal-entry { flex: 0 0 auto; padding: 9px 0; }
-.layout-journal .journal-entry p { margin: 4px 0; }
+.history-day + .history-day { margin-top: 15px; }
+.history-day h2 {
+    margin: 0 0 5px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.history-row {
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.history-row:last-child { border-bottom: 0; }
+.history-row > strong { min-width: 0; overflow-wrap: anywhere; }
+.history-row .stats {
+    display: grid;
+    grid-template-columns: 2.7em 2.6em 2.4em 2.4em;
+    flex: 0 0 auto;
+    gap: 3px;
+    text-align: end;
+    font-size: 13px;
+}
+.history-exam.improved { color: var(--good); }
+.history-exam.declined { color: var(--bad); }
+.history-days > .chip { margin-top: 12px; }
 
 @media (max-height: 700px) {
     .page { gap: 8px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
@@ -716,8 +719,8 @@
         conic-gradient(var(--good) var(--progress), var(--border) 0);
 }
 .student-ring strong { font-size: 34px; }
-.student-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.student-metric {
+.metric-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.metric-tile {
     display: grid;
     justify-items: center;
     align-content: start;
@@ -727,14 +730,15 @@
     border: 1px solid var(--border);
     border-radius: 12px;
 }
-.student-metric strong { font-size: 21px; }
-.student-metric span { font-size: 12px; }
+.metric-tile svg { width: 16px; height: 16px; }
+.metric-tile strong { font-size: 21px; }
+.metric-tile span { font-size: 12px; }
 .student-goal small { font-size: 12px; color: var(--muted); }
 .student-progress > span {
     font-family: var(--font-display);
     font-weight: 650;
 }
-.student-metric > span {
+.metric-tile > span {
     font-family: var(--font-display);
     font-weight: 500;
     color: var(--muted);
@@ -747,8 +751,8 @@
     .student-progress { grid-template-columns: auto 1fr; align-items: center; justify-items: start; }
     .student-ring { width: clamp(56px, 14dvh, 84px); }
     .student-ring strong { font-size: 24px; }
-    .student-metric { grid-template-columns: auto 1fr; align-items: center; padding: 3px; }
-    .student-metric span { grid-column: 1 / -1; }
+    .metric-tile { grid-template-columns: auto 1fr; align-items: center; padding: 3px; }
+    .metric-tile span { grid-column: 1 / -1; }
     .student-goal { gap: 2px; }
 }
 
@@ -807,10 +811,30 @@
 }
 .admin-preview-actions .label,
 .admin-schedule > .between .label { margin: 0; }
+.layout-admin-home > .swipe-card { flex: 0 0 auto; }
+.admin-lesson-month {
+    margin: 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 650;
+}
+.admin-lesson-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+}
+.admin-lesson-metrics .metric-tile {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 5px 2px;
+    border-radius: 9px;
+    line-height: 1.2;
+}
+.admin-lesson-metrics .metric-tile svg { width: 13px; height: 13px; }
+.admin-lesson-metrics .metric-tile strong { font-size: clamp(11px, 3.4vw, 15px); overflow-wrap: anywhere; }
+.admin-lesson-metrics .metric-tile span { font-size: 10px; }
 .admin-attendance { display: grid; gap: 5px; }
 .admin-attendance .label { margin-bottom: 2px; }
 .admin-attendance .seg { height: 13px; min-height: 13px; }
-.admin-attendance small { margin-bottom: 4px; }
 .admin-schedule {
     display: flex;
     flex: 1 1 0;
@@ -871,9 +895,9 @@
 }
 button.admin-lesson { box-shadow: inset 0 0 0 1px var(--border); }
 
-.lesson-form { display: grid; gap: 9px; }
-.lesson-form label { display: grid; gap: 3px; }
-.lesson-form input, .lesson-form select {
+.modal-form { display: grid; gap: 9px; }
+.modal-form label { display: grid; gap: 3px; }
+.modal-form input, .modal-form select {
     width: 100%;
     min-width: 0;
     border: 1px solid var(--border);
@@ -884,11 +908,26 @@ button.admin-lesson { box-shadow: inset 0 0 0 1px var(--border); }
     font: inherit;
 }
 
-.admin-lesson .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+.leader-heading { gap: 8px; }
+.leader-heading:has(.arena-add) { margin-bottom: 4px; }
+.leader-heading:has(.arena-add) .label { margin: 0; }
+.row-with-actions { display: flex; align-items: center; flex: 0 0 auto; min-width: 0; }
+.layout-ranking .row-with-actions .row { flex: 1 1 auto; min-width: 0; padding-inline-end: 4px; gap: 6px; }
+.row-with-actions .row-name { width: clamp(46px, 19vw, 76px); white-space: nowrap; }
+.row-with-actions .stats { gap: 4px; }
+.arena-row-actions { display: flex; flex: 0 0 auto; }
+.arena-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--muted);
 }
+.arena-icon svg { width: 17px; height: 17px; }
+.arena-icon:not(:disabled):active { background: var(--surface-strong); }
+.arena-icon.arena-remove { color: var(--bad); }
+.arena-icon.arena-add { width: 36px; height: 36px; min-height: 0; padding: 0; }
+.arena-add svg { width: 21px; height: 21px; }
+.preview-layout .page { padding-top: calc(env(safe-area-inset-top, 0px) + 51px); }

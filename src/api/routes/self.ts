@@ -30,21 +30,24 @@ export function registerSelf(router: Router): void {
 
     router.post('/api/self/tasks', ({ viewer, body }) => {
         const r = me(viewer);
-        guard(() => addTasks(r.person.id, Number(asObject(body).amount), 'bot', viewer.tgId));
+        guard(() => addTasks(r.person.id, Number(asObject(body).amount),
+            viewer.correctionActorTgId === undefined ? 'bot' : 'admin', viewer.correctionActorTgId ?? viewer.tgId));
         return selfDto(me(viewer));
     });
 
     router.post('/api/self/exam', ({ viewer, body }) => {
         const r = me(viewer);
         const value = asObject(body).value;
-        guard(() => setExam(r.person.id, value === null ? null : Number(value), viewer.tgId));
+        guard(() => setExam(r.person.id, value === null ? null : Number(value),
+            viewer.correctionActorTgId ?? viewer.tgId, viewer.correctionActorTgId !== undefined));
         return selfDto(me(viewer));
     });
 
     router.post('/api/self/topics/:n/cycle', ({ viewer, params }) => {
         const r = me(viewer);
         const n = Number(params.n);
-        guard(() => setTopicStatus(r.person.id, n, nextStatus(statusOf(r.person, n)), viewer.tgId));
+        guard(() => setTopicStatus(r.person.id, n, nextStatus(statusOf(r.person, n)),
+            viewer.correctionActorTgId ?? viewer.tgId, viewer.correctionActorTgId !== undefined));
         return selfDto(me(viewer));
     });
 }

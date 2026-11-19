@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { ALLOWED_ORIGINS, API_HOST, API_PORT, BOT_TOKEN } from '../config.ts';
+import { ALLOWED_ORIGINS, API_HOST, API_PORT, BOT_TOKEN, STAGING_PREVIEW_ENABLED } from '../config.ts';
 import { verifyInitData } from './auth.ts';
 import { loadRanked, resolveViewer } from './context.ts';
 import type { Viewer } from './context.ts';
@@ -88,16 +88,21 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
         const previewHeader = req.headers['x-arena-preview'];
 
         if (previewHeader !== undefined) {
-            if (req.method !== 'GET') {
-                throw new HttpError(403, 'В предпросмотре изменения запрещены');
-            }
-
             if (viewer.role !== 'admin') {
                 throw new HttpError(403, 'Предпросмотр доступен только администратору');
             }
 
             if (typeof previewHeader !== 'string') {
                 throw new HttpError(400, 'Некорректный профиль предпросмотра');
+            }
+
+            const editing = previewHeader.startsWith('edit:');
+            if (!editing && !STAGING_PREVIEW_ENABLED) {
+                throw new HttpError(403, 'Предпросмотр доступен только на Staging');
+            }
+            if (req.method !== 'GET' && !(editing && req.method === 'POST' &&
+                /^\/api\/self\/(?:tasks|exam|topics\/\d+\/cycle)$/.test(url.pathname))) {
+                throw new HttpError(403, 'В предпросмотре изменения запрещены');
             }
 
             if (previewHeader === 'guest') {
@@ -109,15 +114,16 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
                     personId: null,
                 };
             } else {
+                const id = editing ? previewHeader.slice(5) : previewHeader;
                 if (
-                    !/^[1-9][0-9]*$/.test(previewHeader) ||
-                    !Number.isSafeInteger(Number(previewHeader))
+                    !/^[1-9][0-9]*$/.test(id) ||
+                    !Number.isSafeInteger(Number(id))
                 ) {
                     throw new HttpError(400, 'Некорректный профиль предпросмотра');
                 }
 
                 const person = loadRanked()
-                    .find((r) => r.person.id === Number(previewHeader))
+                    .find((r) => r.person.id === Number(id))
                     ?.person;
 
                 if (!person) {
@@ -125,6 +131,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
                 }
 
                 viewer = {
+                    correctionActorTgId: editing ? viewer.tgId : undefined,
                     tgId: person.tgId,
                     firstName: person.name,
                     role: 'student',

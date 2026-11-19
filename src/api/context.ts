@@ -8,6 +8,7 @@ export type Role = 'admin' | 'student' | 'guest';
 
 export interface Viewer {
     tgId: number;
+    correctionActorTgId?: number;
     firstName: string;
     role: Role;
     personId: number | null; // id участника в базе, если он в рейтинге

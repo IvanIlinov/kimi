@@ -9,11 +9,11 @@ const totalOf = db.prepare(
     'SELECT COALESCE(SUM(amount), 0) AS total FROM task_log WHERE user_id = ? AND cancelled = 0',
 );
 
-// source: 'bot' — личка и панель, 'group' — беседка
+// bot — личка и панель, group — беседка, admin — корректировка результата
 export function addTasks(
     userId: number,
     amount: number,
-    source: 'bot' | 'group' = 'bot',
+    source: 'bot' | 'group' | 'admin' = 'bot',
     actorTgId: number | null = null,
 ): number {
     if (!Number.isInteger(amount) || amount === 0) {
@@ -77,6 +77,7 @@ export function setExam(
     userId: number,
     exam: number | null,
     actorTgId: number | null = null,
+    isCorrection = false,
 ): void {
     if (exam !== null && (!Number.isInteger(exam) || exam < 0 || exam > 100)) {
         throw new Error('Балл пробника должен быть целым числом от 0 до 100');
@@ -93,9 +94,9 @@ export function setExam(
     try {
         db.prepare('UPDATE users SET exam = ? WHERE id = ?').run(exam, userId);
         db.prepare(`
-            INSERT INTO exam_log (user_id, actor_tg_id, from_exam, to_exam, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        `).run(userId, actorTgId, current.exam, exam, Date.now());
+            INSERT INTO exam_log (user_id, actor_tg_id, from_exam, to_exam, created_at, is_correction)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `).run(userId, actorTgId, current.exam, exam, Date.now(), Number(isCorrection));
         db.exec('RELEASE SAVEPOINT set_exam');
     } catch (e) {
         db.exec('ROLLBACK TO SAVEPOINT set_exam');
@@ -113,8 +114,8 @@ const upsertStatus = db.prepare(`
     ON CONFLICT (user_id, topic_no) DO UPDATE SET status = excluded.status
 `);
 const insertTopicLog = db.prepare(`
-    INSERT INTO topic_log (user_id, actor_tg_id, topic_no, from_status, to_status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO topic_log (user_id, actor_tg_id, topic_no, from_status, to_status, created_at, is_correction)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
 // Меняет статус задания и пишет запись в журнал. actorTgId — кто нажал (ученик или админ).
@@ -123,6 +124,7 @@ export function setTopicStatus(
     topicNo: number,
     status: Status,
     actorTgId: number | null = null,
+    isCorrection = false,
 ): void {
     if (!Number.isInteger(topicNo) || topicNo < 1 || topicNo > 27) {
         throw new Error('Номер задания должен быть от 1 до 27');
@@ -140,7 +142,7 @@ export function setTopicStatus(
     db.exec('SAVEPOINT set_topic_status');
     try {
         upsertStatus.run(userId, topicNo, status);
-        insertTopicLog.run(userId, actorTgId, topicNo, from, status, Date.now());
+        insertTopicLog.run(userId, actorTgId, topicNo, from, status, Date.now(), Number(isCorrection));
         db.exec('RELEASE SAVEPOINT set_topic_status');
     } catch (e) {
         db.exec('ROLLBACK TO SAVEPOINT set_topic_status');

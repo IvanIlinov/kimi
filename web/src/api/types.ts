@@ -22,6 +22,7 @@ export interface Profile {
     pct: number;
     standing: Standing;
     monthPct: number;
+    totals: { tasks: number; topics: number; exam: number | null };
     daysLeft: number;
     week: { tasks: number; topics: number; goal: number; goalPct: number };
     month: {
@@ -65,15 +66,17 @@ export interface AdminMember {
     topics: TopicStatus[];
 }
 
-export interface AdminJournalEntry {
-    id: number;
-    at: number;
-    kind: 'task' | 'topic' | 'exam' | 'admin';
-    targetId: number | null;
-    targetName: string;
-    targetTgId: number | null;
-    actorTgId: number | null;
-    details: string;
+export interface HistoryDay {
+    day: number;
+    rows: {
+        id: number;
+        name: string;
+        pct: number;
+        tasks: number;
+        topics: number;
+        examBefore: number | null;
+        examAfter: number | null;
+    }[];
 }
 
 export type LessonStatus = 'planned' | 'held' | 'paid';
@@ -84,10 +87,13 @@ export interface Lesson {
     time: string;
     name: string;
     status: LessonStatus;
+    priceKopecks: number;
 }
 
 export interface AdminHome {
+    previewEnabled: boolean;
     weekStart: number;
+    month: { start: number; earnedKopecks: number };
     attendance: { visits: number; visitors: number; participants: number };
     lessons: Lesson[];
 }

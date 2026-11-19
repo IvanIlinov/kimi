@@ -143,3 +143,11 @@ CREATE TABLE IF NOT EXISTS lessons (
 );
 CREATE INDEX IF NOT EXISTS lessons_week ON lessons(week_start, weekday, time);
 `);
+
+addColumnIfMissing('lessons', 'price_kopecks', 'INTEGER NOT NULL DEFAULT 0 CHECK (price_kopecks >= 0)');
+addColumnIfMissing('topic_log', 'is_correction', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('exam_log', 'is_correction', 'INTEGER NOT NULL DEFAULT 0');
+db.exec(`
+CREATE INDEX IF NOT EXISTS topic_log_user_topic ON topic_log(user_id, topic_no, id);
+CREATE INDEX IF NOT EXISTS exam_log_user ON exam_log(user_id, id);
+`);

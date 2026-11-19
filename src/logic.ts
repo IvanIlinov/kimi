@@ -10,6 +10,7 @@ export interface Person {
     name: string;
     exam: number | null; // балл пробника, пока не внесён: null
     tasksTotal: number; // решено всего
+    monthResults?: { tasks: number; topics: number; exam: number | null };
     tasksWeek: number; // решено на этой неделе
     done: number[]; // изучено, но ещё не закреплено
     reinforced: number[]; // окончательно освоено
@@ -137,15 +138,19 @@ export function isSleeping(lastMs: number | undefined, now: Date): boolean {
 
 // Насколько участник укладывается в цели месяца. Веса те же, что в общем прогрессе (40/40/20).
 // Каждая доля ограничена единицей: 100% значит, что все три цели месяца выполнены.
+export function monthlyResults(p: Person) {
+    return p.monthResults ?? { tasks: p.tasksTotal, topics: p.reinforced.length, exam: p.exam };
+}
+
 export function monthPct(r: Ranked, now: Date): number {
     const m = monthGoal(now);
-    const p = r.person;
+    const results = monthlyResults(r.person);
     const share = (value: number, goal: number) => Math.min(1, value / goal);
     return Math.round(
         100 *
-            (0.4 * share(p.reinforced.length, m.topics) +
-                0.4 * share(p.tasksTotal, m.tasks) +
-                0.2 * share(p.exam ?? 0, m.exam)),
+            (0.4 * share(results.topics, m.topics) +
+                0.4 * share(results.tasks, m.tasks) +
+                0.2 * share(results.exam ?? 0, m.exam)),
     );
 }
 

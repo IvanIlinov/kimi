@@ -112,6 +112,8 @@ git log -1 --oneline
 systemctl show arena-staging.service -p WorkingDirectory
 ```
 
+Для предпросмотра гостя и ученика укажи `STAGING_PREVIEW_ENABLED=1` в окружении backend сервиса `arena-staging.service`. По умолчанию предпросмотр выключен.
+
 Если обновление прошло успешно и вывод содержит
 `WorkingDirectory=/home/arena/staging`, перезапустить сервис и проверить статус:
 

@@ -1,8 +1,9 @@
 
 import { addUser, renameUser, removeUser, restoreUser } from '../../admin.ts';
+import { STAGING_PREVIEW_ENABLED } from '../../config.ts';
 import { db } from '../../db.ts';
 import { setTasksTotal, setExam, setTopicStatus } from '../../write.ts';
-import { getAdminMembers, getAdminJournal, weekStartMs } from '../../store.ts';
+import { getAdminMembers, getAdminJournal, getAdminHistory, weekStartMs } from '../../store.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
 
@@ -87,7 +88,8 @@ function guard<T>(fn: () => T): T {
 export function registerAdmin(router: Router): void {
     router.get('/api/admin/home', ({ viewer }) => {
         requireAdmin(viewer);
-        const weekStart = weekStartMs(Date.now());
+        const now = Date.now();
+        const weekStart = weekStartMs(now);
         const attendance = db.prepare(`
             SELECT COUNT(v.message_id) AS visits,
                    COUNT(DISTINCT v.user_id) AS visitors,
@@ -98,11 +100,29 @@ export function registerAdmin(router: Router): void {
             WHERE u.removed = 0
         `).get(weekStart, weekStart + 7 * 86_400_000);
         const lessons = db.prepare(`
-            SELECT id, weekday, time, name, status
+            SELECT id, weekday, time, name, status, price_kopecks AS priceKopecks
             FROM lessons WHERE week_start = ?
             ORDER BY weekday, time, id
         `).all(weekStart);
-        return { weekStart, attendance, lessons };
+        const moscowOffset = 3 * 3_600_000;
+        const moscow = new Date(now + moscowOffset);
+        const year = moscow.getUTCFullYear();
+        const month = moscow.getUTCMonth();
+        const monthStart = Date.UTC(year, month, 1) - moscowOffset;
+        const nextMonth = Date.UTC(year, month + 1, 1) - moscowOffset;
+        const earnings = db.prepare(`
+            SELECT COALESCE(SUM(price_kopecks), 0) AS earnedKopecks
+            FROM lessons
+            WHERE status = 'paid'
+              AND week_start >= ? AND week_start < ?
+              AND week_start + weekday * 86400000 >= ?
+              AND week_start + weekday * 86400000 < ?
+        `).get(weekStartMs(monthStart), nextMonth, monthStart, nextMonth) as { earnedKopecks: number };
+        return {
+            weekStart, attendance, lessons,
+            month: { start: monthStart, earnedKopecks: earnings.earnedKopecks },
+            previewEnabled: STAGING_PREVIEW_ENABLED,
+        };
     });
 
     router.post('/api/admin/lessons', ({ viewer, body }) => {
@@ -112,25 +132,43 @@ export function registerAdmin(router: Router): void {
         if (data.weekStart !== weekStart) {
             throw new HttpError(409, 'Неделя сменилась. Обновите расписание.');
         }
-        const { id, weekday, time, status } = data;
+        const { id, weekday, time, status, priceKopecks } = data;
         const name = typeof data.name === 'string' ? data.name.trim() : '';
         if (typeof weekday !== 'number' || !Number.isInteger(weekday) || weekday < 0 || weekday > 6 ||
             typeof time !== 'string' || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ||
             !name || name.length > 80 || (status !== 'planned' && status !== 'held' && status !== 'paid')) {
             throw new HttpError(400, 'Проверьте день, время, имя и статус занятия');
         }
+        if (priceKopecks !== undefined &&
+            (typeof priceKopecks !== 'number' || !Number.isSafeInteger(priceKopecks) || priceKopecks < 0)) {
+            throw new HttpError(400, 'Стоимость должна быть неотрицательной суммой с точностью до копейки');
+        }
         if (id === undefined) {
             db.prepare(`
-                INSERT INTO lessons (week_start, weekday, time, name, status) VALUES (?, ?, ?, ?, ?)
-            `).run(weekStart, weekday, time, name, status);
+                INSERT INTO lessons (week_start, weekday, time, name, status, price_kopecks) VALUES (?, ?, ?, ?, ?, ?)
+            `).run(weekStart, weekday, time, name, status, priceKopecks ?? 0);
         } else {
             const result = db.prepare(`
-                UPDATE lessons SET weekday = ?, time = ?, name = ?, status = ?
+                UPDATE lessons SET weekday = ?, time = ?, name = ?, status = ?,
+                    price_kopecks = COALESCE(?, price_kopecks)
                 WHERE id = ? AND week_start = ?
-            `).run(weekday, time, name, status, positiveId(String(id)), weekStart);
+            `).run(weekday, time, name, status, priceKopecks ?? null, positiveId(String(id)), weekStart);
             if (!result.changes) throw new HttpError(404, 'Занятие не найдено');
         }
         return { ok: true };
+    });
+
+    router.post('/api/admin/lessons/:id/cycle', ({ viewer, params }) => {
+        requireAdmin(viewer);
+        const id = positiveId(params.id);
+        const lesson = db.prepare(`
+            UPDATE lessons
+            SET status = CASE status WHEN 'planned' THEN 'held' WHEN 'held' THEN 'paid' ELSE 'planned' END
+            WHERE id = ? AND week_start = ?
+            RETURNING status
+        `).get(id, weekStartMs(Date.now()));
+        if (!lesson) throw new HttpError(404, 'Занятие не найдено на этой неделе');
+        return lesson;
     });
 
     router.post('/api/admin/lessons/:id/remove', ({ viewer, params }) => {
@@ -145,6 +183,17 @@ export function registerAdmin(router: Router): void {
     router.get('/api/admin/members', ({ viewer }) => {
         requireAdmin(viewer);
         return getAdminMembers();
+    });
+
+    router.get('/api/admin/history', ({ viewer, query }) => {
+        requireAdmin(viewer);
+        const limit = Number(query.get('limit') ?? 14);
+        const offset = Number(query.get('offset') ?? 0);
+        if (!Number.isInteger(limit) || limit < 1 || limit > 30 || !Number.isSafeInteger(offset) || offset < 0) {
+            throw new HttpError(400, 'Некорректные параметры истории');
+        }
+        const days = getAdminHistory(limit + 1, offset);
+        return { days: days.slice(0, limit), hasMore: days.length > limit };
     });
 
     router.get('/api/admin/journal', ({ viewer, query }) => {

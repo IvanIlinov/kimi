@@ -2,7 +2,7 @@ import { useApi } from '../api/useApi';
 import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
-import { Card, Empty, Loading, Screen, SegmentBar } from '../components/ui';
+import { Card, Empty, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
 
 export function StudentHomePage() {
@@ -10,7 +10,7 @@ export function StudentHomePage() {
     if (error) return <Screen hideTitle title="Главная"><Empty text={error} /></Screen>;
     if (!profile) return <Screen hideTitle title="Главная"><Loading /></Screen>;
 
-    const { name, place, pct, monthPct, daysLeft, month, week } = profile;
+    const { name, place, pct, monthPct, daysLeft, month, week, totals } = profile;
     const topicsLeft = Math.max(0, month.topics.goal - month.topics.value);
     const tasksLeft = Math.max(0, week.goal - week.tasks);
     const exam = month.exam.value ?? 0;
@@ -30,10 +30,10 @@ export function StudentHomePage() {
                     </div>
                     <span>Общий прогресс</span>
                 </div>
-                <div class="student-metrics">
-                    <Metric icon="clipboard-list" label="Балл пробника" value={exam} />
-                    <Metric icon="calendar-days" label="Решено задач" value={month.tasks.value} />
-                    <Metric icon="target" label="Изучено заданий" value={month.topics.value} />
+                <div class="metric-tiles">
+                    <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
+                    <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
+                    <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
                 </div>
             </Card>
             <SwipeCard
@@ -67,16 +67,6 @@ export function StudentHomePage() {
 
 function remaining(value: number, forms: [string, string, string]) {
     return value ? `Осталось: ${value} ${plural(value, forms)}` : 'Цель выполнена';
-}
-
-function Metric({ icon, label, value }: { icon: string; label: string; value: number | string }) {
-    return (
-        <div class="student-metric">
-            <NavIcon name={icon} />
-            <strong>{value}</strong>
-            <span>{label}</span>
-        </div>
-    );
 }
 
 function Goal({ icon, label, value, max, note }: {

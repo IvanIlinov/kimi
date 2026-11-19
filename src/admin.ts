@@ -31,7 +31,7 @@ export function addUser(tgId: number, name: string): number {
     db.exec('SAVEPOINT add_user');
     try {
         const { lastInsertRowid } = db
-            .prepare('INSERT INTO users (tg_id, name) VALUES (?, ?)')
+            .prepare('INSERT INTO users (tg_id, name, exam) VALUES (?, ?, 0)')
             .run(tgId, clean);
         const userId = Number(lastInsertRowid);
         const insert = db.prepare(

@@ -1,4 +1,5 @@
 import { db } from './db.ts';
+import { weekPct } from './logic.ts';
 import type { Person } from './logic.ts';
 
 interface UserRow {
@@ -7,23 +8,45 @@ interface UserRow {
     name: string;
     exam: number | null;
     comment: string;
+    month_exam: number | null;
 }
 
 export function getPersons(): Person[] {
     const users = db
-        .prepare('SELECT id, tg_id, name, exam, comment FROM users WHERE removed = 0 ORDER BY id')
+        .prepare(`
+            SELECT id, tg_id, name, exam, comment,
+                CASE WHEN EXISTS (SELECT 1 FROM exam_log c WHERE c.user_id = u.id AND c.is_correction = 1)
+                    THEN (SELECT CASE WHEN e.is_correction = 1 THEN e.from_exam ELSE e.to_exam END
+                          FROM exam_log e WHERE e.user_id = u.id
+                          ORDER BY e.is_correction,
+                              CASE WHEN e.is_correction = 1 THEN e.id ELSE -e.id END LIMIT 1)
+                    ELSE exam END AS month_exam
+            FROM users u WHERE removed = 0 ORDER BY id
+        `)
         .all() as unknown as UserRow[];
 
     // Статусы всех заданий одним запросом
     const statuses = db
-        .prepare('SELECT user_id, topic_no, status FROM topic_status')
-        .all() as unknown as { user_id: number; topic_no: number; status: string }[];
+        .prepare(`
+            SELECT s.user_id, s.topic_no, s.status,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM topic_log c
+                    WHERE c.user_id = s.user_id AND c.topic_no = s.topic_no AND c.is_correction = 1
+                ) THEN (SELECT CASE WHEN t.is_correction = 1 THEN t.from_status ELSE t.to_status END
+                        FROM topic_log t WHERE t.user_id = s.user_id AND t.topic_no = s.topic_no
+                        ORDER BY t.is_correction,
+                            CASE WHEN t.is_correction = 1 THEN t.id ELSE -t.id END LIMIT 1)
+                  ELSE s.status END AS month_status
+            FROM topic_status s
+        `)
+        .all() as unknown as { user_id: number; topic_no: number; status: string; month_status: string }[];
 
     // Сумма решённых задач: всего и за текущую неделю (с понедельника 00:00 по Москве)
     const totals = db
         .prepare(`
             SELECT user_id,
                    SUM(amount) AS total,
+                   SUM(CASE WHEN source <> 'admin' THEN amount ELSE 0 END) AS month_total,
                    SUM(CASE
                        WHEN created_at >= ?
                         AND source <> 'admin'
@@ -36,7 +59,7 @@ export function getPersons(): Person[] {
             WHERE cancelled = 0
             GROUP BY user_id
         `)
-        .all(weekStartMs(Date.now())) as unknown as { user_id: number; total: number; week: number }[];
+        .all(weekStartMs(Date.now())) as unknown as { user_id: number; total: number; week: number; month_total: number }[];
 
     const totalsById = new Map(totals.map((t) => [t.user_id, t]));
 
@@ -56,6 +79,11 @@ export function getPersons(): Person[] {
             learning: pick('learning'),
             tasksTotal: Number(t?.total ?? 0),
             tasksWeek: Number(t?.week ?? 0),
+            monthResults: {
+                tasks: Math.max(0, Number(t?.month_total ?? 0)),
+                topics: mine.filter((s) => s.month_status === 'reinforced').length,
+                exam: u.month_exam,
+            },
         };
     });
 }
@@ -73,6 +101,20 @@ export interface WeekStat {
     topics: number;  // изменение числа закреплённых заданий за неделю
     active: boolean; // было ли хоть одно действие
 }
+
+// Статус до правки для подсчёта работы ученика без административных корректировок.
+const creditedTopicFromStatus = `CASE WHEN EXISTS (
+    SELECT 1 FROM topic_log c
+    WHERE c.user_id = t.user_id AND c.topic_no = t.topic_no
+      AND c.id < t.id AND c.is_correction = 1
+) THEN (
+    SELECT CASE WHEN p.is_correction = 1 THEN p.from_status ELSE p.to_status END
+    FROM topic_log p
+    WHERE p.user_id = t.user_id AND p.topic_no = t.topic_no AND p.id < t.id
+    ORDER BY p.is_correction,
+             CASE WHEN p.is_correction = 1 THEN p.id ELSE -p.id END
+    LIMIT 1
+) ELSE t.from_status END`;
 
 export function getWeekStats(now: number = Date.now()): WeekStat[] {
     const from = weekStartMs(now);
@@ -109,13 +151,14 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
     // Закреплено: +1 при переходе в reinforced, −1 при уходе из reinforced
     const topicRows = db
         .prepare(`
-            SELECT user_id,
-                   SUM(CASE WHEN to_status = 'reinforced' THEN 1 ELSE 0 END)
-                 - SUM(CASE WHEN from_status = 'reinforced' THEN 1 ELSE 0 END) AS delta,
+            SELECT t.user_id,
+                   SUM(CASE WHEN t.to_status = 'reinforced' THEN 1 ELSE 0 END)
+                 - SUM(CASE WHEN ${creditedTopicFromStatus} = 'reinforced' THEN 1 ELSE 0 END) AS delta,
                    COUNT(*) AS n
             FROM topic_log t
             JOIN users u ON u.id = t.user_id
             WHERE t.created_at >= ?
+              AND t.is_correction = 0
               AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
             GROUP BY t.user_id
         `)
@@ -200,7 +243,8 @@ export function getLastActivity(): Map<number, number> {
                 SELECT t.user_id, t.created_at AS at
                 FROM topic_log t
                 JOIN users u ON u.id = t.user_id
-                WHERE t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id
+                WHERE t.is_correction = 0
+                  AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
             )
             GROUP BY user_id
         `)
@@ -370,4 +414,93 @@ export function getAdminJournal(limit: number, offset: number): AdminJournalEntr
         actorTgId: r.actor_tg_id,
         details: r.details,
     }));
+}
+
+export interface HistoryDay {
+    day: number;
+    rows: {
+        id: number;
+        name: string;
+        pct: number;
+        tasks: number;
+        topics: number;
+        examBefore: number | null;
+        examAfter: number | null;
+    }[];
+}
+
+export function getAdminHistory(limit: number, offset: number): HistoryDay[] {
+    const rows = db.prepare(`
+        WITH changes AS (
+            SELECT t.user_id, t.created_at AS at, t.amount AS tasks, 0 AS topics,
+                   CASE WHEN t.source <> 'admin' AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+                        THEN t.amount ELSE 0 END AS credited_tasks, 0 AS credited_topics
+            FROM task_log t JOIN users u ON u.id = t.user_id
+            WHERE t.cancelled = 0
+
+            UNION ALL
+
+            SELECT t.user_id, t.created_at, 0,
+                   (t.to_status = 'reinforced') - (t.from_status = 'reinforced'),
+                   0,
+                   CASE WHEN t.is_correction = 0 AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+                        THEN (t.to_status = 'reinforced') - (${creditedTopicFromStatus} = 'reinforced')
+                        ELSE 0 END
+            FROM topic_log t JOIN users u ON u.id = t.user_id
+
+            UNION ALL
+
+            SELECT user_id, created_at, 0, 0, 0, 0 FROM exam_log
+        ),
+        dated AS (
+            SELECT *, CAST((at + 10800000) / 86400000 AS INTEGER) AS day FROM changes
+        ),
+        page AS (
+            SELECT DISTINCT day FROM dated ORDER BY day DESC LIMIT ? OFFSET ?
+        ),
+        grouped AS (
+            SELECT day, user_id, MAX(at) AS last_at, SUM(tasks) AS tasks, SUM(topics) AS topics,
+                   SUM(credited_tasks) AS credited_tasks, SUM(credited_topics) AS credited_topics,
+                   day * 86400000 - 10800000 AS day_start
+            FROM dated WHERE day IN (SELECT day FROM page)
+            GROUP BY day, user_id
+        )
+        SELECT g.*, u.name,
+            COALESCE(
+                (SELECT json_array(e.to_exam) FROM exam_log e
+                 WHERE e.user_id = g.user_id AND e.created_at < g.day_start
+                 ORDER BY e.created_at DESC, e.id DESC LIMIT 1),
+                (SELECT json_array(e.from_exam) FROM exam_log e WHERE e.user_id = g.user_id
+                 ORDER BY e.created_at, e.id LIMIT 1),
+                json_array(u.exam)
+            ) AS exam_before,
+            COALESCE(
+                (SELECT json_array(e.to_exam) FROM exam_log e
+                 WHERE e.user_id = g.user_id AND e.created_at < g.day_start + 86400000
+                 ORDER BY e.created_at DESC, e.id DESC LIMIT 1),
+                (SELECT json_array(e.from_exam) FROM exam_log e WHERE e.user_id = g.user_id
+                 ORDER BY e.created_at, e.id LIMIT 1),
+                json_array(u.exam)
+            ) AS exam_after
+        FROM grouped g JOIN users u ON u.id = g.user_id
+        ORDER BY g.day DESC, g.last_at DESC, g.user_id
+    `).all(limit, offset) as unknown as {
+        day: number; user_id: number; name: string; tasks: number; topics: number;
+        credited_tasks: number; credited_topics: number; exam_before: string; exam_after: string;
+    }[];
+    const days = new Map<number, HistoryDay>();
+    for (const row of rows) {
+        const day = days.get(row.day) ?? { day: row.day, rows: [] };
+        day.rows.push({
+            id: row.user_id,
+            name: row.name,
+            pct: Math.round(weekPct({ tasks: row.credited_tasks, topics: row.credited_topics })),
+            tasks: row.tasks,
+            topics: row.topics,
+            examBefore: JSON.parse(row.exam_before)[0],
+            examAfter: JSON.parse(row.exam_after)[0],
+        });
+        days.set(row.day, day);
+    }
+    return [...days.values()];
 }

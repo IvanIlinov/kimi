@@ -21,6 +21,7 @@ after(() => {
 test('административные операции работают на изолированной базе', () => {
     // Добавление участника и создание 27 начальных статусов.
     const alice = addUser(700001, 'Тестовая Алиса');
+    assert.equal(db.prepare('SELECT exam FROM users WHERE id = ?').get(alice)?.exam, 0);
 
     assert.equal(
         Number(db.prepare('SELECT COUNT(*) AS n FROM topic_status WHERE user_id = ?')

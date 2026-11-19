@@ -52,17 +52,38 @@ if (adminDemo) {
         const { id, tgId, name, exam, tasksTotal } = entry.person;
         return { id, tgId, name, exam, tasksTotal, removed: false, topics: selfDto(entry).topics };
     });
-    routes.default['/api/admin/journal?limit=50&offset=0'] = [];
+    const today = Math.floor((now.getTime() + 3 * 3_600_000) / 86_400_000);
+    routes.default['/api/admin/history?limit=14&offset=0'] = {
+        days: [
+            { day: today, rows: [
+                { id: 3, name: 'Миша', pct: 4, tasks: 27, topics: 2, examBefore: 35, examAfter: 37 },
+                { id: 2, name: 'Саша', pct: 1, tasks: 6, topics: 1, examBefore: 70, examAfter: 70 },
+            ] },
+            { day: today - 1, rows: [
+                { id: 3, name: 'Миша', pct: 1, tasks: 0, topics: 1, examBefore: 35, examAfter: 35 },
+            ] },
+            { day: today - 2, rows: [
+                { id: 1, name: 'Лера', pct: 0, tasks: 5, topics: 0, examBefore: null, examAfter: null },
+                { id: 2, name: 'Саша', pct: 0, tasks: 0, topics: 0, examBefore: 66, examAfter: 70 },
+            ] },
+        ],
+        hasMore: false,
+    };
     const moscow = new Date(now.getTime() + 3 * 3_600_000);
     const monday = moscow.getUTCDate() - (moscow.getUTCDay() + 6) % 7;
     routes.default['/api/admin/home'] = {
+        previewEnabled: true,
         weekStart: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth(), monday) - 3 * 3_600_000,
+        month: {
+            start: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth(), 1) - 3 * 3_600_000,
+            next: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth() + 1, 1) - 3 * 3_600_000,
+        },
         attendance: { visits: 12, visitors: 7, participants: 8 },
         lessons: [
-            { id: 1, weekday: 0, time: '16:30', name: 'Лера', status: 'planned' },
-            { id: 2, weekday: 0, time: '18:00', name: 'Саша', status: 'held' },
-            { id: 3, weekday: 2, time: '17:30', name: 'Миша', status: 'paid' },
-            { id: 4, weekday: 4, time: '16:00', name: 'Лера', status: 'planned' },
+            { id: 1, weekday: 0, time: '16:30', name: 'Лера', status: 'planned', priceKopecks: 180000 },
+            { id: 2, weekday: 0, time: '18:00', name: 'Саша', status: 'held', priceKopecks: 160000 },
+            { id: 3, weekday: 2, time: '17:30', name: 'Миша', status: 'paid', priceKopecks: 200000 },
+            { id: 4, weekday: 4, time: '16:00', name: 'Лера', status: 'planned', priceKopecks: 180000 },
         ],
     };
     routes.guest = demoRoutes('guest');
@@ -87,17 +108,120 @@ const files = new Map(bundle.output.map((file) => [file.fileName, file.type === 
 const demo = `<script>
 const routes = ${JSON.stringify(routes).replaceAll('<', '\\u003c')};
 let nextLessonId = 5;
+let nextMemberId = 4;
+const profileTemplate = routes.default['/api/profile/1'];
+const selfTemplate = routes['1']?.['/api/self'];
+const topicCycle = { todo: 'learning', learning: 'done', done: 'reinforced', reinforced: 'todo' };
+const lessonCycle = { planned: 'held', held: 'paid', paid: 'planned' };
 window.fetch = async (path, options) => {
     const read = !options?.method || options.method === 'GET';
     const preview = options?.headers?.['X-Arena-Preview'];
-    const current = preview ? routes[preview] : routes.default;
-    const endpoint = preview && path === '/api/me?preview=' + preview ? '/api/me' : path;
+    const editing = preview?.startsWith('edit:');
+    const target = editing ? preview.slice(5) : preview;
+    const current = target ? routes[target] : routes.default;
+    const endpoint = target && path === '/api/me?preview=' + target ? '/api/me' : path;
+    if (editing && current && options?.method === 'POST') {
+        const result = current['/api/self'];
+        const topic = path.match(/^\\/api\\/self\\/topics\\/(\\d+)\\/cycle$/);
+        if (topic) result.topics[Number(topic[1]) - 1] = topicCycle[result.topics[Number(topic[1]) - 1]];
+        else if (path === '/api/self/exam') result.exam = JSON.parse(options.body).value;
+        else if (path === '/api/self/tasks') result.tasksTotal = Math.max(0, result.tasksTotal + JSON.parse(options.body).amount);
+        else return Response.json({ error: 'Действие недоступно' }, { status: 403 });
+        const totals = { tasks: result.tasksTotal, exam: result.exam, topics: result.topics.filter((s) => s === 'reinforced').length };
+        for (const view of Object.values(routes)) {
+            const profile = view['/api/profile/' + target];
+            if (profile) {
+                profile.totals = totals;
+                if (view['/api/me'].personId === Number(target)) view['/api/profile/me'].totals = totals;
+            }
+        }
+        return Response.json(result);
+    }
     const home = !preview && routes.default['/api/admin/home'];
     if (home && options?.method === 'POST') {
+        if (path === '/api/admin/members') {
+            const { tgId, name } = JSON.parse(options.body);
+            const members = routes.default['/api/admin/members'];
+            if (members.some((row) => row.tgId === tgId || row.name === name.trim())) {
+                return Response.json({ error: 'Участник уже в рейтинге' }, { status: 400 });
+            }
+            const id = nextMemberId++;
+            const topics = Array(27).fill('todo');
+            const member = { id, name: name.trim() };
+            const profile = structuredClone(profileTemplate);
+            Object.assign(profile, member, {
+                place: members.length + 1, pct: 0, monthPct: 0,
+                totals: { tasks: 0, topics: 0, exam: 0 },
+            });
+            Object.assign(profile.week, { tasks: 0, topics: 0, goalPct: 0 });
+            profile.month.tasks.value = 0;
+            profile.month.topics.value = 0;
+            profile.month.exam.value = 0;
+            members.push({ ...member, tgId, removed: false, topics, tasksTotal: 0, exam: 0 });
+            home.attendance.participants++;
+            const newView = structuredClone(routes.guest);
+            newView['/api/me'] = { role: 'student', name: member.name, personId: id };
+            newView['/api/profile/me'] = { ...profile, canEdit: true };
+            newView['/api/self'] = { ...selfTemplate, topics, tasksTotal: 0, tasksWeek: 0, exam: 0 };
+            routes[id] = newView;
+            for (const view of Object.values(routes)) {
+                view['/api/profile/' + id] = profile;
+                view['/api/members'].push(member);
+                const week = view['/api/week'];
+                week.rows.push({ ...member, tasks: 0, topics: 0, goalPct: 0 });
+                week.leader ??= { name: member.name, pct: 0, tasks: 0, topics: 0 };
+                for (const mode of ['global', 'month']) {
+                    const arena = view['/api/arena?mode=' + mode];
+                    arena.rows.push({ ...member, pct: 0, tasks: 0, standing: 'behind' });
+                    arena.leader ??= { name: member.name, pct: 0, monthPct: 0, tasks: 0, topics: 0, exam: 0 };
+                }
+            }
+            return Response.json({ ok: true, id });
+        }
+        const removeMember = path.match(/^\\/api\\/admin\\/members\\/(\\d+)\\/remove$/);
+        if (removeMember) {
+            const id = Number(removeMember[1]);
+            const members = routes.default['/api/admin/members'];
+            const removed = members.find((row) => row.id === id);
+            if (!removed) return Response.json({ error: 'Участник не найден' }, { status: 404 });
+            routes.default['/api/admin/members'] = members.filter((row) => row.id !== id);
+            delete routes[id];
+            home.attendance.participants--;
+            for (const view of Object.values(routes)) {
+                view['/api/members'] = view['/api/members'].filter((row) => row.id !== id);
+                delete view['/api/profile/' + id];
+                const week = view['/api/week'];
+                week.rows = week.rows.filter((row) => row.id !== id);
+                const first = week.rows[0];
+                week.leader = first ? {
+                    name: first.name, tasks: first.tasks, topics: first.topics,
+                    pct: Math.round(40 * (first.tasks / 900 + first.topics / 27)),
+                } : null;
+                for (const mode of ['global', 'month']) {
+                    const arena = view['/api/arena?mode=' + mode];
+                    arena.rows = arena.rows.filter((row) => row.id !== id);
+                    const profile = view['/api/profile/' + arena.rows[0]?.id];
+                    arena.leader = profile ? {
+                        name: profile.name, pct: profile.pct, monthPct: profile.monthPct,
+                        ...(mode === 'global' ? profile.totals : {
+                            tasks: profile.month.tasks.value, topics: profile.month.topics.value, exam: profile.month.exam.value,
+                        }),
+                    } : null;
+                }
+            }
+            return Response.json({ ok: true });
+        }
+        const cycle = path.match(/^\\/api\\/admin\\/lessons\\/(\\d+)\\/cycle$/);
+        if (cycle) {
+            const lesson = home.lessons.find((item) => item.id === Number(cycle[1]));
+            if (!lesson) return Response.json({ error: 'Занятие не найдено' }, { status: 404 });
+            lesson.status = lessonCycle[lesson.status];
+            return Response.json({ status: lesson.status });
+        }
         if (path === '/api/admin/lessons') {
             const { weekStart, id, ...lesson } = JSON.parse(options.body);
-            if (id === undefined) home.lessons.push({ ...lesson, id: nextLessonId++ });
-            else home.lessons = home.lessons.map((row) => row.id === id ? { ...lesson, id } : row);
+            if (id === undefined) home.lessons.push({ priceKopecks: 0, ...lesson, id: nextLessonId++ });
+            else home.lessons = home.lessons.map((row) => row.id === id ? { ...row, ...lesson } : row);
             home.lessons.sort((a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time));
             return Response.json({ ok: true });
         }
@@ -106,6 +230,14 @@ window.fetch = async (path, options) => {
             home.lessons = home.lessons.filter((row) => row.id !== Number(remove[1]));
             return Response.json({ ok: true });
         }
+    }
+    if (read && home && path === '/api/admin/home') {
+        const { start, next } = home.month;
+        const earnedKopecks = home.lessons.reduce((total, lesson) => {
+            const date = home.weekStart + lesson.weekday * 86_400_000;
+            return lesson.status === 'paid' && date >= start && date < next ? total + lesson.priceKopecks : total;
+        }, 0);
+        return Response.json({ ...home, month: { start, earnedKopecks } });
     }
     const found = read && current && Object.hasOwn(current, endpoint);
     return new Response(JSON.stringify(found ? current[endpoint] : {

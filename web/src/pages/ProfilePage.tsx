@@ -10,10 +10,8 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
     if (!p) return <Screen hideTitle title="Профиль"><Loading /></Screen>;
 
     const { month: m, week: w } = p;
-    const examLine =
-        m.exam.value === null
-            ? `Пробник пока не внесён (по плану ${m.exam.goal})`
-            : `Сейчас пишем пробник на ${m.exam.value} ${plural(m.exam.value, ['балл', 'балла', 'баллов'])}!`;
+    const exam = p.totals.exam ?? 0;
+    const examLine = `Сейчас пишем пробник на ${exam} ${plural(exam, ['балл', 'балла', 'баллов'])}!`;
 
     return (
         <Screen title={`${cap(p.name)} 🎖${p.place}`} className="layout-profile">
@@ -38,7 +36,7 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
                 <Label>Цели месяца</Label>
                 <Goal icon="📗" value={m.topics.value} goal={m.topics.goal} />
                 <Goal icon="📘" value={m.tasks.value} goal={m.tasks.goal} />
-                <Goal icon="📕" value={m.exam.value ?? 0} goal={m.exam.goal} shown={m.exam.value ?? '—'} />
+                <Goal icon="📕" value={m.exam.value ?? 0} goal={m.exam.goal} />
             </Card>
 
             <Card class="notes">
@@ -46,7 +44,7 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
                     Решил {w.tasks} {plural(w.tasks, ['задачу', 'задачи', 'задач'])} за эту неделю
                 </p>
                 <p>
-                    Закрепил {m.topics.value} {plural(m.topics.value, ['задание', 'задания', 'заданий'])} (по плану{' '}
+                    Закрепил {p.totals.topics} {plural(p.totals.topics, ['задание', 'задания', 'заданий'])} (по плану{' '}
                     {m.topics.goal})
                 </p>
                 <p>{examLine}</p>
@@ -55,14 +53,14 @@ export function ProfilePage({ id }: { id: number | 'me' }) {
     );
 }
 
-function Goal({ icon, value, goal, shown }: { icon: string; value: number; goal: number; shown?: number | string }) {
+function Goal({ icon, value, goal }: { icon: string; value: number; goal: number }) {
     const tone = toneFor(goal > 0 ? (value / goal) * 100 : 0);
     return (
         <div class="metric">
             <span class="metric-name">{icon}</span>
             <SegmentBar value={value} max={goal} tone={tone} />
             <span class="metric-val">
-                {shown ?? value}/{goal}
+                {value}/{goal}
             </span>
         </div>
     );

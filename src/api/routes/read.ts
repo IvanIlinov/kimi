@@ -25,11 +25,11 @@ export function registerRead(router: Router): void {
 
     router.get('/api/week', ({ viewer }) => {
         const week = new Map(getWeekStats().map((s) => [s.userId, s]));
-        return weekDto(loadRanked(), viewer.tgId, week);
+        return weekDto(loadRanked(), viewer.tgId, week, viewer.role === 'admin');
     });
 
     router.get('/api/arena', ({ viewer, query }) => {
         const mode: ArenaMode = query.get('mode') === 'global' ? 'global' : 'month';
-        return arenaDto(loadRanked(), viewer.tgId, mode, new Date());
+        return arenaDto(loadRanked(), viewer.tgId, mode, new Date(), viewer.role === 'admin');
     });
 }

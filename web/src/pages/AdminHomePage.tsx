@@ -1,9 +1,10 @@
 import { useState } from 'preact/hooks';
 import { api } from '../api/client';
-import type { AdminHome, AdminMember, Lesson, LessonStatus } from '../api/types';
+import type { AdminHome, Arena, Lesson, LessonStatus } from '../api/types';
 import { useApi } from '../api/useApi';
-import { Card, Empty, Label, Loading, Screen, SegmentBar } from '../components/ui';
 import { cap } from '../lib/format';
+import { SwipeCard } from '../components/SwipeCard';
+import { Card, Empty, Label, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const STATUS_LABELS: Record<LessonStatus, string> = {
@@ -12,82 +13,130 @@ const STATUS_LABELS: Record<LessonStatus, string> = {
     paid: 'Оплачено',
 };
 
+const rubles = new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+});
+
+const monthName = new Intl.DateTimeFormat('ru-RU', { month: 'long', timeZone: 'Europe/Moscow' });
+
 export function AdminHomePage({ onPreview, onGuestPreview }: {
     onPreview: (id: number) => void;
     onGuestPreview: () => void;
 }) {
-    const { data, error, reload } = useApi<AdminHome>('/api/admin/home');
-    const [choosingStudent, setChoosingStudent] = useState(false);
+    const { data, error, reload, setData } = useApi<AdminHome>('/api/admin/home');
+    const [openingPreview, setOpeningPreview] = useState(false);
+    const [previewError, setPreviewError] = useState('');
     const [editing, setEditing] = useState(false);
     const [lesson, setLesson] = useState<Partial<Lesson> | null>(null);
+    const [cycling, setCycling] = useState(false);
+    const [cycleError, setCycleError] = useState('');
+
+    async function previewLeader() {
+        if (openingPreview || !data?.previewEnabled) return;
+        setOpeningPreview(true);
+        setPreviewError('');
+        try {
+            const { rows } = await api<Arena>('/api/arena?mode=global');
+            const leader = rows[0];
+            if (leader) onPreview(leader.id);
+            else setPreviewError('В рейтинге пока нет участников');
+        } catch (e) {
+            setPreviewError((e as Error).message);
+        } finally {
+            setOpeningPreview(false);
+        }
+    }
+
+    async function cycleLesson(id: number) {
+        if (!data || cycling) return;
+        setCycling(true);
+        setCycleError('');
+        try {
+            const { status } = await api<{ status: LessonStatus }>(`/api/admin/lessons/${id}/cycle`, { method: 'POST' });
+            setData({ ...data, lessons: data.lessons.map((item) => item.id === id ? { ...item, status } : item) });
+            reload();
+        } catch (e) {
+            setCycleError((e as Error).message);
+        } finally {
+            setCycling(false);
+        }
+    }
+
+    const held = data?.lessons.filter((item) => item.status !== 'planned').length ?? 0;
+    const earned = data?.lessons.reduce((sum, item) => sum + (item.status === 'paid' ? item.priceKopecks : 0), 0) ?? 0;
 
     return (
         <Screen hideTitle title="Главная" className="layout-admin-home">
             <Card class="admin-preview-actions">
                 <Label>Предпросмотр</Label>
                 <div class="chips">
-                    <button class="chip" onClick={onGuestPreview}>Как гость</button>
-                    <button class="chip" aria-expanded={choosingStudent}
-                        onClick={() => setChoosingStudent(!choosingStudent)}>Как ученик</button>
+                    <button class="chip" disabled={openingPreview || !data?.previewEnabled} onClick={onGuestPreview}>Как гость</button>
+                    <button class="chip" disabled={openingPreview || !data?.previewEnabled} onClick={previewLeader}>Как ученик</button>
                 </div>
+                {previewError && <p class="warn" role="alert">{previewError}</p>}
             </Card>
-            {choosingStudent ? <StudentPicker onPreview={onPreview} /> : (
+            {error && <Empty text={error} />}
+            {!data && !error && <Loading />}
+            {data && (
                 <>
-                    {error && <Empty text={error} />}
-                    {!data && !error && <Loading />}
-                    {data && (
-                        <>
-                            <Card class="admin-attendance">
+                    <SwipeCard label="Статистика занятий и посещаемость"
+                        first={
+                            <>
+                                <h2 class="admin-lesson-month">{cap(monthName.format(data.month.start))}</h2>
+                                <div class="metric-tiles admin-lesson-metrics">
+                                    <MetricTile icon="calendar-days" label="Всего занятий" value={data.lessons.length} />
+                                    <MetricTile icon="clipboard-list" label="Проведено" value={held} />
+                                    <MetricTile icon="wallet" label="За неделю" value={rubles.format(earned / 100)} />
+                                    <MetricTile icon="wallet" label="За месяц" value={rubles.format(data.month.earnedKopecks / 100)} />
+                                </div>
+                            </>
+                        }
+                        second={
+                            <div class="admin-attendance">
                                 <Label>Посещаемость за неделю</Label>
                                 <div class="between"><span>Запусков бота</span><b>{data.attendance.visits}</b></div>
                                 <SegmentBar value={data.attendance.visits} max={data.attendance.participants} tone="good" />
-                                <small class="muted">Ориентир — один запуск на участника</small>
                                 <div class="between"><span>Ученики, которые заходили</span>
                                     <b>{data.attendance.visitors} / {data.attendance.participants}</b>
                                 </div>
                                 <SegmentBar value={data.attendance.visitors} max={data.attendance.participants} tone="good" />
-                            </Card>
-                            <Card class="admin-schedule">
-                                <div class="between">
-                                    <Label>Расписание недели · МСК</Label>
-                                    <button class="chip" aria-pressed={editing}
-                                        onClick={() => setEditing(!editing)}>{editing ? 'Готово' : 'Изменить'}</button>
-                                </div>
-                                <div class="admin-schedule-list">
-                                    <div class="admin-calendar">
-                                        {DAYS.map((day, weekday) => {
-                                            const lessons = data.lessons.filter((item) => item.weekday === weekday);
-                                            return (
-                                                <div class="admin-schedule-day" key={day}>
-                                                    <h3>{day}</h3>
-                                                    {lessons.length === 0 && <span class="muted admin-calendar-empty" aria-label="Нет занятий">—</span>}
-                                                    {lessons.map((item) => {
-                                                        const content = (
-                                                            <>
-                                                                <time dateTime={item.time}>{item.time}</time>
-                                                                <b>{item.name}</b>
-                                                                <span class="visually-hidden">{STATUS_LABELS[item.status]}</span>
-                                                            </>
-                                                        );
-                                                        return editing ? (
-                                                            <button type="button" class={`admin-lesson ${item.status}`} key={item.id}
-                                                                onClick={() => setLesson(item)}
-                                                                aria-label={`Изменить занятие: ${item.name}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>
-                                                                {content}
-                                                            </button>
-                                                        ) : (
-                                                            <div class={`admin-lesson ${item.status}`} key={item.id}>{content}</div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                {editing && <button class="chip primary" onClick={() => setLesson({})}>Добавить занятие</button>}
-                            </Card>
-                        </>
-                    )}
+                            </div>
+                        }
+                    />
+                    <Card class="admin-schedule">
+                        <div class="between">
+                            <Label>Расписание недели · МСК</Label>
+                            <button class="chip" aria-pressed={editing} disabled={cycling}
+                                onClick={() => setEditing(!editing)}>{editing ? 'Готово' : 'Изменить'}</button>
+                        </div>
+                        {cycleError && <p class="warn" role="alert">{cycleError}</p>}
+                        <div class="admin-schedule-list">
+                            <div class="admin-calendar">
+                                {DAYS.map((day, weekday) => {
+                                    const lessons = data.lessons.filter((item) => item.weekday === weekday);
+                                    return (
+                                        <div class="admin-schedule-day" key={day}>
+                                            <h3>{day}</h3>
+                                            {lessons.length === 0 && <span class="muted admin-calendar-empty" aria-label="Нет занятий">—</span>}
+                                            {lessons.map((item) => (
+                                                <button type="button" class={`admin-lesson ${item.status}`} key={item.id}
+                                                    disabled={cycling}
+                                                    onClick={() => editing ? setLesson(item) : void cycleLesson(item.id)}
+                                                    aria-label={`${editing ? 'Изменить занятие' : 'Сменить статус'}: ${item.name}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>
+                                                    <time dateTime={item.time}>{item.time}</time>
+                                                    <b>{item.name}</b>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {editing && <button class="chip primary" onClick={() => setLesson({})}>Добавить занятие</button>}
+                    </Card>
                 </>
             )}
             {data && lesson && (
@@ -95,27 +144,6 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                     onSaved={() => { setLesson(null); reload(); }} />
             )}
         </Screen>
-    );
-}
-
-function StudentPicker({ onPreview }: { onPreview: (id: number) => void }) {
-    const { data, error } = useApi<AdminMember[]>('/api/admin/members');
-    const active = data?.filter((member) => !member.removed);
-    return (
-        <Card class="admin-schedule">
-            <Label>Выберите ученика</Label>
-            {error && <Empty text={error} />}
-            {!data && !error && <Loading />}
-            {active?.length === 0 && <Empty text="Нет активных участников" />}
-            <div class="admin-list admin-schedule-list">
-                {active?.map((member) => (
-                    <button key={member.id} class="admin-member" onClick={() => onPreview(member.id)}>
-                        <b>{cap(member.name)}</b>
-                        <span aria-hidden="true">›</span>
-                    </button>
-                ))}
-            </div>
-        </Card>
     );
 }
 
@@ -128,6 +156,10 @@ function LessonEditor({ lesson, weekStart, onClose, onSaved }: {
     const [weekday, setWeekday] = useState(lesson.weekday ?? 0);
     const [time, setTime] = useState(lesson.time ?? '16:30');
     const [name, setName] = useState(lesson.name ?? '');
+    const [price, setPrice] = useState(lesson.priceKopecks ? String(lesson.priceKopecks / 100).replace('.', ',') : '');
+    const [whole, fraction = ''] = price.split(/[.,]/);
+    const priceKopecks = Number(whole + fraction.padEnd(2, '0'));
+    const validPrice = /^\d*(?:[.,]\d{1,2})?$/.test(price) && Number.isSafeInteger(priceKopecks);
     const [status, setStatus] = useState<LessonStatus>(lesson.status ?? 'planned');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -151,9 +183,9 @@ function LessonEditor({ lesson, weekStart, onClose, onSaved }: {
             <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="Занятие"
                 onClick={(e) => e.stopPropagation()}>
                 <Card>
-                    <form class="lesson-form" onSubmit={(e) => {
+                    <form class="modal-form" onSubmit={(e) => {
                         e.preventDefault();
-                        void submit('/api/admin/lessons', { id: lesson.id, weekStart, weekday, time, name, status });
+                        if (validPrice) void submit('/api/admin/lessons', { id: lesson.id, weekStart, weekday, time, name, status, priceKopecks });
                     }}>
                         <div class="between">
                             <Label>{lesson.id ? 'Изменить занятие' : 'Добавить занятие'}</Label>
@@ -170,6 +202,11 @@ function LessonEditor({ lesson, weekStart, onClose, onSaved }: {
                         <label>Имя ученика
                             <input required maxLength={80} value={name} onInput={(e) => setName(e.currentTarget.value)} />
                         </label>
+                        <label>Стоимость урока, ₽
+                            <input inputMode="decimal" value={price} placeholder="0" aria-invalid={!validPrice}
+                                onInput={(e) => setPrice(e.currentTarget.value)} />
+                        </label>
+                        {!validPrice && <p class="warn">Укажите сумму в рублях, до двух знаков после запятой</p>}
                         <label>Статус
                             <select value={status} onChange={(e) => setStatus(e.currentTarget.value as LessonStatus)}>
                                 {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -177,7 +214,7 @@ function LessonEditor({ lesson, weekStart, onClose, onSaved }: {
                         </label>
                         {error && <p class="warn" role="alert">{error}</p>}
                         <div class="chips">
-                            <button class="chip primary" disabled={busy || !name.trim()}>Сохранить</button>
+                            <button class="chip primary" disabled={busy || !name.trim() || !validPrice}>Сохранить</button>
                             {lesson.id && <button type="button" class="chip danger" disabled={busy}
                                 onClick={() => {
                                     if (window.confirm('Удалить это занятие из расписания?')) {

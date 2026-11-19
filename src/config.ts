@@ -16,3 +16,5 @@ export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+
+export const STAGING_PREVIEW_ENABLED = process.env.STAGING_PREVIEW_ENABLED === '1';
