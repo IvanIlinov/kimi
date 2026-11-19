@@ -15,6 +15,26 @@ export interface Member {
     name: string;
 }
 
+export interface WeeklyRecap {
+    start: number;
+    end: number;
+    tasks: number;
+    topics: number;
+    goal: number;
+    place: number | null;
+}
+
+export interface StudyRecap {
+    start: number;
+    end: number;
+    tasks: number;
+    topics: number;
+    examBefore: number;
+    exam: number;
+    goals: { tasks: number; topics: number; exam: number };
+    pct: number;
+}
+
 export interface Profile {
     id: number;
     name: string;
@@ -32,6 +52,8 @@ export interface Profile {
         exam: { value: number | null; goal: number };
     };
     canEdit: boolean;
+    weeklyRecap?: WeeklyRecap;
+    studyRecaps?: { year: StudyRecap; season: StudyRecap };
 }
 
 export interface Week {

@@ -78,6 +78,8 @@ npm run build --prefix web
 ## Предпросмотр Mini App
 
 - **В обычном браузере.** Из корня проекта выполни `npm run demo --prefix web` для демо ученика, `npm run demo --prefix web -- --admin` для демо администратора или `npm run demo --prefix web -- --guest` для демо гостя. Открой соответствующий файл в браузере: `web/demos/student-home.html`, `web/demos/admin-home.html` или `web/demos/guest-home.html`. Повторная сборка обновляет соответствующий файл. Демо используют вымышленные данные. Изменения в демо сбрасываются после обновления страницы. Для сохранения реальных данных нужен тестовый бот.
+- **Карточки итогов.** Открой [автономное демо](../web/demos/period-recaps.html) и выбери период. В карточках используются вымышленные результаты.
+- **Итоги на главной ученика.** Выполни `npm run demo --prefix web -- --recap-button` для [кнопки рядом с месяцем](../web/demos/student-recap-button.html) или `npm run demo --prefix web -- --recap-swipe` для [страницы слева в свайп-карточке](../web/demos/student-recap-swipe.html).
 - **В Telegram.** Открой Mini App через тестового бота после выкладки backend и frontend на Staging. Так проверяются вход через Telegram, сохранение результатов и поведение интерфейса на телефоне.
 
 ## Git и окружения

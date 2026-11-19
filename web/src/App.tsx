@@ -32,7 +32,7 @@ const ADMIN_TABS: Tab<TabId>[] = [
 
 type Preview = { mode: 'student'; id: number; editing: boolean } | { mode: 'guest' };
 
-export function App() {
+export function App({ StudentHome = StudentHomePage } = {}) {
     const [preview, setPreview] = useState<Preview | null>(null);
     const me = useApi<Me>(preview ? `/api/me?preview=${preview.mode === 'guest' ? 'guest' : preview.id}` : '/api/me');
     const [tab, setTab] = useState<TabId | null>(null);
@@ -94,7 +94,7 @@ export function App() {
     if (openId !== null) page = <StudentHomePage key={openId} id={openId} />;
     else if (active === 'week') page = <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'adminHistory') page = <HistoryPage />;
-    else if (active === 'home') page = <StudentHomePage />;
+    else if (active === 'home') page = <StudentHome autoOpenWeeklyRecap={me.data.role === 'student' && !preview} />;
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null && !editingStudent} />;
     else {
         const admin = tabs === ADMIN_TABS;

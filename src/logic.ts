@@ -47,6 +47,13 @@ function moscow(now: Date) {
     return { y: d.getUTCFullYear(), m: d.getUTCMonth(), day: d.getUTCDate() };
 }
 
+// Начало текущей недели: понедельник 00:00 по Москве, в UTC-миллисекундах
+export function weekStartMs(now: number): number {
+    const msk = new Date(now + 3 * 3600e3);
+    const dow = (msk.getUTCDay() + 6) % 7; // понедельник = 0
+    return Date.UTC(msk.getUTCFullYear(), msk.getUTCMonth(), msk.getUTCDate() - dow) - 3 * 3600e3;
+}
+
 const monthName = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', month: 'long' });
 
 export function studyPeriod(now: Date) {

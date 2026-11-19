@@ -1,6 +1,7 @@
 import { db } from './db.ts';
-import { weekPct } from './logic.ts';
+import { weekPct, weekStartMs } from './logic.ts';
 import type { Person } from './logic.ts';
+export { weekStartMs } from './logic.ts';
 
 interface UserRow {
     id: number;
@@ -78,13 +79,6 @@ export function getPersons(): Person[] {
     });
 }
 
-// Начало текущей недели: понедельник 00:00 по Москве, в UTC-миллисекундах
-export function weekStartMs(now: number): number {
-    const msk = new Date(now + 3 * 3600e3);
-    const dow = (msk.getUTCDay() + 6) % 7; // понедельник = 0
-    return Date.UTC(msk.getUTCFullYear(), msk.getUTCMonth(), msk.getUTCDate() - dow) - 3 * 3600e3;
-}
-
 export interface WeekStat {
     userId: number;
     tasks: number;   // решено задач за неделю (с учётом отмен)
@@ -106,7 +100,7 @@ const creditedTopicFromStatus = `CASE WHEN EXISTS (
     LIMIT 1
 ) ELSE t.from_status END`;
 
-export function getWeekStats(now: number = Date.now()): WeekStat[] {
+export function getWeekStats(now: number = Date.now(), until: number | null = null): WeekStat[] {
     const from = weekStartMs(now);
     const stats = new Map<number, WeekStat>();
 
@@ -126,11 +120,12 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
             JOIN users u ON u.id = t.user_id
             WHERE t.cancelled = 0
               AND t.created_at >= ?
+              AND (? IS NULL OR t.created_at < ?)
               AND t.source <> 'admin'
               AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
             GROUP BY t.user_id
         `)
-        .all(from) as unknown as { user_id: number; total: number; n: number }[];
+        .all(from, until, until) as unknown as { user_id: number; total: number; n: number }[];
 
     for (const r of taskRows) {
         const s = get(r.user_id);
@@ -148,11 +143,12 @@ export function getWeekStats(now: number = Date.now()): WeekStat[] {
             FROM topic_log t
             JOIN users u ON u.id = t.user_id
             WHERE t.created_at >= ?
+              AND (? IS NULL OR t.created_at < ?)
               AND t.is_correction = 0
               AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
             GROUP BY t.user_id
         `)
-        .all(from) as unknown as { user_id: number; delta: number; n: number }[];
+        .all(from, until, until) as unknown as { user_id: number; delta: number; n: number }[];
 
     for (const r of topicRows) {
         const s = get(r.user_id);
@@ -493,4 +489,35 @@ export function getAdminHistory(limit: number, offset: number): HistoryDay[] {
         days.set(row.day, day);
     }
     return [...days.values()];
+}
+
+export function studyRecapStats(person: Person, start: number, end: number) {
+    const tasks = db.prepare(`
+        SELECT COALESCE(SUM(amount), 0) AS value FROM task_log
+        WHERE user_id = ? AND created_at >= ? AND created_at < ?
+          AND cancelled = 0 AND source <> 'admin'
+          AND (actor_tg_id IS NULL OR actor_tg_id = ?)
+    `).get(person.id, start, end, person.tgId) as { value: number };
+    const laterTopics = db.prepare(`
+        SELECT COALESCE(SUM((to_status = 'reinforced') - (from_status = 'reinforced')), 0) AS value
+        FROM topic_log WHERE user_id = ? AND created_at >= ?
+    `).get(person.id, end) as { value: number };
+    const examAt = (boundary: number) => {
+        const previous = db.prepare(`
+            SELECT to_exam FROM exam_log WHERE user_id = ? AND created_at < ? AND is_correction = 0
+            ORDER BY created_at DESC, id DESC LIMIT 1
+        `).get(person.id, boundary) as { to_exam: number | null } | undefined;
+        if (previous) return previous.to_exam ?? 0;
+        const first = db.prepare(`
+            SELECT from_exam FROM exam_log WHERE user_id = ?
+            ORDER BY created_at, id LIMIT 1
+        `).get(person.id) as { from_exam: number | null } | undefined;
+        return (first ? first.from_exam : person.exam) ?? 0;
+    };
+    return {
+        tasks: Math.max(0, tasks.value),
+        topics: Math.max(0, person.reinforced.length - laterTopics.value),
+        examBefore: examAt(start),
+        exam: examAt(end),
+    };
 }

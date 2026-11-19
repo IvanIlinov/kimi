@@ -18,6 +18,38 @@ export interface MemberDto {
 export const membersDto = (ranked: Ranked[], viewerTgId: number): MemberDto[] =>
     visible(ranked, viewerTgId).map((r) => ({ id: r.person.id, name: r.person.name }));
 
+export interface WeeklyRecapDto {
+    start: number;
+    end: number;
+    tasks: number;
+    topics: number;
+    goal: number;
+    place: number | null;
+}
+
+export function weeklyRecapDto(ranked: Ranked[], person: Ranked, stats: WeekStat[], start: number, end: number): WeeklyRecapDto {
+    const week = new Map(stats.map((stat) => [stat.userId, stat]));
+    const stat = week.get(person.person.id);
+    const rows = weekDto(ranked, person.person.tgId, week, true).rows;
+    return {
+        start, end, goal: WEEK_GOAL,
+        tasks: stat?.tasks ?? 0,
+        topics: stat?.topics ?? 0,
+        place: stat?.active ? rows.findIndex((row) => row.id === person.person.id) + 1 : null,
+    };
+}
+
+export interface StudyRecapDto {
+    start: number;
+    end: number;
+    tasks: number;
+    topics: number;
+    examBefore: number;
+    exam: number;
+    goals: { tasks: number; topics: number; exam: number };
+    pct: number;
+}
+
 export interface ProfileDto {
     id: number;
     name: string;
@@ -35,6 +67,8 @@ export interface ProfileDto {
         exam: { value: number | null; goal: number };
     };
     canEdit: boolean;
+    weeklyRecap?: WeeklyRecapDto;
+    studyRecaps?: { year: StudyRecapDto; season: StudyRecapDto };
 }
 
 export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, canEdit: boolean): ProfileDto {

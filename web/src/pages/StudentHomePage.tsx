@@ -1,11 +1,18 @@
+import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
+import { PeriodRecaps } from '../components/PeriodRecaps';
 import { Card, Empty, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
 
-export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
+export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenWeeklyRecap = false }: {
+    id?: number | 'me';
+    monthAction?: ComponentChildren;
+    leadingPage?: ComponentChildren;
+    autoOpenWeeklyRecap?: boolean;
+}) {
     const { data: profile, error } = useApi<Profile>(`/api/profile/${id}`);
     const title = id === 'me' ? 'Главная' : 'Профиль';
     if (error) return <Screen hideTitle title={title}><Empty text={error} /></Screen>;
@@ -16,6 +23,10 @@ export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
     const tasksLeft = Math.max(0, week.goal - week.tasks);
     const exam = month.exam.value ?? 0;
     const examLeft = Math.max(0, month.exam.goal - exam);
+
+    const recaps = leadingPage ?? (profile.weeklyRecap && (
+        <PeriodRecaps week={profile.weeklyRecap} study={profile.studyRecaps} autoOpen={autoOpenWeeklyRecap} />
+    ));
 
     return (
         <Screen hideTitle title={title} className="student-home">
@@ -38,10 +49,11 @@ export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
                 </div>
             </Card>
             <SwipeCard
-                label="Прогресс и ближайшие цели"
+                label={recaps ? "Итоги, прогресс и ближайшие цели" : "Прогресс и ближайшие цели"}
+                leading={recaps}
                 first={
                     <>
-                        <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} />
+                        <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} action={monthAction} />
                         <Goal label="Прогресс недели" value={week.goalPct} />
                         {daysLeft != null && (
                             <div class="student-countdown">
@@ -70,12 +82,13 @@ function remaining(value: number, forms: [string, string, string]) {
     return value ? `Осталось: ${value} ${plural(value, forms)}` : 'Цель выполнена';
 }
 
-function Goal({ icon, label, value, max, note }: {
+function Goal({ icon, label, value, max, note, action }: {
     icon?: string;
     label: string;
     value: number;
     max?: number;
     note?: string;
+    action?: ComponentChildren;
 }) {
     const shown = max === undefined ? `${value}%` : `${value}/${max}`;
 
@@ -89,7 +102,7 @@ function Goal({ icon, label, value, max, note }: {
                 </div>
             ) : (
                 <>
-                    <span>{label}</span>
+                    {action ? <div class="between"><span>{label}</span>{action}</div> : <span>{label}</span>}
                     <div class="student-goal-progress">
                         <SegmentBar value={value} max={max} />
                         <strong>{shown}</strong>

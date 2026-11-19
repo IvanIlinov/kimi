@@ -1,0 +1,42 @@
+.recap-trigger {
+    color: var(--good);
+    font-weight: 700;
+    padding: 0 6px;
+    position: relative;
+}
+.recap-trigger::before {
+    content: '';
+    position: absolute;
+    inset: -8px -3px;
+}
+.recap-entries { display: grid; gap: 6px; }
+.recap-entries button {
+    display: grid;
+    text-align: left;
+    gap: 1px;
+    min-height: 44px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+}
+.recap-entries button:hover { border-color: var(--accent); }
+.recap-entries button strong { color: var(--accent); font-size: 13px; }
+.recap-entries button span { color: var(--muted); font-size: 12px; }
+.recap-entries [data-period="week"] { --accent: var(--blue); }
+.recap-entries [data-period="season"] { --accent: var(--good); }
+.recap-entries [data-period="year"] { --accent: var(--warn); }
+
+.recap-picker {
+    width: min(390px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0;
+}
+.recap-picker::backdrop { background: #08090de0; }
+.recap-picker-body { padding: 16px; }
+.recap-picker h2 { margin: 0; font-size: 23px; }
+.recap-picker-close { width: 44px; height: 44px; font-size: 24px; }

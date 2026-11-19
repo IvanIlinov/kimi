@@ -723,7 +723,8 @@
     color: var(--muted);
 }
 .student-goal { display: grid; gap: 5px; font-size: 14px; }
-.student-home .swipe-card-page:first-child > .student-goal + .student-goal {
+.student-home .swipe-card:not(.swipe-card-with-leading) .swipe-card-page:first-child > .student-goal + .student-goal,
+.student-home .swipe-card-with-leading .swipe-card-page:nth-child(2) > .student-goal + .student-goal {
     margin-top: clamp(4px, 1dvh, 8px);
 }
 .student-goal strong { white-space: nowrap; }
@@ -963,3 +964,35 @@
 .pill[data-accent] {
     background: color-mix(in srgb, var(--tile-accent) 12%, transparent);
 }
+
+.swipe-card-with-leading .swipe-card-track { position: relative; }
+.swipe-card-with-leading .swipe-card-page:first-child { align-content: stretch; }
+.swipe-card-recaps { display: grid; }
+.swipe-card-recaps > div {
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 6px;
+    padding: 4px 3px;
+}
+.swipe-card-recaps > div > button {
+    align-content: center;
+    border-radius: 999px;
+    text-align: center;
+}
+.swipe-card-with-leading .swipe-card-dots { gap: 0; }
+.swipe-card-with-leading .swipe-card-dots button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    min-height: 28px;
+    border-radius: 8px;
+    background: transparent;
+}
+.swipe-card-with-leading .swipe-card-dots button::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+}
+.swipe-card-with-leading .swipe-card-dots button.active::after { background: var(--good); }

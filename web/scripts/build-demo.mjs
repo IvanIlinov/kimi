@@ -1,9 +1,10 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
-import { arenaDto, membersDto, profileDto, selfDto, weekDto } from '../../src/api/dto.ts';
-import { monthGoal, rank } from '../../src/logic.ts';
+import { arenaDto, membersDto, profileDto, selfDto, weekDto, weeklyRecapDto } from '../../src/api/dto.ts';
+import { recapPeriods } from '../../src/recap-periods.ts';
+import { monthGoal, monthPct, rank } from '../../src/logic.ts';
 
 const now = new Date();
 const goals = monthGoal(now);
@@ -23,6 +24,9 @@ const ranked = rank([
 const adminDemo = process.argv.includes('--admin');
 const guestDemo = process.argv.includes('--guest');
 const role = adminDemo ? 'admin' : guestDemo ? 'guest' : 'student';
+const recapPlacement = process.argv.includes('--recap-button') ? 'button'
+    : process.argv.includes('--recap-swipe') ? 'swipe' : null;
+if (recapPlacement && role !== 'student') throw new Error('Демо итогов доступно на главной ученика');
 const firstStudent = ranked.find(({ person }) => person.id === 1);
 const week = new Map(ranked.map(({ person }) => [
     person.id, { userId: person.id, tasks: person.tasksWeek, topics: 2, active: true },
@@ -50,6 +54,28 @@ function demoRoutes(role, student) {
 }
 
 const routes = { default: demoRoutes(role, role === 'student' ? firstStudent : undefined) };
+const demoPeriods = recapPeriods(now.getTime());
+const weekStart = demoPeriods.week.end;
+if (role === 'student' && !recapPlacement) {
+    const lastWeek = [
+        { userId: 1, tasks: 32, topics: 2, active: true },
+        { userId: 2, tasks: 35, topics: 1, active: true },
+        { userId: 3, tasks: 20, topics: 0, active: true },
+    ];
+    const profile = routes.default['/api/profile/me'];
+    profile.weeklyRecap = weeklyRecapDto(ranked, firstStudent, lastWeek, demoPeriods.week.start, weekStart);
+    const studyRecap = ({ start, end }, factor, examBefore) => {
+        const date = new Date(end - 1);
+        const goals = monthGoal(date);
+        const stats = Object.fromEntries(Object.entries(goals).map(([metric, value]) => [metric, Math.round(value * factor)]));
+        const pct = monthPct({ ...firstStudent, person: { ...firstStudent.person, monthResults: stats } }, date);
+        return { start, end, ...stats, goals, pct, examBefore };
+    };
+    profile.studyRecaps = {
+        season: studyRecap(demoPeriods.season, 0.92, 42),
+        year: studyRecap(demoPeriods.year, 0.97, 42),
+    };
+}
 if (adminDemo) {
     routes.default['/api/admin/members'] = ranked.map((entry) => {
         const { id, tgId, name, exam, tasksTotal } = entry.person;
@@ -72,11 +98,9 @@ if (adminDemo) {
         ],
         hasMore: false,
     };
-    const moscow = new Date(now.getTime() + 3 * 3_600_000);
-    const monday = moscow.getUTCDate() - (moscow.getUTCDay() + 6) % 7;
     routes.default['/api/admin/home'] = {
         previewEnabled: true,
-        weekStart: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth(), monday) - 3 * 3_600_000,
+        weekStart,
         month: {
             start: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth(), 1) - 3 * 3_600_000,
             next: Date.UTC(moscow.getUTCFullYear(), moscow.getUTCMonth() + 1, 1) - 3 * 3_600_000,
@@ -93,6 +117,26 @@ if (adminDemo) {
     for (const entry of ranked) routes[entry.person.id] = demoRoutes('student', entry);
 }
 
+let recapMarkup = '';
+if (recapPlacement) {
+    const source = await readFile(new URL('../demos/period-recaps.html', import.meta.url), 'utf8');
+    const dialog = source.match(/<dialog id="period-recap"[\s\S]*?<\/dialog>/)?.[0];
+    const script = source.match(/<script>[\s\S]*?<\/script>/)?.[0];
+    const style = source.match(/\/\* Recap dialog start \*\/([\s\S]*?)\/\* Recap dialog end \*\//)?.[1];
+    if (!dialog || !script || !style) throw new Error('Не найдена разметка карточек итогов');
+    const scopedStyle = style.replaceAll('#period-recap', '&');
+    recapMarkup = `<style>
+        #period-recap {
+            --accent: var(--blue);
+            &[data-period="season"] { --accent: var(--good); }
+            &[data-period="year"] { --accent: var(--warn); }
+            h2, p, dl, dd { margin: 0; }
+            .period { color: var(--muted); font-size: .87rem; }
+            ${scopedStyle}
+        }
+    </style>${dialog}${script}`;
+}
+
 const bundle = await build({
     envFile: false,
     define: { 'import.meta.env.VITE_API_URL': '""' },
@@ -101,6 +145,10 @@ const bundle = await build({
         name: 'arena-browser-demo',
         enforce: 'pre',
         transform(code, id) {
+            if (recapPlacement && id.endsWith('/src/main.tsx')) {
+                return `import { RecapHome } from '../scripts/recap-home';\n` +
+                    code.replace('<App />', `<App StudentHome={() => <RecapHome placement="${recapPlacement}" />} />`);
+            }
             if (id.endsWith('/src/lib/telegram.ts')) {
                 return code.replace("export const insideTelegram = initData !== '';", 'export const insideTelegram = true;');
             }
@@ -110,6 +158,7 @@ const bundle = await build({
 const files = new Map(bundle.output.map((file) => [file.fileName, file.type === 'asset' ? file.source : file.code]));
 const demo = `<script>
 const routes = ${JSON.stringify(routes).replaceAll('<', '\\u003c')};
+let recapOpened = false;
 let nextLessonId = 5;
 let nextMemberId = 4;
 const normalizeName = (name) => name.trim().replace(/\\p{L}/u, (letter) => letter.toUpperCase());
@@ -124,6 +173,15 @@ window.fetch = async (path, options) => {
     const target = editing ? preview.slice(5) : preview;
     const current = target ? routes[target] : routes.default;
     const endpoint = target && path === '/api/me?preview=' + target ? '/api/me' : path;
+    if (!preview && options?.method === 'POST' && path === '/api/self/recaps/open') {
+        const requested = new URLSearchParams(window.location.search).get('recap');
+        const kind = requested === 'season' || requested === 'year' ? requested : 'week';
+        const profile = routes.default['/api/profile/me'];
+        const recap = kind === 'week' ? profile?.weeklyRecap : profile?.studyRecaps?.[kind];
+        const open = !recapOpened && recap && recap.end === JSON.parse(options.body)[kind] ? kind : null;
+        if (open) recapOpened = true;
+        return Response.json({ open });
+    }
     if (editing && current && options?.method === 'POST') {
         const result = current['/api/self'];
         const topic = path.match(/^\\/api\\/self\\/topics\\/(\\d+)\\/cycle$/);
@@ -255,6 +313,7 @@ window.fetch = async (path, options) => {
 };
 </script>`;
 const html = files.get('index.html')
+    .replace('</body>', () => recapMarkup + '</body>')
     .replace(/<script src="https:\/\/telegram\.org\/js\/telegram-web-app\.js"><\/script>/, () => demo)
     .replace(/<script type="module" crossorigin src="\/([^"]+)"><\/script>/, (_, file) =>
         '<script type="module">' + files.get(file).replaceAll('</script', '<\\/script') + '</script>')
@@ -266,6 +325,6 @@ if (!html.includes('window.fetch =') || !html.includes('<script type="module">')
 
 const dir = fileURLToPath(new URL('../demos/', import.meta.url));
 await mkdir(dir, { recursive: true });
-const preview = join(dir, `${role}-home.html`);
+const preview = join(dir, recapPlacement ? `student-recap-${recapPlacement}.html` : `${role}-home.html`);
 await writeFile(preview, html);
 console.log(preview);

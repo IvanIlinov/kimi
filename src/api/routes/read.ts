@@ -1,9 +1,11 @@
-import { arenaDto, membersDto, profileDto, weekDto } from '../dto.ts';
+import { recapPeriods } from '../../recap-periods.ts';
+import { monthGoal, monthPct } from '../../logic.ts';
+import { arenaDto, membersDto, profileDto, weekDto, weeklyRecapDto } from '../dto.ts';
 import type { ArenaMode } from '../dto.ts';
 import { loadRanked } from '../context.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
-import { getWeekStats } from '../../store.ts';
+import { getWeekStats, studyRecapStats } from '../../store.ts';
 
 // Чтение: доступно всем ролям
 export function registerRead(router: Router): void {
@@ -17,10 +19,27 @@ export function registerRead(router: Router): void {
 
     router.get('/api/profile/:id', ({ viewer, params }) => {
         const id = params.id === 'me' ? viewer.personId : Number(params.id);
-        const r = loadRanked().find((x) => x.person.id === id);
+        const ranked = loadRanked();
+        const r = ranked.find((x) => x.person.id === id);
         if (!r) throw new HttpError(404, 'Участник не найден');
-        const week = getWeekStats().find((s) => s.userId === r.person.id);
-        return profileDto(r, week, new Date(), viewer.personId === r.person.id);
+        const now = Date.now();
+        const week = getWeekStats(now).find((s) => s.userId === r.person.id);
+        const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
+        if (params.id === 'me' && viewer.role === 'student') {
+            const { week, season, year } = recapPeriods(now);
+            profile.weeklyRecap = weeklyRecapDto(ranked, r, getWeekStats(week.start, week.end), week.start, week.end);
+            const studyRecap = ({ start, end }: { start: number; end: number }, studyStart: number) => {
+                const stats = studyRecapStats(r.person, studyStart, end);
+                const date = new Date(end - 1);
+                const pct = monthPct({ ...r, person: { ...r.person, monthResults: stats } }, date);
+                return { start, end, ...stats, goals: monthGoal(date), pct };
+            };
+            profile.studyRecaps = {
+                year: studyRecap(year, year.start),
+                season: studyRecap(season, season.studyStart),
+            };
+        }
+        return profile;
     });
 
     router.get('/api/week', ({ viewer }) => {
