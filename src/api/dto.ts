@@ -128,7 +128,7 @@ export interface SelfDto {
     tasksTotal: number;
     tasksWeek: number;
     exam: number | null;
-    limits: { topics: number; tasks: number; exam: number };
+    limits: { topics: number; tasks: number; week: number; exam: number };
 }
 
 export function selfDto(r: Ranked): SelfDto {
@@ -138,6 +138,6 @@ export function selfDto(r: Ranked): SelfDto {
         tasksTotal: p.tasksTotal,
         tasksWeek: p.tasksWeek,
         exam: p.exam,
-        limits: { topics: TOPICS_TOTAL, tasks: TASKS_GOAL, exam: EXAM_MAX },
+        limits: { topics: TOPICS_TOTAL, tasks: TASKS_GOAL, week: WEEK_GOAL, exam: EXAM_MAX },
     };
 }

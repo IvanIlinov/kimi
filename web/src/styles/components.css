@@ -556,6 +556,7 @@
     margin-bottom: 1px;
 }
 .layout-topics > .card { padding: 11px; }
+.layout-topics > .card:last-child { flex: 1 0 auto; }
 .layout-topics .label { margin-bottom: 7px; }
 .layout-topics .grid { gap: 6px; }
 .layout-topics .cell {
@@ -689,6 +690,7 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
 }
+.swipe-card-track::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .swipe-card-page {
     display: grid;
     flex: 0 0 100%;
@@ -713,7 +715,11 @@
 
 .student-home { gap: clamp(6px, 1.6dvh, 12px); }
 .student-home > .card { padding: clamp(8px, 2dvh, 14px); }
-.student-home > .card { flex: 0 0 auto; }
+.student-home > .student-summary { flex: 0 0 auto; }
+.student-home > .swipe-card {
+    flex: 1 0 auto;
+    grid-template-rows: minmax(min-content, 1fr) auto;
+}
 .student-summary { display: grid; gap: clamp(6px, 1.7dvh, 14px); }
 .student-summary .pill { display: inline-flex; align-items: center; gap: 4px; }
 .student-summary svg { width: 16px; height: 16px; }
@@ -764,15 +770,23 @@
     .student-goal { gap: 2px; }
 }
 
+.swipe-card-page:has(> .student-countdown) {
+    grid-template-rows: auto auto minmax(min-content, 1fr);
+    align-content: stretch;
+}
+.student-countdown { align-self: center; }
 .student-countdown {
     display: grid;
     justify-items: center;
-    margin-top: 4px;
     line-height: 1.15;
 }
 .student-countdown strong { font-size: clamp(22px, 5dvh, 32px); }
 .student-countdown small { color: var(--muted); font-size: 12px; }
 
+.swipe-card-page:has(.student-goal-with-icon) {
+    align-content: center;
+    gap: clamp(8px, 2dvh, 16px);
+}
 .student-goal-with-icon {
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) 5ch;
@@ -793,17 +807,10 @@
 .layout-topics .cell.reinforced { background: rgba(66, 165, 255, 0.22); }
 .layout-topics .cell b { font-size: 14px; }
 
-.tasks-total {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-}
-.tasks-total .seg { height: 11px; min-height: 11px; }
-.tasks-total-compact { display: none; }
+.tasks-week { margin-top: 8px; }
+.tasks-week .seg { height: 11px; min-height: 11px; }
+.tasks-week .seg i { max-width: none; }
 @media (max-height: 460px) {
-    .tasks-total { display: none; }
-    .tasks-total-compact { display: inline; }
+    .tasks-week { margin-top: 4px; }
+    .tasks-week .seg { height: 8px; min-height: 8px; }
 }

@@ -42,12 +42,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
         <Screen hideTitle title="Задания" className="layout-topics">
             {readOnly && <p class="muted">Режим предпросмотра — изменения отключены.</p>}
             <Card>
-                <div class="between">
-                    <Label>Задачи</Label>
-                    <span class="muted">
-                        за неделю {data.tasksWeek}<span class="tasks-total-compact"> · всего {data.tasksTotal}</span>
-                    </span>
-                </div>
+                <Label>Задачи</Label>
                 <div class="amounts">
                     {AMOUNTS.map((n) => (
                         <button
@@ -60,12 +55,12 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                         </button>
                     ))}
                 </div>
-                <div class="tasks-total">
-                    <SegmentBar value={data.tasksTotal} max={data.limits.tasks} />
-                    <strong aria-label={`Всего решено задач: ${data.tasksTotal} из ${data.limits.tasks}`}>
-                        {data.tasksTotal}/{data.limits.tasks}
-                    </strong>
-                </div>
+                {data.limits.week > 0 && (
+                    <div class="tasks-week" role="group"
+                        aria-label={`Решено за неделю: ${data.tasksWeek} из ${data.limits.week}`}>
+                        <SegmentBar value={data.tasksWeek} max={data.limits.week} />
+                    </div>
+                )}
                 {note && <p class="warn">⚠️ {note}</p>}
             </Card>
 
@@ -98,7 +93,7 @@ function ExamCard({ exam, max, busy, readOnly, onSave }: {
     readOnly: boolean;
     onSave: (value: number) => void;
 }) {
-    const [value, setValue] = useState(exam === null ? '' : String(exam));
+    const [value, setValue] = useState(String(exam ?? 0));
     const valid = value !== '' && Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= max;
 
     return (

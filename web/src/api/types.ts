@@ -52,7 +52,7 @@ export interface SelfData {
     tasksTotal: number;
     tasksWeek: number;
     exam: number | null;
-    limits: { topics: number; tasks: number; exam: number };
+    limits: { topics: number; tasks: number; week: number; exam: number };
 }
 
 export interface AdminMember {

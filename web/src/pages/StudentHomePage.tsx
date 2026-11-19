@@ -13,7 +13,8 @@ export function StudentHomePage() {
     const { name, place, pct, monthPct, daysLeft, month, week } = profile;
     const topicsLeft = Math.max(0, month.topics.goal - month.topics.value);
     const tasksLeft = Math.max(0, week.goal - week.tasks);
-    const examLeft = Math.max(0, month.exam.goal - (month.exam.value ?? 0));
+    const exam = month.exam.value ?? 0;
+    const examLeft = Math.max(0, month.exam.goal - exam);
 
     return (
         <Screen hideTitle title="Главная" className="student-home">
@@ -30,7 +31,7 @@ export function StudentHomePage() {
                     <span>Общий прогресс</span>
                 </div>
                 <div class="student-metrics">
-                    <Metric icon="clipboard-list" label="Балл пробника" value={month.exam.value ?? '—'} />
+                    <Metric icon="clipboard-list" label="Балл пробника" value={exam} />
                     <Metric icon="calendar-days" label="Решено задач" value={month.tasks.value} />
                     <Metric icon="target" label="Изучено заданий" value={month.topics.value} />
                 </div>
@@ -55,8 +56,8 @@ export function StudentHomePage() {
                             note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
                         <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
                             note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
-                        <Goal icon="clipboard-list" label="Пробник" value={month.exam.value} max={month.exam.goal}
-                            note={month.exam.value === null ? 'Балл ещё не внесён' : remaining(examLeft, ['балл', 'балла', 'баллов'])} />
+                        <Goal icon="clipboard-list" label="Пробник" value={exam} max={month.exam.goal}
+                            note={remaining(examLeft, ['балл', 'балла', 'баллов'])} />
                     </>
                 }
             />
@@ -81,24 +82,24 @@ function Metric({ icon, label, value }: { icon: string; label: string; value: nu
 function Goal({ icon, label, value, max, note }: {
     icon?: string;
     label: string;
-    value: number | null;
+    value: number;
     max?: number;
     note?: string;
 }) {
-    const shown = max === undefined ? `${value}%` : `${value ?? '—'}/${max}`;
+    const shown = max === undefined ? `${value}%` : `${value}/${max}`;
 
     return (
         <div class="student-goal" role={icon ? 'group' : undefined} aria-label={icon ? label : undefined}>
             {icon ? (
                 <div class="student-goal-with-icon">
                     <NavIcon name={icon} />
-                    <SegmentBar value={value ?? 0} max={max} />
+                    <SegmentBar value={value} max={max} />
                     <strong>{shown}</strong>
                 </div>
             ) : (
                 <>
                     <div class="between"><span>{label}</span><strong>{shown}</strong></div>
-                    <SegmentBar value={value ?? 0} max={max} />
+                    <SegmentBar value={value} max={max} />
                 </>
             )}
             {note && <small>{note}</small>}
