@@ -24,7 +24,7 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                     </div>
                     {data.leader && <div class="between">
                         <strong>{cap(data.leader.name)}</strong>
-                        <span class="stats week-leader-stats">
+                        <span class="stats">
                             <b>{sgn(data.leader.pct)}%</b>
                             <b>{sgn(data.leader.tasks)}</b>
                             <b>{sgn(data.leader.topics)}</b>

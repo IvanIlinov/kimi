@@ -151,7 +151,7 @@
 .leader {
     position: relative;
     overflow: hidden;
-    border-color: color-mix(in srgb, var(--blue) 20%, transparent);
+    border-color: transparent;
     background: var(--surface);
 }
 
@@ -539,19 +539,12 @@
 .layout-ranking .leader { flex: 0 0 auto; padding: 12px; }
 .layout-ranking .leader-name { margin-bottom: 8px; }
 .layout-ranking .kpis { gap: 6px; }
-.layout-ranking .kpi b { font-size: clamp(11px, 3.3vw, 15px); }
+.layout-ranking .kpi b { font-size: 15px; }
 .layout-ranking .seg { align-self: center; height: 12px; min-height: 12px; }
 .layout-ranking .row + .row,
 .layout-ranking .row-with-actions + .row-with-actions {
     border-top: 1px solid var(--border);
 }
-.week-leader-stats { gap: 5px; }
-.week-leader-stats b {
-    padding: 4px 7px;
-    border-radius: 8px;
-    font-size: 13px;
-}
-
 
 .layout-admin { gap: 9px; }
 .layout-admin > .card { flex: 0 0 auto; padding: 11px; }
