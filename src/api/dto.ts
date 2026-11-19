@@ -44,6 +44,7 @@ export interface StudyRecapDto {
     end: number;
     tasks: number;
     topics: number;
+    inProgress?: boolean;
     examBefore: number;
     exam: number;
     goals: { tasks: number; topics: number; exam: number };

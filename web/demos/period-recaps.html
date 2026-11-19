@@ -67,9 +67,14 @@
     }
 
     #period-recap::backdrop { background: #08090de0; }
-    .recap { position: relative; padding: clamp(16px, 5vw, 26px); }
+    .recap { position: relative; touch-action: pan-y pinch-zoom; padding: clamp(16px, 5vw, 26px); }
     header { padding-right: 46px; }
     h2 { font-size: clamp(24px, 7vw, 34px); letter-spacing: -.045em; line-height: 1.12; margin-top: 5px; }
+    #recap-title:focus { outline: none; }
+    .close:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--accent);
+    }
     .close {
         position: absolute;
         right: 14px;
@@ -150,9 +155,9 @@
     <form class="recap" method="dialog">
         <header>
             <p class="period"></p>
-            <h2 id="recap-title"></h2>
+            <h2 id="recap-title" tabindex="-1" autofocus aria-live="polite"></h2>
         </header>
-        <button class="close" value="close" aria-label="Закрыть" autofocus>×</button>
+        <button class="close" value="close" aria-label="Закрыть">×</button>
         <section class="hero" aria-labelledby="hero-label">
             <p class="hero-label" id="hero-label"></p>
             <p class="hero-value"></p>
@@ -205,9 +210,11 @@
 
     const dialog = document.getElementById('period-recap');
 
-    document.addEventListener('click', (event) => {
-        const choice = event.target.closest('button[data-recap]');
-        if (!choice) return;
+    const periods = ['week', 'season', 'year'];
+    let gesture = null;
+    let keepKeyboardFocus = false;
+
+    function showRecap(choice) {
         const period = choice.dataset.period;
         const recap = recaps[period];
         dialog.dataset.period = period;
@@ -226,7 +233,50 @@
             row.append(term, detail);
             return row;
         }));
-        dialog.showModal();
+        if (dialog.open) dialog.scrollTop = 0;
+        else dialog.showModal();
+    }
+
+    function step(direction) {
+        const index = periods.indexOf(dialog.dataset.period);
+        const period = periods[(index + direction + periods.length) % periods.length];
+        const choice = document.querySelector(`button[data-recap][data-period="${period}"]`);
+        if (choice) showRecap(choice);
+    }
+
+    document.addEventListener('click', (event) => {
+        const choice = event.target.closest('button[data-recap]');
+        if (choice) {
+            keepKeyboardFocus = event.detail === 0;
+            showRecap(choice);
+        }
+    });
+
+    dialog.addEventListener('pointerdown', (event) => {
+        if (!event.isPrimary || event.pointerType === 'mouse' ||
+            !event.target.closest('form') || event.target.closest('button')) return;
+        gesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    });
+    dialog.addEventListener('pointercancel', (event) => {
+        if (gesture?.id === event.pointerId) gesture = null;
+    });
+    dialog.addEventListener('pointerup', (event) => {
+        if (gesture?.id !== event.pointerId) return;
+        const dx = event.clientX - gesture.x;
+        const dy = event.clientY - gesture.y;
+        gesture = null;
+        if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.25) step(dx < 0 ? 1 : -1);
+    });
+    dialog.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        step(event.key === 'ArrowRight' ? 1 : -1);
+    });
+    dialog.addEventListener('close', () => {
+        const focused = document.activeElement;
+        if (!keepKeyboardFocus && focused?.closest('.swipe-card-track')) focused.blur();
+        keepKeyboardFocus = false;
+        gesture = null;
     });
 
     dialog.addEventListener('click', (event) => {

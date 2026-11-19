@@ -13,7 +13,10 @@ export function recapPeriods(now: number) {
     const seasonStart = midnight(seasonYear, seasonMonth - 3);
     const studyStart = midnight(seasonMonth === 11 ? seasonYear : seasonYear - 1, 8);
     const weekEnd = weekStartMs(now);
+    const fallInProgress = month >= 8 && month <= 10;
+    const currentFall = fallInProgress ? { start: midnight(year, 8), end: now, goalAt: midnight(year, 11) - 1 } : null;
     return {
+        currentFall,
         year: { start: yearStart, end: yearEnd },
         season: { start: seasonStart, end: seasonEnd, studyStart },
         week: { start: weekStartMs(weekEnd - 1), end: weekEnd },

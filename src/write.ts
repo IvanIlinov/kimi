@@ -1,6 +1,5 @@
 import { db } from './db.ts';
-
-const MAX_PER_STEP = 50; // за раз не больше 50 задач
+import { MAX_TASKS_PER_ENTRY } from './logic.ts';
 
 const insertLog = db.prepare(
     'INSERT INTO task_log (user_id, amount, created_at, source, actor_tg_id) VALUES (?, ?, ?, ?, ?)',
@@ -19,8 +18,8 @@ export function addTasks(
     if (!Number.isInteger(amount) || amount === 0) {
         throw new Error('Число задач должно быть целым и не равным нулю');
     }
-    if (Math.abs(amount) > MAX_PER_STEP) {
-        throw new Error(`За раз не больше ${MAX_PER_STEP} задач`);
+    if (Math.abs(amount) > MAX_TASKS_PER_ENTRY) {
+        throw new Error(`За раз не больше ${MAX_TASKS_PER_ENTRY} задач`);
     }
 
     const { total } = totalOf.get(userId) as unknown as { total: number };
@@ -57,7 +56,7 @@ export function setTasksTotal(
     db.exec('SAVEPOINT set_tasks_total');
     try {
         while (remaining !== 0) {
-            const amount = Math.sign(remaining) * Math.min(MAX_PER_STEP, Math.abs(remaining));
+            const amount = Math.sign(remaining) * Math.min(MAX_TASKS_PER_ENTRY, Math.abs(remaining));
             insertLog.run(userId, amount, Date.now(), 'admin', actorTgId);
             remaining -= amount;
         }

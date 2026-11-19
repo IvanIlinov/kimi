@@ -27,6 +27,7 @@ test('итоги закрываются в понедельник по Моск�
     const task = db.prepare('INSERT INTO task_log (user_id, amount, created_at, source, cancelled) VALUES (?, ?, ?, ?, ?)');
     task.run(1, 12, start - 1, 'bot', 0);
     task.run(1, 25, start, 'bot', 0);
+    task.run(1, 765, start, 'bot', 0);
     task.run(1, 7, end - 1, 'bot', 0);
     task.run(1, 50, end - 1, 'admin', 0);
     task.run(1, 10, end - 1, 'bot', 1);
@@ -54,7 +55,12 @@ test('итоги закрываются в понедельник по Моск�
     t.mock.timers.tick(1);
     assert.deepEqual(profile().weeklyRecap, { start, end, tasks: 32, topics: 1, goal: 25, place: 2 });
     assert.equal(profile().week.tasks, 5);
-    assert.equal((call('GET', '/api/profile/1') as ProfileDto).weeklyRecap, undefined);
+    const guest = { ...student, role: 'guest', personId: null } as const;
+    const guestProfile = call('GET', '/api/profile/1', {}, guest) as ProfileDto;
+    assert.deepEqual(guestProfile.weeklyRecap, profile().weeklyRecap);
+    assert.equal(guestProfile.studyRecaps?.season.inProgress, true);
+    assert.equal(guestProfile.studyRecaps?.season.goals.tasks, 321);
+    assert.equal(guestProfile.totals.tasks, 864);
     assert.deepEqual(open(end), { open: true });
     assert.deepEqual(open(end), { open: false });
     assert.equal(profile().weeklyRecap?.tasks, 32);
@@ -86,7 +92,8 @@ test('сезонные и годовые итоги закрываются по 
     const fallStart = Date.parse('2026-08-31T21:00:00Z');
     const task = db.prepare('INSERT INTO task_log (user_id, amount, created_at) VALUES (3, ?, ?)');
     task.run(50, fallStart - 1);
-    task.run(100, fallStart);
+    task.run(50, fallStart);
+    task.run(50, fallStart);
     task.run(10, fallEnd);
     const exam = db.prepare('INSERT INTO exam_log (user_id, from_exam, to_exam, created_at) VALUES (3, ?, ?, ?)');
     exam.run(30, 55, fallEnd - 1);
@@ -105,7 +112,8 @@ test('сезонные и годовые итоги закрываются по 
             year: current.studyRecaps?.year.end,
         });
     }
-    assert.notEqual(profile().studyRecaps?.season.end, fallEnd);
+    assert.equal(profile().studyRecaps?.season.inProgress, true);
+    assert.equal(profile().studyRecaps?.season.tasks, 100);
     t.mock.timers.tick(1);
     assert.deepEqual(profile().studyRecaps?.season, {
         start: fallStart, end: fallEnd, tasks: 100, topics: 1, examBefore: 30, exam: 55,

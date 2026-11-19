@@ -22,9 +22,11 @@ export function PeriodRecaps({ week, study, autoOpen }: {
     autoOpen: boolean;
 }) {
     const modal = useRef<HTMLDialogElement>(null);
+    const gesture = useRef<{ id: number; x: number; y: number } | null>(null);
     const [active, setActive] = useState<Kind | null>(null);
+    const keepKeyboardFocus = useRef(false);
     const yearEnd = study?.year.end;
-    const seasonEnd = study?.season.end;
+    const seasonEnd = study?.season.inProgress ? undefined : study?.season.end;
     const weekEnd = week.end;
 
     useEffect(() => {
@@ -39,7 +41,10 @@ export function PeriodRecaps({ week, study, autoOpen }: {
     }, [autoOpen, weekEnd, seasonEnd, yearEnd]);
 
     useLayoutEffect(() => {
-        if (active && modal.current && !modal.current.open) modal.current.showModal();
+        const dialog = modal.current;
+        if (!active || !dialog) return;
+        if (dialog.open) dialog.scrollTop = 0;
+        else dialog.showModal();
     }, [active]);
 
     const recaps = { week, ...study };
@@ -48,35 +53,77 @@ export function PeriodRecaps({ week, study, autoOpen }: {
     const period = (value: WeeklyRecap | StudyRecap) => date.formatRange(value.start, value.end - 1);
     const season = study ? seasonNames[new Date(study.season.start + 3 * 3600e3).toISOString().slice(5, 7)] : undefined;
 
+    function step(direction: 1 | -1) {
+        if (!active || kinds.length < 2) return;
+        const index = kinds.indexOf(active);
+        setActive(kinds[(index + direction + kinds.length) % kinds.length]);
+    }
+
     return (
         <section class="swipe-card-recaps" aria-label="Итоги">
             <div class="period-recap-entries">
                 {kinds.map((kind) => (
                     <button key={kind} type="button" class="weekly-recap-entry" data-kind={kind} aria-haspopup="dialog"
-                        onClick={() => setActive(kind)}>
+                        onClick={(event) => {
+                            keepKeyboardFocus.current = event.detail === 0;
+                            setActive(kind);
+                        }}>
                         <strong>{labels[kind]}</strong>
                         <span>{kind === 'season' && season ? `${season} · ` : ''}{period(recaps[kind]!)}</span>
                     </button>
                 ))}
             </div>
 
-            <dialog class="weekly-recap" ref={modal} data-kind={active ?? undefined} onClose={() => setActive(null)} aria-labelledby="weekly-recap-title"
+            <dialog class="weekly-recap" ref={modal} data-kind={active ?? undefined}
+                aria-labelledby="weekly-recap-title"
+                onClose={() => {
+                    const focused = document.activeElement;
+                    const track = modal.current?.closest('.swipe-card-track');
+                    if (!keepKeyboardFocus.current && focused instanceof HTMLElement && track?.contains(focused)) {
+                        focused.blur();
+                    }
+                    keepKeyboardFocus.current = false;
+                    gesture.current = null;
+                    setActive(null);
+                }}
+                onPointerDown={(event) => {
+                    if (!event.isPrimary || event.pointerType === 'mouse') return;
+                    const target = event.target as Element;
+                    if (!target.closest('form') || target.closest('button')) return;
+                    gesture.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+                }}
+                onPointerCancel={(event) => {
+                    if (gesture.current?.id === event.pointerId) gesture.current = null;
+                }}
+                onPointerUp={(event) => {
+                    const start = gesture.current;
+                    if (start?.id !== event.pointerId) return;
+                    gesture.current = null;
+                    const dx = event.clientX - start.x;
+                    const dy = event.clientY - start.y;
+                    if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.25) step(dx < 0 ? 1 : -1);
+                }}
+                onKeyDown={(event) => {
+                    if (kinds.length < 2 || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+                    event.preventDefault();
+                    step(event.key === 'ArrowRight' ? 1 : -1);
+                }}
                 onClick={(event) => {
                     if (event.target === event.currentTarget) event.currentTarget.close();
                 }}>
                 {active && recap && <form method="dialog">
                     <header>
                         <p>{period(recap)}</p>
-                        <h2 id="weekly-recap-title">{titles[active]}</h2>
+                        <h2 id="weekly-recap-title" tabIndex={-1} autofocus aria-live="polite">{titles[active]}</h2>
                     </header>
-                    <button class="weekly-recap-close" aria-label="Закрыть" autofocus>×</button>
+                    <button class="weekly-recap-close" aria-label="Закрыть">×</button>
                     {'goals' in recap ? (
                         <>
                             <section class="weekly-recap-goal" aria-labelledby="weekly-recap-goal">
                                 <p id="weekly-recap-goal">{active === 'year' ? 'Общий прогресс' : 'Цель к концу сезона'}</p>
                                 <strong>{recap.pct}%</strong>
                                 <progress aria-labelledby="weekly-recap-goal" max={100} value={recap.pct} />
-                                {active === 'season' && <p>Показатели с начала учебного года</p>}
+                                {active === 'season' && <p>{recap.inProgress ? 'Сезон ещё идёт' : 'Показатели с начала учебного года'}</p>}
                             </section>
                             <dl>
                                 <div><dt>Решено задач</dt><dd>{recap.tasks} из {recap.goals.tasks}</dd></div>
@@ -102,7 +149,7 @@ function WeekResult({ week }: { week: WeeklyRecap }) {
     return (
         <>
             <section class="weekly-recap-goal" aria-labelledby="weekly-recap-goal">
-                <p id="weekly-recap-goal">Решено за неделю</p>
+                <p id="weekly-recap-goal">Решено за завершённую неделю</p>
                 <strong>{week.tasks} / {week.goal}</strong>
                 <progress aria-labelledby="weekly-recap-goal" max={week.goal}
                     value={Math.max(0, Math.min(week.tasks, week.goal))} />

@@ -32,6 +32,22 @@ const week = new Map(ranked.map(({ person }) => [
     person.id, { userId: person.id, tasks: person.tasksWeek, topics: 2, active: true },
 ]));
 
+const demoPeriods = recapPeriods(now.getTime());
+const weekStart = demoPeriods.week.end;
+const lastWeek = [
+    { userId: 1, tasks: 32, topics: 2, active: true },
+    { userId: 2, tasks: 35, topics: 1, active: true },
+    { userId: 3, tasks: 20, topics: 0, active: true },
+];
+
+function sampleStudyRecap(entry, { start, end, goalAt = end - 1 }, factor) {
+    const date = new Date(goalAt);
+    const goals = monthGoal(date);
+    const stats = Object.fromEntries(Object.entries(goals).map(([metric, value]) => [metric, Math.round(value * factor)]));
+    const pct = monthPct({ ...entry, person: { ...entry.person, monthResults: stats } }, date);
+    return { start, end, ...stats, goals, pct, examBefore: 42 };
+}
+
 function demoRoutes(role, student) {
     const viewer = student?.person;
     const tgId = viewer?.tgId ?? 0;
@@ -44,7 +60,18 @@ function demoRoutes(role, student) {
     };
     for (const entry of ranked) {
         const { id } = entry.person;
-        routes['/api/profile/' + id] = profileDto(entry, week.get(id), now, id === viewer?.id);
+        const profile = profileDto(entry, week.get(id), now, id === viewer?.id);
+        if (!recapPlacement || id !== viewer?.id) {
+            profile.weeklyRecap = weeklyRecapDto(ranked, entry, lastWeek, demoPeriods.week.start, weekStart);
+            profile.studyRecaps = {
+                season: {
+                    ...sampleStudyRecap(entry, demoPeriods.currentFall ?? demoPeriods.season, 0.92),
+                    inProgress: Boolean(demoPeriods.currentFall),
+                },
+                year: sampleStudyRecap(entry, demoPeriods.year, 0.97),
+            };
+        }
+        routes['/api/profile/' + id] = profile;
     }
     if (student) {
         routes['/api/profile/me'] = routes['/api/profile/' + viewer.id];
@@ -54,28 +81,6 @@ function demoRoutes(role, student) {
 }
 
 const routes = { default: demoRoutes(role, role === 'student' ? firstStudent : undefined) };
-const demoPeriods = recapPeriods(now.getTime());
-const weekStart = demoPeriods.week.end;
-if (role === 'student' && !recapPlacement) {
-    const lastWeek = [
-        { userId: 1, tasks: 32, topics: 2, active: true },
-        { userId: 2, tasks: 35, topics: 1, active: true },
-        { userId: 3, tasks: 20, topics: 0, active: true },
-    ];
-    const profile = routes.default['/api/profile/me'];
-    profile.weeklyRecap = weeklyRecapDto(ranked, firstStudent, lastWeek, demoPeriods.week.start, weekStart);
-    const studyRecap = ({ start, end }, factor, examBefore) => {
-        const date = new Date(end - 1);
-        const goals = monthGoal(date);
-        const stats = Object.fromEntries(Object.entries(goals).map(([metric, value]) => [metric, Math.round(value * factor)]));
-        const pct = monthPct({ ...firstStudent, person: { ...firstStudent.person, monthResults: stats } }, date);
-        return { start, end, ...stats, goals, pct, examBefore };
-    };
-    profile.studyRecaps = {
-        season: studyRecap(demoPeriods.season, 0.92, 42),
-        year: studyRecap(demoPeriods.year, 0.97, 42),
-    };
-}
 if (adminDemo) {
     routes.default['/api/admin/members'] = ranked.map((entry) => {
         const { id, tgId, name, exam, tasksTotal } = entry.person;
@@ -307,6 +312,13 @@ window.fetch = async (path, options) => {
         return Response.json({ ...home, month: { start, earnedKopecks, plannedKopecks } });
     }
     const found = read && current && Object.hasOwn(current, endpoint);
+    if (found && endpoint === '/api/profile/me' && new URLSearchParams(window.location.search).get('recap') === 'season') {
+        const fall = current[endpoint].studyRecaps?.season;
+        if (fall?.inProgress) {
+            fall.end = Date.UTC(new Date(fall.start + 3 * 3_600_000).getUTCFullYear(), 11, 1) - 3 * 3_600_000;
+            fall.inProgress = false;
+        }
+    }
     return new Response(JSON.stringify(found ? current[endpoint] : {
         error: read ? 'Данные не найдены' : 'Сохранение доступно через тестового бота',
     }), { status: found ? 200 : read ? 404 : 405 });

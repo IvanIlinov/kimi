@@ -24,11 +24,17 @@
 }
 
 .weekly-recap::backdrop { background: #08090de0; }
-.weekly-recap form { position: relative; padding: clamp(16px, 5vw, 26px); }
+.weekly-recap form { position: relative; touch-action: pan-y pinch-zoom; padding: clamp(16px, 5vw, 26px); }
 .weekly-recap h2, .weekly-recap p, .weekly-recap dl, .weekly-recap dd { margin: 0; }
 .weekly-recap header { padding-right: 46px; }
 .weekly-recap header p, .weekly-recap dt { color: var(--muted); font-size: 13px; }
 .weekly-recap h2 { margin-top: 5px; font-size: clamp(24px, 7vw, 34px); line-height: 1.12; letter-spacing: -.045em; }
+
+.weekly-recap h2:focus { outline: none; }
+.weekly-recap .weekly-recap-close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--recap-accent);
+}
 
 .weekly-recap-close {
     position: absolute;

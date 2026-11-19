@@ -25,20 +25,22 @@ export function registerRead(router: Router): void {
         const now = Date.now();
         const week = getWeekStats(now).find((s) => s.userId === r.person.id);
         const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
-        if (params.id === 'me' && viewer.role === 'student') {
-            const { week, season, year } = recapPeriods(now);
-            profile.weeklyRecap = weeklyRecapDto(ranked, r, getWeekStats(week.start, week.end), week.start, week.end);
-            const studyRecap = ({ start, end }: { start: number; end: number }, studyStart: number) => {
-                const stats = studyRecapStats(r.person, studyStart, end);
-                const date = new Date(end - 1);
-                const pct = monthPct({ ...r, person: { ...r.person, monthResults: stats } }, date);
-                return { start, end, ...stats, goals: monthGoal(date), pct };
-            };
-            profile.studyRecaps = {
-                year: studyRecap(year, year.start),
-                season: studyRecap(season, season.studyStart),
-            };
-        }
+        const { week: closedWeek, season, year, currentFall } = recapPeriods(now);
+        profile.weeklyRecap = weeklyRecapDto(
+            ranked, r, getWeekStats(closedWeek.start, closedWeek.end), closedWeek.start, closedWeek.end,
+        );
+        const studyRecap = ({ start, end }: { start: number; end: number }, studyStart: number, goalAt = end - 1) => {
+            const stats = studyRecapStats(r.person, studyStart, end);
+            const date = new Date(goalAt);
+            const pct = monthPct({ ...r, person: { ...r.person, monthResults: stats } }, date);
+            return { start, end, ...stats, goals: monthGoal(date), pct };
+        };
+        profile.studyRecaps = {
+            year: studyRecap(year, year.start),
+            season: currentFall
+                ? { ...studyRecap(currentFall, currentFall.start, currentFall.goalAt), inProgress: true }
+                : studyRecap(season, season.studyStart),
+        };
         return profile;
     });
 

@@ -1,6 +1,7 @@
 export const TOPICS_TOTAL = 27; // всего заданий
 export const TASKS_GOAL = 900; // цель по решённым задачам
 export const EXAM_MAX = 100; // максимальный балл пробника
+export const MAX_TASKS_PER_ENTRY = 50;
 export const WEEK_GOAL = 25; // задач в неделю по плану
 export const MONTH_TOPICS = [6, 6, 4, 3, 3, 2, 2, 1]; // сен, окт, ноя, дек, янв, фев, март, апр
 

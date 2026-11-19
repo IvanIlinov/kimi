@@ -1,5 +1,5 @@
 import { db } from './db.ts';
-import { weekPct, weekStartMs } from './logic.ts';
+import { MAX_TASKS_PER_ENTRY, weekPct, weekStartMs } from './logic.ts';
 import type { Person } from './logic.ts';
 export { weekStartMs } from './logic.ts';
 
@@ -31,7 +31,8 @@ export function getPersons(): Person[] {
         .prepare('SELECT user_id, topic_no, status FROM topic_status')
         .all() as unknown as { user_id: number; topic_no: number; status: string }[];
 
-    // Сумма решённых задач: всего и за текущую неделю (с понедельника 00:00 по Москве)
+    // Стартовые суммы в старых данных превышают лимит записи и входят только в накопительные показатели.
+    // Текущая неделя начинается в понедельник в 00:00 по Москве.
     const totals = db
         .prepare(`
             SELECT user_id,
@@ -40,6 +41,7 @@ export function getPersons(): Person[] {
                    SUM(CASE
                        WHEN created_at >= ?
                         AND source <> 'admin'
+                        AND ABS(amount) <= ?
                         AND (actor_tg_id IS NULL OR actor_tg_id = (
                             SELECT tg_id FROM users WHERE id = task_log.user_id
                         ))
@@ -49,7 +51,7 @@ export function getPersons(): Person[] {
             WHERE cancelled = 0
             GROUP BY user_id
         `)
-        .all(weekStartMs(Date.now())) as unknown as { user_id: number; total: number; week: number; month_total: number }[];
+        .all(weekStartMs(Date.now()), MAX_TASKS_PER_ENTRY) as unknown as { user_id: number; total: number; week: number; month_total: number }[];
 
     const totalsById = new Map(totals.map((t) => [t.user_id, t]));
 
@@ -122,10 +124,11 @@ export function getWeekStats(now: number = Date.now(), until: number | null = nu
               AND t.created_at >= ?
               AND (? IS NULL OR t.created_at < ?)
               AND t.source <> 'admin'
+              AND ABS(t.amount) <= ?
               AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
             GROUP BY t.user_id
         `)
-        .all(from, until, until) as unknown as { user_id: number; total: number; n: number }[];
+        .all(from, until, until, MAX_TASKS_PER_ENTRY) as unknown as { user_id: number; total: number; n: number }[];
 
     for (const r of taskRows) {
         const s = get(r.user_id);
@@ -496,8 +499,9 @@ export function studyRecapStats(person: Person, start: number, end: number) {
         SELECT COALESCE(SUM(amount), 0) AS value FROM task_log
         WHERE user_id = ? AND created_at >= ? AND created_at < ?
           AND cancelled = 0 AND source <> 'admin'
+          AND ABS(amount) <= ?
           AND (actor_tg_id IS NULL OR actor_tg_id = ?)
-    `).get(person.id, start, end, person.tgId) as { value: number };
+    `).get(person.id, start, end, MAX_TASKS_PER_ENTRY, person.tgId) as { value: number };
     const laterTopics = db.prepare(`
         SELECT COALESCE(SUM((to_status = 'reinforced') - (from_status = 'reinforced')), 0) AS value
         FROM topic_log WHERE user_id = ? AND created_at >= ?
