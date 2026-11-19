@@ -38,7 +38,7 @@ export interface CallbackQuery {
     id: string;
     from: { id: number; first_name: string };
     data?: string;
-    message?: { message_id: number; chat: { id: number } };
+    message?: { message_id: number; chat: { id: number; type: string } };
 }
 
 export interface Update {

@@ -456,6 +456,19 @@ async function showPanel(chatId: number, html: Reply): Promise<void> {
     panel.set(chatId, sent.message_id);
 }
 
+async function showMiniApp(chatId: number): Promise<void> {
+    const previous = panel.get(chatId);
+    const sent = await sendMessage(BOT_TOKEN, chatId,
+        'Добро пожаловать в Арену! В приложении можно записывать результаты, следить за прогрессом и смотреть рейтинг.',
+        {
+            reply_markup: {
+                inline_keyboard: [[{ text: 'Открыть Арену', web_app: { url: MINIAPP_URL } }]],
+            },
+        });
+    panel.set(chatId, sent.message_id);
+    if (previous) await deleteQuietly(chatId, previous);
+}
+
 // ---- Обработчики ----
 
 async function handleCallback(q: CallbackQuery): Promise<void> {
@@ -463,6 +476,13 @@ async function handleCallback(q: CallbackQuery): Promise<void> {
 
     const msg = q.message;
     if (!msg || !q.data) return;
+
+    if (MINIAPP_URL && msg.chat.type === 'private') {
+        const previous = panel.get(msg.chat.id);
+        await showMiniApp(msg.chat.id);
+        if (previous !== msg.message_id) await deleteQuietly(msg.chat.id, msg.message_id);
+        return;
+    }
 
     panel.set(msg.chat.id, msg.message_id);
     await showPanel(msg.chat.id, respond(q.from.id, q.data, q.from.first_name));
@@ -498,11 +518,20 @@ async function handle(u: Update): Promise<void> {
 
     // Снимаем старую reply-клавиатуру один раз
     if (!keyboardCleared.has(chatId)) {
-        keyboardCleared.add(chatId);
         const tmp = await sendMessage(BOT_TOKEN, chatId, '⌨️', {
             reply_markup: { remove_keyboard: true },
         });
+        keyboardCleared.add(chatId);
         await deleteQuietly(chatId, tmp.message_id);
+    }
+
+    if (MINIAPP_URL && m.chat.type === 'private') {
+        if (text === '/id') {
+            await sendMessage(BOT_TOKEN, chatId, `Твой id: ${viewerId}`);
+        } else {
+            await showMiniApp(chatId);
+        }
+        return;
     }
 
     if (text === '/id') {
