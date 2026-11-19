@@ -459,12 +459,12 @@ async function showPanel(chatId: number, html: Reply): Promise<void> {
 
 async function showMiniApp(chatId: number): Promise<void> {
     const previous = panel.get(chatId);
-    const animation = await openAsBlob(new URL('../assets/sunny-study-breeze.gif', import.meta.url), {
-        type: 'image/gif',
+    const image = await openAsBlob(new URL('../assets/arena-welcome.png', import.meta.url), {
+        type: 'image/png',
     });
     const form = new FormData();
     form.set('chat_id', String(chatId));
-    form.set('animation', animation, 'sunny-study-breeze.gif');
+    form.set('document', image, 'arena-welcome.png');
     form.set('caption',
         'Добро пожаловать на Арену!\n\n'
         + '27 заданий | 900 задач | 100 баллов | 1 год\n\n'
@@ -472,7 +472,7 @@ async function showMiniApp(chatId: number): Promise<void> {
     form.set('reply_markup', JSON.stringify({
         inline_keyboard: [[{ text: 'Открыть Арену', web_app: { url: MINIAPP_URL } }]],
     }));
-    const sent = await callApi<{ message_id: number }>(BOT_TOKEN, 'sendAnimation', form);
+    const sent = await callApi<{ message_id: number }>(BOT_TOKEN, 'sendDocument', form);
     panel.set(chatId, sent.message_id);
     if (previous) await deleteQuietly(chatId, previous);
 }
