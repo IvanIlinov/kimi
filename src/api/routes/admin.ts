@@ -4,6 +4,7 @@ import { STAGING_PREVIEW_ENABLED } from '../../config.ts';
 import { db } from '../../db.ts';
 import { normalizeName } from '../../names.ts';
 import { setTasksTotal, setExam, setTopicStatus } from '../../write.ts';
+import { syncTag } from '../../tags.ts';
 import { getAdminMembers, getAdminJournal, getAdminHistory, weekStartMs } from '../../store.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
@@ -297,17 +298,19 @@ export function registerAdmin(router: Router): void {
         const data = objectBody(body);
         const total = data.total;
 
-        return guard(() =>
+        const result = guard(() =>
             atomicAdmin(viewer.tgId, id, 'set_tasks_total', `Итого: ${total}`, () => {
                 activeUser(id);
                 if (typeof total !== 'number' || !Number.isSafeInteger(total) || total < 0) {
                     throw new Error('Общее число задач должно быть целым числом не меньше нуля');
                 }
 
-                const result = setTasksTotal(id, total, viewer.tgId);
-                return { ok: true, total: result };
+                const tasksTotal = setTasksTotal(id, total, viewer.tgId);
+                return { ok: true, total: tasksTotal };
             }),
         );
+        void syncTag(id);
+        return result;
     });
 
     router.post('/api/admin/members/:id/exam', ({ viewer, params, body }) => {
@@ -316,7 +319,7 @@ export function registerAdmin(router: Router): void {
         const data = objectBody(body);
         const value = data.value;
 
-        return guard(() =>
+        const result = guard(() =>
             atomicAdmin(viewer.tgId, id, 'set_exam', `Балл: ${value ?? 'не указан'}`, () => {
                 activeUser(id);
                 if (
@@ -330,6 +333,8 @@ export function registerAdmin(router: Router): void {
                 return { ok: true };
             }),
         );
+        void syncTag(id);
+        return result;
     });
 
     router.post('/api/admin/members/:id/topics/:n', ({ viewer, params, body }) => {

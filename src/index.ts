@@ -254,9 +254,11 @@ function applyChange(
     source: 'bot' | 'group' = 'bot',
 ): string | null {
     try {
-        if (op === 'add') addTasks(personId, Number(arg), source, actorTgId);
-        else if (op === 'exam') setExam(personId, Number(arg), actorTgId);
-        else if (op === 'topic') {
+        if (op === 'add' || op === 'exam') {
+            if (op === 'add') addTasks(personId, Number(arg), source, actorTgId);
+            else setExam(personId, Number(arg), actorTgId);
+            void syncTag(personId);
+        } else if (op === 'topic') {
             const p = findById(personId)!.person;
             const n = Number(arg);
             setTopicStatus(personId, n, nextStatus(statusOf(p, n)), actorTgId);
@@ -362,6 +364,7 @@ function adminCommand(viewerId: number, text: string): Reply | null {
                 const id = Number(rest[0]);
                 if (!findById(id)) throw new Error('Участник не найден');
                 setExam(id, Number(rest[1]), viewerId);
+                void syncTag(id);
                 return screenArena(viewerId, '✅ Пробник обновлён');
             }
             case '/start':
@@ -566,9 +569,6 @@ async function handleGroup(m: NonNullable<Update['message']>, text: string): Pro
         }
         return;
     }
-
-    const fresh = findByTg(viewerId)!.person;
-    void syncTag(viewerId, fresh.exam, fresh.tasksTotal);
 
     try {
         await setReaction(BOT_TOKEN, m.chat.id, m.message_id, '✍');

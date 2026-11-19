@@ -8,6 +8,7 @@ import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
 import { nextStatus, statusOf } from '../../status.ts';
 import { addTasks, setExam, setTopicStatus } from '../../write.ts';
+import { syncTag } from '../../tags.ts';
 
 // Свой участник: только тот, чей Telegram id пришёл в подписи
 function me(viewer: Viewer) {
@@ -78,6 +79,7 @@ export function registerSelf(router: Router): void {
         const r = me(viewer);
         guard(() => addTasks(r.person.id, Number(asObject(body).amount),
             viewer.correctionActorTgId === undefined ? 'bot' : 'admin', viewer.correctionActorTgId ?? viewer.tgId));
+        void syncTag(r.person.id);
         return selfDto(me(viewer));
     });
 
@@ -86,6 +88,7 @@ export function registerSelf(router: Router): void {
         const value = asObject(body).value;
         guard(() => setExam(r.person.id, value === null ? null : Number(value),
             viewer.correctionActorTgId ?? viewer.tgId, viewer.correctionActorTgId !== undefined));
+        void syncTag(r.person.id);
         return selfDto(me(viewer));
     });
 
