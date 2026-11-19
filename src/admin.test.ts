@@ -20,7 +20,9 @@ after(() => {
 
 test('административные операции работают на изолированной базе', () => {
     // Добавление участника и создание 27 начальных статусов.
-    const alice = addUser(700001, 'Тестовая Алиса');
+    const alice = addUser(700001, '  тестовая Алиса  ');
+    assert.equal(db.prepare('SELECT name FROM users WHERE id = ?').get(alice)?.name, 'Тестовая Алиса');
+    assert.throws(() => addUser(700099, 'тестовая Алиса'), /имя уже занято/);
     assert.equal(db.prepare('SELECT exam FROM users WHERE id = ?').get(alice)?.exam, 0);
 
     assert.equal(
@@ -35,7 +37,7 @@ test('административные операции работают на и
     // Переименование и проверка уникальности имени.
     const bob = addUser(700002, 'Тестовый Боб');
 
-    renameUser(alice, 'Алиса Новая');
+    renameUser(alice, 'алиса Новая');
 
     assert.throws(() => renameUser(alice, 'Тестовый Боб'));
 

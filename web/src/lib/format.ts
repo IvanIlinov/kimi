@@ -1,4 +1,4 @@
-export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export const cap = (s: string) => s.trim().replace(/\p{L}/u, (letter) => letter.toUpperCase());
 
 // plural(5, ['задача', 'задачи', 'задач']) -> 'задач'
 export function plural(n: number, [one, few, many]: [string, string, string]): string {

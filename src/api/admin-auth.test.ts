@@ -203,7 +203,7 @@ test('главная считает посещения текущей недел
             weekStart: number;
             month: { start: number; earnedKopecks: number };
             attendance: { visits: number; visitors: number; participants: number };
-            lessons: { id: number; status: string; priceKopecks: number }[];
+            lessons: { id: number; name: string; status: string; priceKopecks: number }[];
         };
     }
 
@@ -219,7 +219,7 @@ test('главная считает посещения текущей недел
         participants: before.attendance.participants + 1,
     });
 
-    const lesson = { weekStart: before.weekStart, weekday: 0, time: '16:30', name: 'Ученик', status: 'planned' };
+    const lesson = { weekStart: before.weekStart, weekday: 0, time: '16:30', name: 'ученик', status: 'planned' };
     assert.throws(() => call('POST', '/api/admin/lessons', { ...lesson, time: '24:00' }),
         (error: unknown) => error instanceof HttpError && error.status === 400);
     assert.throws(() => call('POST', '/api/admin/lessons', { ...lesson, weekStart: before.weekStart - 1 }),
@@ -233,6 +233,7 @@ test('главная считает посещения текущей недел
     call('POST', '/api/admin/lessons', { ...lesson, priceKopecks: 150050 });
     const [saved] = home().lessons;
     assert.equal(saved.status, 'planned');
+    assert.equal(saved.name, 'Ученик');
     assert.equal(saved.priceKopecks, 150050);
     for (const status of ['held', 'paid', 'planned']) {
         const changed = call('POST', `/api/admin/lessons/${saved.id}/cycle`) as { status: string };

@@ -1,3 +1,4 @@
+import { normalizeName as cap } from './names.ts';
 import {
     EXAM_MAX,
     MONTH_TOPICS,
@@ -17,7 +18,7 @@ import {
 import type { Ranked } from './logic.ts';
 import type { JournalEntry, WeekStat } from './store.ts';
 
-export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export { cap };
 export const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // ---- Общие кирпичики ----
@@ -88,7 +89,7 @@ export function renderAdminHomeRich(
     now: Date = new Date(),
 ): string {
     return [
-        `<h3>👑 Привет, ${escHtml(firstName)}!</h3>`,
+        `<h3>👑 Привет, ${escHtml(cap(firstName))}!</h3>`,
         goalsTable(now),
         ranked.length ? table(monthRows(ranked, now, lastActive, false)) : '<p>Пока никого нет.</p>',
         BLANK,

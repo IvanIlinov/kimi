@@ -29,13 +29,25 @@ legacy.exec(`
         PRIMARY KEY (user_id, topic_no)
     );
 
-    INSERT INTO users (id, tg_id, name) VALUES (1, 700001, 'Старый участник');
+    INSERT INTO users (id, tg_id, name) VALUES (1, 700001, '  ёжик  ');
 
     INSERT INTO topic_status (user_id, topic_no, status)
     VALUES
         (1, 1, 'done'),
         (1, 2, 'learning'),
         (1, 3, 'todo');
+
+    CREATE TABLE lessons (
+        id INTEGER PRIMARY KEY,
+        week_start INTEGER NOT NULL,
+        weekday INTEGER NOT NULL,
+        time TEXT NOT NULL,
+        name TEXT NOT NULL,
+        status TEXT NOT NULL
+    );
+
+    INSERT INTO lessons (id, week_start, weekday, time, name, status)
+    VALUES (1, 0, 0, '16:30', 'алёна', 'planned');
 `);
 legacy.close();
 
@@ -72,5 +84,7 @@ test('миграция разрешает reinforced и сохраняет ст�
         'reinforced',
     );
 
+    assert.equal(db.prepare('SELECT name FROM users WHERE id = 1').get()?.name, 'Ёжик');
+    assert.equal(db.prepare('SELECT name FROM lessons WHERE id = 1').get()?.name, 'Алёна');
     assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
 });

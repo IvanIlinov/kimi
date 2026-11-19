@@ -1,7 +1,7 @@
 import { db } from './db.ts';
 
 const TEST_TG_ID = 1079824799;
-const TEST_NAME = 'тест';
+const TEST_NAME = 'Тест';
 
 const exists = db.prepare('SELECT id FROM users WHERE tg_id = ?').get(TEST_TG_ID);
 

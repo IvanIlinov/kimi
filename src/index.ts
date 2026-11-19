@@ -12,6 +12,7 @@ import {
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
 import { db } from './db.ts';
+import { normalizeName } from './names.ts';
 import { rank } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import {
@@ -340,14 +341,14 @@ function adminCommand(viewerId: number, text: string): Reply | null {
     try {
         switch (cmd) {
             case '/add': {
-                const name = rest.slice(1).join(' ');
+                const name = normalizeName(rest.slice(1).join(' '));
                 addUser(Number(rest[0]), name);
                 return screenArena(viewerId, `✅ Добавлен: ${name}`);
             }
             case '/rename': {
                 const id = Number(rest[0]);
                 if (!findById(id)) throw new Error('Участник не найден');
-                const name = rest.slice(1).join(' ');
+                const name = normalizeName(rest.slice(1).join(' '));
                 renameUser(id, name);
                 return screenArena(viewerId, `✅ Переименован: ${name}`);
             }

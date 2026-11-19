@@ -1,3 +1,4 @@
+import { normalizeName } from './names.ts';
 import { db } from './db.ts';
 
 interface Input {
@@ -57,7 +58,7 @@ const insertLog = db.prepare('INSERT INTO task_log (user_id, amount, created_at)
 db.exec('BEGIN');
 try {
     for (const { p, statuses } of plans) {
-        const { lastInsertRowid } = insertUser.run(p.tgId, p.name, p.exam, p.comment);
+        const { lastInsertRowid } = insertUser.run(p.tgId, normalizeName(p.name), p.exam, p.comment);
         const userId = Number(lastInsertRowid);
 
         // Все 27 заданий: не указанные становятся 'todo'

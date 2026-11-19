@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { normalizeName } from './names.ts';
 
 const DB_PATH = process.env.DB_PATH ?? 'data/arena.db';
 
@@ -151,3 +152,20 @@ db.exec(`
 CREATE INDEX IF NOT EXISTS topic_log_user_topic ON topic_log(user_id, topic_no, id);
 CREATE INDEX IF NOT EXISTS exam_log_user ON exam_log(user_id, id);
 `);
+
+// Приводим имена в существующей базе к тому же формату, что и при записи.
+db.exec('BEGIN IMMEDIATE');
+try {
+    for (const table of ['users', 'lessons']) {
+        const rows = db.prepare(`SELECT id, name FROM ${table}`).all() as { id: number; name: string }[];
+        const update = db.prepare(`UPDATE ${table} SET name = ? WHERE id = ?`);
+        for (const row of rows) {
+            const normalized = normalizeName(row.name);
+            if (normalized !== row.name) update.run(normalized, row.id);
+        }
+    }
+    db.exec('COMMIT');
+} catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+}

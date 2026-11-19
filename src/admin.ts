@@ -1,8 +1,9 @@
 import { db } from './db.ts';
+import { normalizeName } from './names.ts';
 
 // Имя от 1 до 30 символов и не занято другим активным участником
 function checkName(name: string, exceptId: number | null = null): string {
-    const clean = name.trim();
+    const clean = normalizeName(name);
     if (!clean || clean.length > 30) throw new Error('Имя от 1 до 30 символов');
     const dup = db
         .prepare('SELECT id FROM users WHERE name = ? AND removed = 0 AND id IS NOT ?')

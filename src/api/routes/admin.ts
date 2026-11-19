@@ -2,6 +2,7 @@
 import { addUser, renameUser, removeUser, restoreUser } from '../../admin.ts';
 import { STAGING_PREVIEW_ENABLED } from '../../config.ts';
 import { db } from '../../db.ts';
+import { normalizeName } from '../../names.ts';
 import { setTasksTotal, setExam, setTopicStatus } from '../../write.ts';
 import { getAdminMembers, getAdminJournal, getAdminHistory, weekStartMs } from '../../store.ts';
 import { HttpError } from '../errors.ts';
@@ -133,7 +134,7 @@ export function registerAdmin(router: Router): void {
             throw new HttpError(409, 'Неделя сменилась. Обновите расписание.');
         }
         const { id, weekday, time, status, priceKopecks } = data;
-        const name = typeof data.name === 'string' ? data.name.trim() : '';
+        const name = typeof data.name === 'string' ? normalizeName(data.name) : '';
         if (typeof weekday !== 'number' || !Number.isInteger(weekday) || weekday < 0 || weekday > 6 ||
             typeof time !== 'string' || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ||
             !name || name.length > 80 || (status !== 'planned' && status !== 'held' && status !== 'paid')) {
@@ -219,7 +220,7 @@ export function registerAdmin(router: Router): void {
         requireAdmin(viewer);
         const data = objectBody(body);
         const tgId = Number(data.tgId);
-        const name = typeof data.name === 'string' ? data.name : '';
+        const name = typeof data.name === 'string' ? normalizeName(data.name) : '';
 
         return guard(() => {
             db.exec('SAVEPOINT admin_api_action');
@@ -233,8 +234,8 @@ export function registerAdmin(router: Router): void {
 
                 const action = previous?.removed ? 'restore_user' : 'add_user';
                 const details = previous?.removed
-                    ? `Восстановлен через добавление: ${name.trim()}`
-                    : `Участник: ${name.trim()}`;
+                    ? `Восстановлен через добавление: ${name}`
+                    : `Участник: ${name}`;
 
                 audit(viewer.tgId, id, action, details);
 
@@ -253,10 +254,10 @@ export function registerAdmin(router: Router): void {
         requireAdmin(viewer);
         const id = positiveId(params.id);
         const data = objectBody(body);
-        const name = typeof data.name === 'string' ? data.name : '';
+        const name = typeof data.name === 'string' ? normalizeName(data.name) : '';
 
         return guard(() =>
-            atomicAdmin(viewer.tgId, id, 'rename_user', `Новое имя: ${name.trim()}`, () => {
+            atomicAdmin(viewer.tgId, id, 'rename_user', `Новое имя: ${name}`, () => {
                 renameUser(id, name);
                 return { ok: true };
             }),

@@ -109,6 +109,7 @@ const demo = `<script>
 const routes = ${JSON.stringify(routes).replaceAll('<', '\\u003c')};
 let nextLessonId = 5;
 let nextMemberId = 4;
+const normalizeName = (name) => name.trim().replace(/\\p{L}/u, (letter) => letter.toUpperCase());
 const profileTemplate = routes.default['/api/profile/1'];
 const selfTemplate = routes['1']?.['/api/self'];
 const topicCycle = { todo: 'learning', learning: 'done', done: 'reinforced', reinforced: 'todo' };
@@ -142,12 +143,12 @@ window.fetch = async (path, options) => {
         if (path === '/api/admin/members') {
             const { tgId, name } = JSON.parse(options.body);
             const members = routes.default['/api/admin/members'];
-            if (members.some((row) => row.tgId === tgId || row.name === name.trim())) {
+            if (members.some((row) => row.tgId === tgId || row.name === normalizeName(name))) {
                 return Response.json({ error: 'Участник уже в рейтинге' }, { status: 400 });
             }
             const id = nextMemberId++;
             const topics = Array(27).fill('todo');
-            const member = { id, name: name.trim() };
+            const member = { id, name: normalizeName(name) };
             const profile = structuredClone(profileTemplate);
             Object.assign(profile, member, {
                 place: members.length + 1, pct: 0, monthPct: 0,
@@ -220,6 +221,7 @@ window.fetch = async (path, options) => {
         }
         if (path === '/api/admin/lessons') {
             const { weekStart, id, ...lesson } = JSON.parse(options.body);
+            lesson.name = normalizeName(lesson.name);
             if (id === undefined) home.lessons.push({ priceKopecks: 0, ...lesson, id: nextLessonId++ });
             else home.lessons = home.lessons.map((row) => row.id === id ? { ...row, ...lesson } : row);
             home.lessons.sort((a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time));

@@ -20,7 +20,7 @@ export function StudentHomePage() {
         <Screen hideTitle title="Главная" className="student-home">
             <Card class="student-summary">
                 <div class="between">
-                    <strong>{name}</strong>
+                    <strong>{cap(name)}</strong>
                     <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
                 </div>
                 <div class="student-progress">

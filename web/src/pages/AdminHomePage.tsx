@@ -127,9 +127,9 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                                                 <button type="button" class={`admin-lesson ${item.status}`} key={item.id}
                                                     disabled={cycling}
                                                     onClick={() => editing ? setLesson(item) : void cycleLesson(item.id)}
-                                                    aria-label={`${editing ? 'Изменить занятие' : 'Сменить статус'}: ${item.name}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>
+                                                    aria-label={`${editing ? 'Изменить занятие' : 'Сменить статус'}: ${cap(item.name)}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>
                                                     <time dateTime={item.time}>{item.time}</time>
-                                                    <b>{item.name}</b>
+                                                    <b>{cap(item.name)}</b>
                                                 </button>
                                             ))}
                                         </div>
