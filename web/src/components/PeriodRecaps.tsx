@@ -16,14 +16,17 @@ const labels = { week: 'Неделя', season: 'Сезон', year: 'Год' };
 const titles = { week: 'Итоги недели', season: 'Итоги сезона', year: 'Итоги года' };
 const seasonNames = { '03': 'Весна', '09': 'Осень', '12': 'Зима' } as Record<string, string>;
 
-export function PeriodRecaps({ week, study, autoOpen }: {
+export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
     week: WeeklyRecap;
+    currentWeek?: WeeklyRecap;
     study: Profile['studyRecaps'];
     autoOpen: boolean;
 }) {
     const modal = useRef<HTMLDialogElement>(null);
     const gesture = useRef<{ id: number; x: number; y: number } | null>(null);
-    const [active, setActive] = useState<Kind | null>(null);
+    const [selection, setSelection] = useState<{ kind: Kind; completed: boolean } | null>(null);
+    const active = selection?.kind;
+    const showingCompletedWeek = !currentWeek || selection?.completed === true;
     const keepKeyboardFocus = useRef(false);
     const yearEnd = study?.year.end;
     const seasonEnd = study?.season.inProgress ? undefined : study?.season.end;
@@ -35,7 +38,7 @@ export function PeriodRecaps({ week, study, autoOpen }: {
         void api<{ open: Kind | null }>('/api/self/recaps/open', {
             method: 'POST', body: { week: weekEnd, season: seasonEnd, year: yearEnd },
         }).then(({ open }) => {
-            if (open && attached) setActive((current) => current ?? open);
+            if (open && attached) setSelection((current) => current ?? { kind: open, completed: true });
         }).catch(() => {});
         return () => { attached = false; };
     }, [autoOpen, weekEnd, seasonEnd, yearEnd]);
@@ -45,18 +48,20 @@ export function PeriodRecaps({ week, study, autoOpen }: {
         if (!active || !dialog) return;
         if (dialog.open) dialog.scrollTop = 0;
         else dialog.showModal();
-    }, [active]);
+    }, [active, showingCompletedWeek]);
 
     const recaps = { week, ...study };
     const kinds: Kind[] = study ? ['week', 'season', 'year'] : ['week'];
-    const recap = active ? recaps[active] : undefined;
+    const recap = active === 'week'
+        ? (showingCompletedWeek ? week : currentWeek)
+        : active ? recaps[active] : undefined;
     const period = (value: WeeklyRecap | StudyRecap) => date.formatRange(value.start, value.end - 1);
     const season = study ? seasonNames[new Date(study.season.start + 3 * 3600e3).toISOString().slice(5, 7)] : undefined;
 
     function step(direction: 1 | -1) {
-        if (!active || kinds.length < 2) return;
-        const index = kinds.indexOf(active);
-        setActive(kinds[(index + direction + kinds.length) % kinds.length]);
+        if (!selection || kinds.length < 2) return;
+        const index = kinds.indexOf(selection.kind);
+        setSelection({ ...selection, kind: kinds[(index + direction + kinds.length) % kinds.length] });
     }
 
     return (
@@ -66,10 +71,10 @@ export function PeriodRecaps({ week, study, autoOpen }: {
                     <button key={kind} type="button" class="weekly-recap-entry" data-kind={kind} aria-haspopup="dialog"
                         onClick={(event) => {
                             keepKeyboardFocus.current = event.detail === 0;
-                            setActive(kind);
+                            setSelection({ kind, completed: false });
                         }}>
                         <strong>{labels[kind]}</strong>
-                        <span>{kind === 'season' && season ? `${season} · ` : ''}{period(recaps[kind]!)}</span>
+                        <span>{kind === 'season' && season ? `${season} · ` : ''}{period(kind === 'week' && currentWeek ? currentWeek : recaps[kind]!)}</span>
                     </button>
                 ))}
             </div>
@@ -84,7 +89,7 @@ export function PeriodRecaps({ week, study, autoOpen }: {
                     }
                     keepKeyboardFocus.current = false;
                     gesture.current = null;
-                    setActive(null);
+                    setSelection(null);
                 }}
                 onPointerDown={(event) => {
                     if (!event.isPrimary || event.pointerType === 'mouse') return;
@@ -132,7 +137,13 @@ export function PeriodRecaps({ week, study, autoOpen }: {
                             </dl>
                         </>
                     ) : (
-                        <WeekResult week={week} />
+                        <>
+                            <WeekResult week={recap} completed={showingCompletedWeek} />
+                            {currentWeek && <button type="button" class="weekly-recap-switch" onClick={() =>
+                                setSelection({ kind: 'week', completed: !showingCompletedWeek })}>
+                                {showingCompletedWeek ? 'Текущая неделя' : 'Прошлая неделя'}
+                            </button>}
+                        </>
                     )}
                     <button class="weekly-recap-done">Готово</button>
                 </form>}
@@ -141,7 +152,7 @@ export function PeriodRecaps({ week, study, autoOpen }: {
     );
 }
 
-function WeekResult({ week }: { week: WeeklyRecap }) {
+function WeekResult({ week, completed }: { week: WeeklyRecap; completed: boolean }) {
     const difference = week.tasks - week.goal;
     const differenceLabel = `${Math.abs(difference)} ${plural(difference, ['задача', 'задачи', 'задач'])}`;
     const goalNote = difference > 0 ? `Сверх цели — ${differenceLabel}`
@@ -149,7 +160,7 @@ function WeekResult({ week }: { week: WeeklyRecap }) {
     return (
         <>
             <section class="weekly-recap-goal" aria-labelledby="weekly-recap-goal">
-                <p id="weekly-recap-goal">Решено за завершённую неделю</p>
+                <p id="weekly-recap-goal">{completed ? 'Решено за завершённую неделю' : 'Решено за текущую неделю'}</p>
                 <strong>{week.tasks} / {week.goal}</strong>
                 <progress aria-labelledby="weekly-recap-goal" max={week.goal}
                     value={Math.max(0, Math.min(week.tasks, week.goal))} />

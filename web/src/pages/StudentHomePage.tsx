@@ -25,7 +25,7 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
     const examLeft = Math.max(0, month.exam.goal - exam);
 
     const recaps = leadingPage ?? (profile.weeklyRecap && (
-        <PeriodRecaps week={profile.weeklyRecap} study={profile.studyRecaps} autoOpen={autoOpenWeeklyRecap} />
+        <PeriodRecaps week={profile.weeklyRecap} currentWeek={profile.currentWeekRecap} study={profile.studyRecaps} autoOpen={autoOpenWeeklyRecap} />
     ));
 
     return (

@@ -69,6 +69,7 @@ export interface ProfileDto {
     };
     canEdit: boolean;
     weeklyRecap?: WeeklyRecapDto;
+    currentWeekRecap?: WeeklyRecapDto;
     studyRecaps?: { year: StudyRecapDto; season: StudyRecapDto };
 }
 

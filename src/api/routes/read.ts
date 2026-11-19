@@ -23,12 +23,15 @@ export function registerRead(router: Router): void {
         const r = ranked.find((x) => x.person.id === id);
         if (!r) throw new HttpError(404, 'Участник не найден');
         const now = Date.now();
-        const week = getWeekStats(now).find((s) => s.userId === r.person.id);
+        const currentWeekStats = getWeekStats(now);
+        const week = currentWeekStats.find((s) => s.userId === r.person.id);
         const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
         const { week: closedWeek, season, year, currentFall } = recapPeriods(now);
         profile.weeklyRecap = weeklyRecapDto(
             ranked, r, getWeekStats(closedWeek.start, closedWeek.end), closedWeek.start, closedWeek.end,
         );
+        const nextWeek = closedWeek.end + (closedWeek.end - closedWeek.start);
+        profile.currentWeekRecap = weeklyRecapDto(ranked, r, currentWeekStats, closedWeek.end, nextWeek);
         const studyRecap = ({ start, end }: { start: number; end: number }, studyStart: number, goalAt = end - 1) => {
             const stats = studyRecapStats(r.person, studyStart, end);
             const date = new Date(goalAt);

@@ -63,6 +63,8 @@ function demoRoutes(role, student) {
         const profile = profileDto(entry, week.get(id), now, id === viewer?.id);
         if (!recapPlacement || id !== viewer?.id) {
             profile.weeklyRecap = weeklyRecapDto(ranked, entry, lastWeek, demoPeriods.week.start, weekStart);
+            const nextWeek = weekStart + (weekStart - demoPeriods.week.start);
+            profile.currentWeekRecap = weeklyRecapDto(ranked, entry, [...week.values()], weekStart, nextWeek);
             profile.studyRecaps = {
                 season: {
                     ...sampleStudyRecap(entry, demoPeriods.currentFall ?? demoPeriods.season, 0.92),

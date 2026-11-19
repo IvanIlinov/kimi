@@ -78,6 +78,15 @@
 }
 .weekly-recap dd { font-weight: 700; }
 
+.weekly-recap-switch {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin: -8px 0 6px;
+    color: var(--recap-accent);
+    font-weight: 650;
+}
+
 .weekly-recap-done {
     width: 100%;
     min-height: 44px;

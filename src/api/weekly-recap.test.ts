@@ -55,9 +55,13 @@ test('итоги закрываются в понедельник по Моск�
     t.mock.timers.tick(1);
     assert.deepEqual(profile().weeklyRecap, { start, end, tasks: 32, topics: 1, goal: 25, place: 2 });
     assert.equal(profile().week.tasks, 5);
+    assert.equal(profile().currentWeekRecap?.tasks, 5);
+    assert.equal(profile().currentWeekRecap?.topics, 1);
+    assert.equal(profile().currentWeekRecap?.start, end);
     const guest = { ...student, role: 'guest', personId: null } as const;
     const guestProfile = call('GET', '/api/profile/1', {}, guest) as ProfileDto;
     assert.deepEqual(guestProfile.weeklyRecap, profile().weeklyRecap);
+    assert.deepEqual(guestProfile.currentWeekRecap, profile().currentWeekRecap);
     assert.equal(guestProfile.studyRecaps?.season.inProgress, true);
     assert.equal(guestProfile.studyRecaps?.season.goals.tasks, 321);
     assert.equal(guestProfile.totals.tasks, 864);

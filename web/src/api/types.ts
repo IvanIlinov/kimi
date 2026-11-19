@@ -54,6 +54,7 @@ export interface Profile {
     };
     canEdit: boolean;
     weeklyRecap?: WeeklyRecap;
+    currentWeekRecap?: WeeklyRecap;
     studyRecaps?: { year: StudyRecap; season: StudyRecap };
 }
 
