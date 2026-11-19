@@ -35,6 +35,8 @@ const ICONS: Record<string, ComponentChildren> = {
         <path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0 0 4h14a1 1 0 0 1 1 1v10H6a2 2 0 0 1-2-2V6" />
         <path d="M21 12h-5a2 2 0 0 0 0 4h5m-5-2h.01" />
     </>,
+    'arrow-left': <path d="M20 12H4m6-6-6 6 6 6" />,
+    'arrow-down-up': <path d="M7 4v15m-4-4 4 4 4-4m6 5V5m-4 4 4-4 4 4" />,
     plus: <path d="M12 5v14M5 12h14" />,
     pencil: <path d="m4 16 11-11a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4ZM13 7l4 4" />,
     trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7" />,

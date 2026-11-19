@@ -30,9 +30,9 @@ function demoRoutes(role, student) {
     const tgId = viewer?.tgId ?? 0;
     const routes = {
         '/api/me': { role, name: viewer?.name ?? (role === 'admin' ? 'Администратор' : 'Гость'), personId: viewer?.id ?? null },
-        '/api/arena?mode=global': arenaDto(ranked, tgId, 'global', now),
-        '/api/arena?mode=month': arenaDto(ranked, tgId, 'month', now),
-        '/api/week': weekDto(ranked, tgId, week),
+        '/api/arena?mode=global': arenaDto(ranked, tgId, 'global', now, role !== 'student'),
+        '/api/arena?mode=month': arenaDto(ranked, tgId, 'month', now, role !== 'student'),
+        '/api/week': weekDto(ranked, tgId, week, role !== 'student'),
         '/api/members': membersDto(ranked, tgId),
     };
     for (const entry of ranked) {

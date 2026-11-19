@@ -33,6 +33,9 @@ test('global and monthly standings choose their own leaders before selecting the
     assert.equal(month.leader?.name, monthLeader.name);
     assert.equal(month.rows[0].pct, 100);
     assert.equal(month.rows.length, 10);
+    for (const mode of ['global', 'month'] as const) {
+        assert.equal(arenaDto(ranked, -1, mode, now, true).rows.length, ranked.length);
+    }
 });
 
 test('weekly standings sort by tasks then reinforced delta before selecting the top ten', () => {

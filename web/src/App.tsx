@@ -8,14 +8,12 @@ import { Empty, Loading, Screen } from './components/ui';
 import { ArenaPage } from './pages/ArenaPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AdminHomePage } from './pages/AdminHomePage';
-import { MembersPage } from './pages/MembersPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { TopicsPage } from './pages/TopicsPage';
 import { StudentHomePage } from './pages/StudentHomePage';
-import { WeekPage } from './pages/WeekPage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
-type TabId = 'home' | 'week' | 'topics' | 'arena' | 'members' | 'adminHistory';
+type TabId = 'home' | 'week' | 'topics' | 'arena' | 'adminHistory';
 
 const STUDENT_TABS: Tab<TabId>[] = [
     { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
@@ -24,9 +22,7 @@ const STUDENT_TABS: Tab<TabId>[] = [
 ];
 
 const GUEST_TABS: Tab<TabId>[] = [
-    { id: 'members', icon: 'users-round', label: 'Профили' },
-    { id: 'week', icon: 'calendar-days', label: 'Главная' },
-    { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
+    { id: 'arena', icon: 'trophy', label: 'Главная' },
 ];
 
 const ADMIN_TABS: Tab<TabId>[] = [
@@ -54,7 +50,7 @@ export function App() {
         setPreviewAs('guest');
         setPreview({ mode: 'guest' });
         setOpenId(null);
-        setTab('members');
+        setTab('arena');
     };
 
     const stopPreview = () => {
@@ -97,30 +93,24 @@ export function App() {
 
     let page;
     if (openId !== null) page = <ProfilePage id={openId} />;
-    else if (active === 'week') {
-        page = tabs === ADMIN_TABS
-            ? <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />
-            : <WeekPage onOpen={open} />;
-    }
+    else if (active === 'week') page = <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'adminHistory') page = <HistoryPage />;
     else if (active === 'home') page = <StudentHomePage />;
     else if (active === 'topics') page = <TopicsPage correction={editingStudent} readOnly={preview !== null && !editingStudent} />;
-    else if (active === 'arena') {
+    else {
         const admin = tabs === ADMIN_TABS;
         page = <ArenaPage onOpen={admin ? (id) => startPreview(id, true) : open}
             onEdit={admin ? (id) => startPreview(id, true, 'topics') : undefined} />;
     }
-    else page = <MembersPage onOpen={open} />;
 
     return (
-        <div class={preview ? 'preview-layout' : undefined}>
-            {preview && (
-                <button class="preview-exit" onClick={stopPreview}>
-                    {editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра'}
-                </button>
-            )}
+        <>
             {page}
-            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} />
-        </div>
+            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go}
+                exit={preview ? {
+                    label: editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра',
+                    onClick: stopPreview,
+                } : undefined} />
+        </>
     );
 }

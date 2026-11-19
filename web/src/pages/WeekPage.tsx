@@ -1,12 +1,8 @@
 import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
-import { Card, Empty, Label, Loading, Row, Screen, SegmentBar } from '../components/ui';
+import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
 import { cap, sgn } from '../lib/format';
-
-export function WeekPage({ onOpen }: { onOpen: (id: number) => void }) {
-    return <Screen hideTitle title="Неделя" className="layout-ranking"><WeekResults onOpen={onOpen} /></Screen>;
-}
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
     onOpen: (id: number) => void;

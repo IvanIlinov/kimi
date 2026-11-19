@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { SelfData } from '../api/types';
+import { NavIcon } from '../components/NavIcon';
 import { Card, Empty, Label, Loading, Screen, SegmentBar } from '../components/ui';
 import { haptic } from '../lib/telegram';
 
@@ -14,10 +15,22 @@ const STATUS_LABEL = {
 
 const AMOUNTS = [-1, 1, 3, 5, 10];
 
+// Порядок заданий внутри рангов и между рангами из роадмапа v5.
+const STUDY_ORDER = [
+    4, 7, 11, 1,
+    18, 3, 22, 10, 6, 12,
+    17, 9, 8,
+    14, 13, 2, 15, 5,
+    16, 23, 19, 20, 21,
+    25, 27,
+    24, 26,
+];
+
 export function TopicsPage({ readOnly = false, correction = false }: { readOnly?: boolean; correction?: boolean }) {
     const { data, error, setData } = useApi<SelfData>('/api/self');
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState('');
+    const [studyOrder, setStudyOrder] = useState(false);
 
     if (error) return <Screen hideTitle title="Задания" className="layout-topics"><Empty text={error} /></Screen>;
     if (!data) return <Screen hideTitle title="Задания" className="layout-topics"><Loading /></Screen>;
@@ -38,9 +51,10 @@ export function TopicsPage({ readOnly = false, correction = false }: { readOnly?
         }
     }
 
+    const topicNumbers = studyOrder ? STUDY_ORDER : data.topics.map((_, index) => index + 1);
+
     return (
         <Screen hideTitle title="Задания" className="layout-topics">
-            {readOnly && <p class="muted">Режим предпросмотра — изменения отключены.</p>}
             <Card>
                 <div class="between"><Label>Задачи</Label>{correction && <b>Всего: {data.tasksTotal}</b>}</div>
                 <div class="amounts">
@@ -67,17 +81,26 @@ export function TopicsPage({ readOnly = false, correction = false }: { readOnly?
             <Card>
                 <Label>Задания: нажмите, чтобы сменить статус</Label>
                 <div class="grid">
-                    {data.topics.map((status, i) => (
-                        <button
-                            key={i}
-                            class={`cell ${status}`}
-                            aria-label={`Задание ${i + 1}. ${STATUS_LABEL[status]}`}
-                            disabled={readOnly || busy}
-                            onClick={() => run(`/api/self/topics/${i + 1}/cycle`)}
-                        >
-                            <b>{i + 1}</b>
-                        </button>
-                    ))}
+                    {topicNumbers.map((number) => {
+                        const status = data.topics[number - 1];
+                        return (
+                            <button
+                                key={number}
+                                class={`cell ${status}`}
+                                aria-label={`Задание ${number}. ${STATUS_LABEL[status]}`}
+                                disabled={readOnly || busy}
+                                onClick={() => run(`/api/self/topics/${number}/cycle`)}
+                            >
+                                <b>{number}</b>
+                            </button>
+                        );
+                    })}
+                    <button type="button" class="topic-order-toggle" aria-label="По порядку изучения"
+                        aria-pressed={studyOrder} title={studyOrder ? 'Вернуть порядок по номерам' : 'По порядку изучения'}
+                        onClick={() => setStudyOrder((current) => !current)}>
+                        <NavIcon name="arrow-down-up" />
+                        <span>По плану</span>
+                    </button>
                 </div>
             </Card>
 
