@@ -15,7 +15,7 @@ export function ArenaPage({ onOpen }: { onOpen: (id: number) => void }) {
     const [mode, setMode] = useState<(typeof MODES)[number]['id']>('global');
 
     return (
-        <Screen title="Рейтинг" className="layout-ranking">
+        <Screen hideTitle title="Рейтинг" className="layout-ranking">
             <div class="segmented" role="group" aria-label="Период рейтинга">
                 {MODES.map(({ id, label }) => (
                     <button key={id} type="button" class={mode === id ? 'on' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>

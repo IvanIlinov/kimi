@@ -24,7 +24,8 @@ export interface ProfileDto {
     place: number;
     pct: number; // глобальный прогресс
     standing: Standing;
-    week: { tasks: number; topics: number; goalPct: number }; // goalPct может быть больше 100
+    monthPct: number;
+    week: { tasks: number; topics: number; goal: number; goalPct: number }; // goalPct может быть больше 100
     month: {
         topics: { value: number; goal: number };
         tasks: { value: number; goal: number };
@@ -43,7 +44,8 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
         place: r.place,
         pct: r.pct,
         standing: standing(r, now),
-        week: { tasks: w.tasks, topics: w.topics, goalPct: Math.round((w.tasks / WEEK_GOAL) * 100) },
+        monthPct: monthPct(r, now),
+        week: { tasks: w.tasks, topics: w.topics, goal: WEEK_GOAL, goalPct: Math.round((w.tasks / WEEK_GOAL) * 100) },
         month: {
             topics: { value: p.reinforced.length, goal: m.topics },
             tasks: { value: p.tasksTotal, goal: m.tasks },

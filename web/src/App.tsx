@@ -10,17 +10,16 @@ import { AdminPage } from './pages/AdminPage';
 import { MembersPage } from './pages/MembersPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { TopicsPage } from './pages/TopicsPage';
+import { StudentHomePage } from './pages/StudentHomePage';
 import { WeekPage } from './pages/WeekPage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
-type TabId = 'profile' | 'week' | 'topics' | 'arena' | 'members' | 'adminMembers' | 'adminJournal' | 'adminPreview';
+type TabId = 'home' | 'week' | 'topics' | 'arena' | 'members' | 'adminMembers' | 'adminJournal' | 'adminPreview';
 
 const STUDENT_TABS: Tab<TabId>[] = [
-    { id: 'profile', icon: 'user-round', label: 'Профиль' },
-    { id: 'week', icon: 'calendar-days', label: 'Главная' },
-    { id: 'topics', icon: 'target', label: 'Задания' },
     { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
-    { id: 'members', icon: 'users-round', label: 'Участники' },
+    { id: 'home', icon: 'user-round', label: 'Главная' },
+    { id: 'topics', icon: 'target', label: 'Задания' },
 ];
 
 const GUEST_TABS: Tab<TabId>[] = [
@@ -53,7 +52,7 @@ export function App() {
         setPreviewAs(String(id));
         setPreview({ mode: 'student', id, name });
         setOpenId(null);
-        setTab('week');
+        setTab('home');
     };
 
     const startGuestPreview = () => {
@@ -89,7 +88,8 @@ export function App() {
                 ? ADMIN_TABS
                 : me.data.personId !== null ? STUDENT_TABS : GUEST_TABS;
 
-    const active = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
+    const defaultTab = tabs === STUDENT_TABS ? 'home' : tabs[0].id;
+    const active = tab && tabs.some((t) => t.id === tab) ? tab : defaultTab;
     const open = (id: number) => setOpenId(id);
 
     const go = (id: TabId) => {
@@ -103,7 +103,7 @@ export function App() {
     else if (active === 'adminMembers') page = <AdminPage section="members" />;
     else if (active === 'adminJournal') page = <AdminPage section="journal" />;
     else if (active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} onGuestPreview={startGuestPreview} />;
-    else if (active === 'profile') page = <ProfilePage id="me" />;
+    else if (active === 'home') page = <StudentHomePage />;
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null} />;
     else if (active === 'arena') page = <ArenaPage onOpen={open} />;
     else page = <MembersPage onOpen={open} />;

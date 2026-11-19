@@ -21,7 +21,8 @@ export interface Profile {
     place: number;
     pct: number;
     standing: Standing;
-    week: { tasks: number; topics: number; goalPct: number };
+    monthPct: number;
+    week: { tasks: number; topics: number; goal: number; goalPct: number };
     month: {
         topics: { value: number; goal: number };
         tasks: { value: number; goal: number };

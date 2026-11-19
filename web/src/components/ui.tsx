@@ -53,14 +53,15 @@ export function Row({ name, bar, right, onClick }: {
     );
 }
 
-export function Screen({ title, children, className = '' }: {
+export function Screen({ title, hideTitle = false, children, className = '' }: {
     title: string;
+    hideTitle?: boolean;
     children: ComponentChildren;
     className?: string;
 }) {
     return (
-        <main class={`page ${className}`}>
-            <h1 class="display">{title}</h1>
+        <main class={`page ${className}`} aria-label={hideTitle ? title : undefined}>
+            {!hideTitle && <h1 class="display">{title}</h1>}
             {children}
         </main>
     );

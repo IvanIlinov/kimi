@@ -4,7 +4,7 @@ import { Card, Empty, Label, Loading, Row, Screen, SegmentBar } from '../compone
 import { cap, sgn } from '../lib/format';
 
 export function WeekPage({ onOpen }: { onOpen: (id: number) => void }) {
-    return <Screen title="Неделя" className="layout-ranking"><WeekResults onOpen={onOpen} /></Screen>;
+    return <Screen hideTitle title="Неделя" className="layout-ranking"><WeekResults onOpen={onOpen} /></Screen>;
 }
 
 export function WeekResults({ onOpen }: { onOpen: (id: number) => void }) {

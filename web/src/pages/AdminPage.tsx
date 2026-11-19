@@ -38,13 +38,13 @@ function PreviewPage({ onPreview, onGuestPreview }: {
 }) {
     const { data, error } = useApi<AdminMember[]>('/api/admin/members');
 
-    if (error) return <Screen title="Предпросмотр" className="layout-preview"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Предпросмотр" className="layout-preview"><Loading /></Screen>;
+    if (error) return <Screen hideTitle title="Предпросмотр" className="layout-preview"><Empty text={error} /></Screen>;
+    if (!data) return <Screen hideTitle title="Предпросмотр" className="layout-preview"><Loading /></Screen>;
 
     const active = data.filter((member) => !member.removed);
 
     return (
-        <Screen title="Предпросмотр" className="layout-preview">
+        <Screen hideTitle title="Предпросмотр" className="layout-preview">
             <Card>
                 <Label>Как видит Арену гость</Label>
                 <p class="muted">Режим родителя: профили, главная, успеваемость и глобальный прогресс. Данные доступны только для просмотра.</p>
@@ -103,15 +103,15 @@ function MembersAdminPage() {
         }
     }
 
-    if (error) return <Screen title="Участники" className="layout-admin"><Empty text={error} /></Screen>;
-    if (!data) return <Screen title="Участники" className="layout-admin"><Loading /></Screen>;
+    if (error) return <Screen hideTitle title="Участники" className="layout-admin"><Empty text={error} /></Screen>;
+    if (!data) return <Screen hideTitle title="Участники" className="layout-admin"><Loading /></Screen>;
 
     const selected = data.find((m) => m.id === selectedId) ?? null;
     const active = data.filter((m) => !m.removed);
     const removed = data.filter((m) => m.removed);
 
     return (
-        <Screen title="Участники" className="layout-admin">
+        <Screen hideTitle title="Участники" className="layout-admin">
             <Card>
                 <div class="between">
                     <Label>Добавить участника</Label>
@@ -333,7 +333,7 @@ function JournalPage() {
     }, []);
 
     return (
-        <Screen title="Журнал" className="layout-journal">
+        <Screen hideTitle title="Журнал" className="layout-journal">
             <Card>
                 <Label>История изменений</Label>
                 {error && <p class="warn">{error}</p>}

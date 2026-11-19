@@ -6,8 +6,8 @@ import { cap, plural, toneFor } from '../lib/format';
 export function ProfilePage({ id }: { id: number | 'me' }) {
     const { data: p, error } = useApi<Profile>(`/api/profile/${id}`);
 
-    if (error) return <Screen title="Профиль"><Empty text={error} /></Screen>;
-    if (!p) return <Screen title="Профиль"><Loading /></Screen>;
+    if (error) return <Screen hideTitle title="Профиль"><Empty text={error} /></Screen>;
+    if (!p) return <Screen hideTitle title="Профиль"><Loading /></Screen>;
 
     const { month: m, week: w } = p;
     const examLine =
