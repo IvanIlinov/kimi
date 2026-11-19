@@ -26,7 +26,11 @@ const guestDemo = process.argv.includes('--guest');
 const role = adminDemo ? 'admin' : guestDemo ? 'guest' : 'student';
 const recapPlacement = process.argv.includes('--recap-button') ? 'button'
     : process.argv.includes('--recap-swipe') ? 'swipe' : null;
+const swipeNavigation = process.argv.includes('--swipe-navigation');
 if (recapPlacement && role !== 'student') throw new Error('Демо итогов доступно на главной ученика');
+if (swipeNavigation && (role !== 'student' || recapPlacement)) {
+    throw new Error('Демо навигации собирается отдельно для главной ученика');
+}
 const firstStudent = ranked.find(({ person }) => person.id === 1);
 const week = new Map(ranked.map(({ person }) => [
     person.id, { userId: person.id, tasks: person.tasksWeek, topics: 2, active: true },
@@ -84,6 +88,7 @@ function demoRoutes(role, student) {
 
 const routes = { default: demoRoutes(role, role === 'student' ? firstStudent : undefined) };
 if (adminDemo) {
+    const moscow = new Date(now.getTime() + 3 * 3_600_000);
     routes.default['/api/admin/members'] = ranked.map((entry) => {
         const { id, tgId, name, exam, tasksTotal } = entry.person;
         return { id, tgId, name, exam, tasksTotal, removed: false, topics: selfDto(entry).topics };
@@ -181,6 +186,7 @@ window.fetch = async (path, options) => {
     const current = target ? routes[target] : routes.default;
     const endpoint = target && path === '/api/me?preview=' + target ? '/api/me' : path;
     if (!preview && options?.method === 'POST' && path === '/api/self/recaps/open') {
+        if (${swipeNavigation}) return Response.json({ open: null });
         const requested = new URLSearchParams(window.location.search).get('recap');
         const kind = requested === 'season' || requested === 'year' ? requested : 'week';
         const profile = routes.default['/api/profile/me'];
@@ -339,6 +345,20 @@ if (!html.includes('window.fetch =') || !html.includes('<script type="module">')
 
 const dir = fileURLToPath(new URL('../demos/', import.meta.url));
 await mkdir(dir, { recursive: true });
-const preview = join(dir, recapPlacement ? `student-recap-${recapPlacement}.html` : `${role}-home.html`);
-await writeFile(preview, html);
-console.log(preview);
+const previews = swipeNavigation ? [
+    {
+        name: 'student-swipe-mobile.html',
+        title: 'Арена — свайп на телефоне',
+        style: '.page { max-width: 390px; } .swipe-card-arrow { display: none; }',
+    },
+    {
+        name: 'student-swipe-desktop.html',
+        title: 'Арена — стрелки на компьютере',
+    },
+] : [{ name: recapPlacement ? `student-recap-${recapPlacement}.html` : `${role}-home.html` }];
+for (const { name, title, style } of previews) {
+    const preview = join(dir, name);
+    const page = title ? html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`) : html;
+    await writeFile(preview, style ? page.replace('</head>', `<style>${style}</style></head>`) : page);
+    console.log(preview);
+}

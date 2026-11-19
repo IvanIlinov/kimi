@@ -4,7 +4,7 @@ import { NavIcon } from './NavIcon';
 export interface Tab<Id extends string> {
     id: Id;
     icon: string;
-    label: string; // для скринридеров
+    label: string;
 }
 
 export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
@@ -36,6 +36,7 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
                     }}
                 >
                     <NavIcon name={t.icon} />
+                    <span class="tab-label">{t.label}</span>
                 </button>
             ))}
         </nav>
