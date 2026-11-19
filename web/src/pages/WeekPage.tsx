@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
 import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
-import { cap, metricAccent, sgn } from '../lib/format';
+import { cap, sgn } from '../lib/format';
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
     onOpen: (id: number) => void;
@@ -13,8 +13,6 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
 
     if (error) return <Empty text={error} />;
     if (!data) return <Loading />;
-
-    const taskAccent = metricAccent(data.leader?.goalPct ?? null);
 
     return (
         <>
@@ -27,9 +25,9 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                     {data.leader && <div class="between">
                         <strong>{cap(data.leader.name)}</strong>
                         <span class="stats week-leader-stats">
-                            <b class="accent-tile">{sgn(data.leader.pct)}%</b>
-                            <b class="accent-tile" data-accent={taskAccent}>{sgn(data.leader.tasks)}</b>
-                            <b class="accent-tile">{sgn(data.leader.topics)}</b>
+                            <b>{sgn(data.leader.pct)}%</b>
+                            <b>{sgn(data.leader.tasks)}</b>
+                            <b>{sgn(data.leader.topics)}</b>
                         </span>
                     </div>}
                 </Card>

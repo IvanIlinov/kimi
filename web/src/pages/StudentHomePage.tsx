@@ -3,7 +3,7 @@ import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
 import { Card, Empty, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
-import { cap, metricAccent, plural } from '../lib/format';
+import { cap, plural } from '../lib/format';
 
 export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
     const { data: profile, error } = useApi<Profile>(`/api/profile/${id}`);
@@ -32,9 +32,9 @@ export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
                     <span>Общий прогресс</span>
                 </div>
                 <div class="metric-tiles">
-                    <MetricTile accent={metricAccent(totals.exam, month.exam.goal)} icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
-                    <MetricTile accent={metricAccent(totals.tasks, month.tasks.goal)} icon="calendar-days" label="Решено задач" value={totals.tasks} />
-                    <MetricTile accent={metricAccent(totals.topics, month.topics.goal)} icon="target" label="Изучено заданий" value={totals.topics} />
+                    <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
+                    <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
+                    <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
                 </div>
             </Card>
             <SwipeCard

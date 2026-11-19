@@ -58,10 +58,10 @@ export function HistoryPage() {
                                 <div class="history-row between" key={row.id}>
                                     <strong>{cap(row.name)}</strong>
                                     <span class="stats">
-                                        <b class="accent-tile" aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
-                                        <b class="accent-tile" aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
-                                        <b class="accent-tile" aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
-                                        <b class="accent-tile" data-accent={examAccent} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
+                                        <b aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
+                                        <b aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
+                                        <b aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
+                                        <b data-accent={examAccent} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
                                     </span>
                                 </div>
                             );

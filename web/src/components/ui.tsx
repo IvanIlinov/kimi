@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { cap, toneFor } from '../lib/format';
-import type { Accent, Tone } from '../lib/format';
+import type { Tone } from '../lib/format';
 import { NavIcon } from './NavIcon';
 import type { Standing } from '../api/types';
 
@@ -30,14 +30,13 @@ export function Card({ children, class: cls = '' }: { children: ComponentChildre
 // Подпись над блоком: мелкая, приглушённая
 export const Label = ({ children }: { children: ComponentChildren }) => <div class="label">{children}</div>;
 
-export function MetricTile({ icon, label, value, accent }: {
+export function MetricTile({ icon, label, value }: {
     icon: string;
     label: string;
     value: number | string;
-    accent?: Accent;
 }) {
     return (
-        <div class="metric-tile accent-tile" data-accent={accent}>
+        <div class="metric-tile">
             <NavIcon name={icon} />
             <strong>{value}</strong>
             <span>{label}</span>
@@ -47,9 +46,9 @@ export function MetricTile({ icon, label, value, accent }: {
 
 export function Pill({ standing }: { standing: Standing }) {
     return standing === 'ontrack' ? (
-        <span class="pill accent-tile" data-accent="blue">В плане</span>
+        <span class="pill" data-accent="blue">В плане</span>
     ) : (
-        <span class="pill accent-tile" data-accent="red">Отстаёт</span>
+        <span class="pill" data-accent="red">Отстаёт</span>
     );
 }
 

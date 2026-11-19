@@ -12,14 +12,6 @@ export function plural(n: number, [one, few, many]: [string, string, string]): s
 
 export const sgn = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 
-export type Accent = 'red' | 'yellow' | 'green' | 'blue';
-
-export function metricAccent(value: number | null, goal = 100): Accent | undefined {
-    if (value === null || goal <= 0) return undefined;
-    const pct = value / goal * 100;
-    return pct >= 100 ? 'blue' : pct >= 75 ? 'green' : pct >= 40 ? 'yellow' : 'red';
-}
-
 export type Tone = 'good' | 'warn' | 'bad';
 
 // Цвет шкалы по проценту выполнения
