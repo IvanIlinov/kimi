@@ -35,7 +35,7 @@ export interface Profile {
 }
 
 export interface Week {
-    leader: { name: string; pct: number; tasks: number; topics: number } | null;
+    leader: { name: string; pct: number; tasks: number; topics: number; goalPct?: number } | null;
     rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
 }
 
@@ -44,6 +44,8 @@ export type ArenaMode = 'global' | 'month';
 export interface Arena {
     mode: ArenaMode;
     monthTaskGoal: number;
+    monthTopicGoal?: number;
+    monthExamGoal?: number;
     leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
     rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
 }
@@ -93,7 +95,7 @@ export interface Lesson {
 export interface AdminHome {
     previewEnabled: boolean;
     weekStart: number;
-    month: { start: number; earnedKopecks: number };
+    month: { start: number; earnedKopecks: number; plannedKopecks?: number };
     attendance: { visits: number; visitors: number; participants: number };
     lessons: Lesson[];
 }

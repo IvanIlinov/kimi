@@ -64,7 +64,7 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
 }
 
 export interface WeekDto {
-    leader: { name: string; pct: number; tasks: number; topics: number } | null;
+    leader: { name: string; pct: number; tasks: number; topics: number; goalPct: number } | null;
     rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
 }
 
@@ -82,7 +82,13 @@ export function weekDto(ranked: Ranked[], viewerTgId: number, week: Map<number, 
     }));
     return {
         leader: first
-            ? { name: first.person.name, pct: Math.round(weekPct(first.stat)), tasks: first.stat.tasks, topics: first.stat.topics }
+            ? {
+                  name: first.person.name,
+                  pct: Math.round(weekPct(first.stat)),
+                  tasks: first.stat.tasks,
+                  topics: first.stat.topics,
+                  goalPct: (first.stat.tasks / WEEK_GOAL) * 100,
+              }
             : null,
         rows,
     };
@@ -93,6 +99,8 @@ export type ArenaMode = 'global' | 'month';
 export interface ArenaDto {
     mode: ArenaMode;
     monthTaskGoal: number;
+    monthTopicGoal: number;
+    monthExamGoal: number;
     // Первое место в выбранном режиме
     leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
     rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
@@ -106,9 +114,12 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
     const results = first && (mode === 'month' ? monthlyResults(first.person) : {
         tasks: first.person.tasksTotal, topics: first.person.reinforced.length, exam: first.person.exam,
     });
+    const goals = monthGoal(now);
     return {
         mode,
-        monthTaskGoal: monthGoal(now).tasks,
+        monthTaskGoal: goals.tasks,
+        monthTopicGoal: goals.topics,
+        monthExamGoal: goals.exam,
         leader: first && results
             ? {
                   name: first.person.name,

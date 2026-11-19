@@ -11,17 +11,16 @@
     --text: #f0f1f4;
     --muted: #969ba7;
 
+    /* Основные акценты шкал, плиток и состояний интерфейса. */
     --good: #35df91;
     --warn: #ffd04a;
     --bad: #ff6575;
     --blue: #42a5ff;
-    --violet: #ad98ff;
 
-    --good-soft: rgba(53, 223, 145, 0.12);
-    --warn-soft: rgba(255, 208, 74, 0.12);
-    --bad-soft: rgba(255, 101, 117, 0.12);
-    --blue-soft: rgba(66, 165, 255, 0.14);
-    --violet-soft: rgba(173, 152, 255, 0.12);
+    --good-soft: color-mix(in srgb, var(--good) 12%, transparent);
+    --warn-soft: color-mix(in srgb, var(--warn) 12%, transparent);
+    --bad-soft: color-mix(in srgb, var(--bad) 12%, transparent);
+    --blue-soft: color-mix(in srgb, var(--blue) 14%, transparent);
 
     --radius-lg: 21px;
     --radius-md: 15px;

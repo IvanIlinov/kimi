@@ -112,16 +112,19 @@ export function registerAdmin(router: Router): void {
         const monthStart = Date.UTC(year, month, 1) - moscowOffset;
         const nextMonth = Date.UTC(year, month + 1, 1) - moscowOffset;
         const earnings = db.prepare(`
-            SELECT COALESCE(SUM(price_kopecks), 0) AS earnedKopecks
+            SELECT COALESCE(SUM(CASE WHEN status = 'paid' THEN price_kopecks ELSE 0 END), 0) AS earnedKopecks,
+                   COALESCE(SUM(price_kopecks), 0) AS plannedKopecks
             FROM lessons
-            WHERE status = 'paid'
-              AND week_start >= ? AND week_start < ?
+            WHERE week_start >= ? AND week_start < ?
               AND week_start + weekday * 86400000 >= ?
               AND week_start + weekday * 86400000 < ?
-        `).get(weekStartMs(monthStart), nextMonth, monthStart, nextMonth) as { earnedKopecks: number };
+        `).get(weekStartMs(monthStart), nextMonth, monthStart, nextMonth) as {
+            earnedKopecks: number;
+            plannedKopecks: number;
+        };
         return {
             weekStart, attendance, lessons,
-            month: { start: monthStart, earnedKopecks: earnings.earnedKopecks },
+            month: { start: monthStart, ...earnings },
             previewEnabled: STAGING_PREVIEW_ENABLED,
         };
     });

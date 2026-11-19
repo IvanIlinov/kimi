@@ -3,10 +3,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
 import { arenaDto, membersDto, profileDto, selfDto, weekDto } from '../../src/api/dto.ts';
-import { rank } from '../../src/logic.ts';
+import { monthGoal, rank } from '../../src/logic.ts';
 
+const now = new Date();
+const goals = monthGoal(now);
 const ranked = rank([
-    { name: 'Лера', tasksTotal: 314, tasksWeek: 17, exam: null, topics: 14 },
+    { name: 'Лера', tasksTotal: Math.round(goals.tasks * 0.6), tasksWeek: 17, exam: Math.round(goals.exam * 0.3), topics: goals.topics },
     { name: 'Саша', tasksTotal: 341, tasksWeek: 22, exam: 70, topics: 16 },
     { name: 'Миша', tasksTotal: 276, tasksWeek: 27, exam: 59, topics: 13 },
 ].map(({ topics, ...person }, i) => ({
@@ -14,13 +16,14 @@ const ranked = rank([
     id: i + 1,
     tgId: i + 1,
     reinforced: Array.from({ length: topics }, (_, n) => n + 1),
-    done: [17],
-    learning: [18],
+    done: topics < 27 ? [topics + 1] : [],
+    learning: topics < 26 ? [topics + 2] : [],
     comment: '',
 })));
 const adminDemo = process.argv.includes('--admin');
+const guestDemo = process.argv.includes('--guest');
+const role = adminDemo ? 'admin' : guestDemo ? 'guest' : 'student';
 const firstStudent = ranked.find(({ person }) => person.id === 1);
-const now = new Date();
 const week = new Map(ranked.map(({ person }) => [
     person.id, { userId: person.id, tasks: person.tasksWeek, topics: 2, active: true },
 ]));
@@ -46,7 +49,7 @@ function demoRoutes(role, student) {
     return routes;
 }
 
-const routes = { default: adminDemo ? demoRoutes('admin') : demoRoutes('student', firstStudent) };
+const routes = { default: demoRoutes(role, role === 'student' ? firstStudent : undefined) };
 if (adminDemo) {
     routes.default['/api/admin/members'] = ranked.map((entry) => {
         const { id, tgId, name, exam, tasksTotal } = entry.person;
@@ -63,7 +66,7 @@ if (adminDemo) {
                 { id: 3, name: 'Миша', pct: 1, tasks: 0, topics: 1, examBefore: 35, examAfter: 35 },
             ] },
             { day: today - 2, rows: [
-                { id: 1, name: 'Лера', pct: 0, tasks: 5, topics: 0, examBefore: null, examAfter: null },
+                { id: 1, name: 'Лера', pct: 0, tasks: 5, topics: 0, examBefore: firstStudent.person.exam, examAfter: firstStudent.person.exam },
                 { id: 2, name: 'Саша', pct: 0, tasks: 0, topics: 0, examBefore: 66, examAfter: 70 },
             ] },
         ],
@@ -235,11 +238,15 @@ window.fetch = async (path, options) => {
     }
     if (read && home && path === '/api/admin/home') {
         const { start, next } = home.month;
-        const earnedKopecks = home.lessons.reduce((total, lesson) => {
+        let earnedKopecks = 0;
+        let plannedKopecks = 0;
+        for (const lesson of home.lessons) {
             const date = home.weekStart + lesson.weekday * 86_400_000;
-            return lesson.status === 'paid' && date >= start && date < next ? total + lesson.priceKopecks : total;
-        }, 0);
-        return Response.json({ ...home, month: { start, earnedKopecks } });
+            if (date < start || date >= next) continue;
+            plannedKopecks += lesson.priceKopecks;
+            if (lesson.status === 'paid') earnedKopecks += lesson.priceKopecks;
+        }
+        return Response.json({ ...home, month: { start, earnedKopecks, plannedKopecks } });
     }
     const found = read && current && Object.hasOwn(current, endpoint);
     return new Response(JSON.stringify(found ? current[endpoint] : {
@@ -259,6 +266,6 @@ if (!html.includes('window.fetch =') || !html.includes('<script type="module">')
 
 const dir = fileURLToPath(new URL('../demos/', import.meta.url));
 await mkdir(dir, { recursive: true });
-const preview = join(dir, adminDemo ? 'admin-home.html' : 'student-home.html');
+const preview = join(dir, `${role}-home.html`);
 await writeFile(preview, html);
 console.log(preview);

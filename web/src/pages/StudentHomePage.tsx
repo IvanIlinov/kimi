@@ -3,12 +3,13 @@ import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
 import { Card, Empty, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
-import { cap, plural } from '../lib/format';
+import { cap, metricAccent, plural } from '../lib/format';
 
-export function StudentHomePage() {
-    const { data: profile, error } = useApi<Profile>('/api/profile/me');
-    if (error) return <Screen hideTitle title="Главная"><Empty text={error} /></Screen>;
-    if (!profile) return <Screen hideTitle title="Главная"><Loading /></Screen>;
+export function StudentHomePage({ id = 'me' }: { id?: number | 'me' }) {
+    const { data: profile, error } = useApi<Profile>(`/api/profile/${id}`);
+    const title = id === 'me' ? 'Главная' : 'Профиль';
+    if (error) return <Screen hideTitle title={title}><Empty text={error} /></Screen>;
+    if (!profile) return <Screen hideTitle title={title}><Loading /></Screen>;
 
     const { name, place, pct, monthPct, daysLeft, month, week, totals } = profile;
     const topicsLeft = Math.max(0, month.topics.goal - month.topics.value);
@@ -17,7 +18,7 @@ export function StudentHomePage() {
     const examLeft = Math.max(0, month.exam.goal - exam);
 
     return (
-        <Screen hideTitle title="Главная" className="student-home">
+        <Screen hideTitle title={title} className="student-home">
             <Card class="student-summary">
                 <div class="between">
                     <strong>{cap(name)}</strong>
@@ -31,9 +32,9 @@ export function StudentHomePage() {
                     <span>Общий прогресс</span>
                 </div>
                 <div class="metric-tiles">
-                    <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
-                    <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
-                    <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
+                    <MetricTile accent={metricAccent(totals.exam, month.exam.goal)} icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
+                    <MetricTile accent={metricAccent(totals.tasks, month.tasks.goal)} icon="calendar-days" label="Решено задач" value={totals.tasks} />
+                    <MetricTile accent={metricAccent(totals.topics, month.topics.goal)} icon="target" label="Изучено заданий" value={totals.topics} />
                 </div>
             </Card>
             <SwipeCard
@@ -88,8 +89,11 @@ function Goal({ icon, label, value, max, note }: {
                 </div>
             ) : (
                 <>
-                    <div class="between"><span>{label}</span><strong>{shown}</strong></div>
-                    <SegmentBar value={value} max={max} />
+                    <span>{label}</span>
+                    <div class="student-goal-progress">
+                        <SegmentBar value={value} max={max} />
+                        <strong>{shown}</strong>
+                    </div>
                 </>
             )}
             {note && <small>{note}</small>}

@@ -2,7 +2,8 @@ import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import type { AdminHome, Arena, Lesson, LessonStatus } from '../api/types';
 import { useApi } from '../api/useApi';
-import { cap } from '../lib/format';
+import { cap, metricAccent } from '../lib/format';
+import type { Accent } from '../lib/format';
 import { SwipeCard } from '../components/SwipeCard';
 import { Card, Empty, Label, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 
@@ -13,6 +14,8 @@ const STATUS_LABELS: Record<LessonStatus, string> = {
     paid: 'Оплачено',
 };
 
+const STATUS_ACCENTS = { planned: 'red', held: 'green', paid: 'blue' } as const;
+
 const rubles = new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
@@ -21,6 +24,13 @@ const rubles = new Intl.NumberFormat('ru-RU', {
 });
 
 const monthName = new Intl.DateTimeFormat('ru-RU', { month: 'long', timeZone: 'Europe/Moscow' });
+
+function incomeAccent(earned: number, planned: number | undefined): Accent | undefined {
+    if (planned === undefined) return undefined;
+    if (earned === 0) return 'red';
+    if (earned >= planned) return 'blue';
+    return earned / planned >= 0.75 ? 'green' : 'yellow';
+}
 
 export function AdminHomePage({ onPreview, onGuestPreview }: {
     onPreview: (id: number) => void;
@@ -67,6 +77,7 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
 
     const held = data?.lessons.filter((item) => item.status !== 'planned').length ?? 0;
     const earned = data?.lessons.reduce((sum, item) => sum + (item.status === 'paid' ? item.priceKopecks : 0), 0) ?? 0;
+    const planned = data?.lessons.reduce((sum, item) => sum + item.priceKopecks, 0) ?? 0;
 
     return (
         <Screen hideTitle title="Главная" className="layout-admin-home">
@@ -89,22 +100,26 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                             <>
                                 <h2 class="admin-lesson-month">{cap(monthName.format(data.month.start))}</h2>
                                 <div class="metric-tiles admin-lesson-metrics">
-                                    <MetricTile icon="calendar-days" label="Всего занятий" value={data.lessons.length} />
-                                    <MetricTile icon="clipboard-list" label="Проведено" value={held} />
-                                    <MetricTile icon="wallet" label="За неделю" value={rubles.format(earned / 100)} />
-                                    <MetricTile icon="wallet" label="За месяц" value={rubles.format(data.month.earnedKopecks / 100)} />
+                                    <MetricTile icon="calendar-days" label="Всего занятий" value={data.lessons.length} accent="blue" />
+                                    <MetricTile icon="clipboard-list" label="Проведено" value={held}
+                                        accent={metricAccent(held, data.lessons.length)} />
+                                    <MetricTile icon="wallet" label="За неделю" value={rubles.format(earned / 100)}
+                                        accent={incomeAccent(earned, planned)} />
+                                    <MetricTile icon="wallet" label="За месяц" value={rubles.format(data.month.earnedKopecks / 100)}
+                                        accent={incomeAccent(data.month.earnedKopecks, data.month.plannedKopecks)} />
                                 </div>
                             </>
                         }
                         second={
                             <div class="admin-attendance">
                                 <Label>Посещаемость за неделю</Label>
-                                <div class="between"><span>Запусков бота</span><b>{data.attendance.visits}</b></div>
+                                <div class="between"><span>Запусков бота</span><b class="accent-tile">{data.attendance.visits}</b></div>
                                 <SegmentBar value={data.attendance.visits} max={data.attendance.participants} tone="good" />
                                 <div class="between"><span>Ученики, которые заходили</span>
-                                    <b>{data.attendance.visitors} / {data.attendance.participants}</b>
+                                    <b class="accent-tile" data-accent={metricAccent(data.attendance.visitors, data.attendance.participants)}>
+                                        {data.attendance.visitors} / {data.attendance.participants}</b>
                                 </div>
-                                <SegmentBar value={data.attendance.visitors} max={data.attendance.participants} tone="good" />
+                                <SegmentBar value={data.attendance.visitors} max={data.attendance.participants} />
                             </div>
                         }
                     />
@@ -124,7 +139,7 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                                             <h3>{day}</h3>
                                             {lessons.length === 0 && <span class="muted admin-calendar-empty" aria-label="Нет занятий">—</span>}
                                             {lessons.map((item) => (
-                                                <button type="button" class={`admin-lesson ${item.status}`} key={item.id}
+                                                <button type="button" class="admin-lesson accent-tile" data-accent={STATUS_ACCENTS[item.status]} key={item.id}
                                                     disabled={cycling}
                                                     onClick={() => editing ? setLesson(item) : void cycleLesson(item.id)}
                                                     aria-label={`${editing ? 'Изменить занятие' : 'Сменить статус'}: ${cap(item.name)}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>

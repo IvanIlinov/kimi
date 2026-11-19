@@ -26,7 +26,7 @@ const STUDY_ORDER = [
     24, 26,
 ];
 
-export function TopicsPage({ readOnly = false, correction = false }: { readOnly?: boolean; correction?: boolean }) {
+export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     const { data, error, setData } = useApi<SelfData>('/api/self');
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState('');
@@ -56,7 +56,7 @@ export function TopicsPage({ readOnly = false, correction = false }: { readOnly?
     return (
         <Screen hideTitle title="Задания" className="layout-topics">
             <Card>
-                <div class="between"><Label>Задачи</Label>{correction && <b>Всего: {data.tasksTotal}</b>}</div>
+                <Label>Задачи</Label>
                 <div class="amounts">
                     {AMOUNTS.map((n) => (
                         <button

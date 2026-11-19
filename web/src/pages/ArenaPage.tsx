@@ -4,7 +4,8 @@ import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { Arena, ArenaMode } from '../api/types';
 import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
-import { cap } from '../lib/format';
+import type { Accent } from '../lib/format';
+import { cap, metricAccent } from '../lib/format';
 import { NavIcon } from '../components/NavIcon';
 import { WeekResults } from './WeekPage';
 
@@ -148,11 +149,11 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                     {l && <>
                         <strong class="leader-name">{cap(l.name)}</strong>
                         <div class="kpis">
-                            <Kpi label="Прогресс" value={`${l.pct}%`} />
-                            <Kpi label="Успеваемость" value={`${l.monthPct}%`} />
-                            <Kpi label="Пробник" value={l.exam ?? 0} />
-                            <Kpi label="Задания" value={l.topics} />
-                            <Kpi label="Задачи" value={monthTaskGoal ? `${l.tasks}/${monthTaskGoal}` : l.tasks} />
+                            <Kpi accent={metricAccent(l.pct)} label="Прогресс" value={`${l.pct}%`} />
+                            <Kpi accent={metricAccent(l.monthPct)} label="Успеваемость" value={`${l.monthPct}%`} />
+                            <Kpi accent={metricAccent(l.exam, data.monthExamGoal ?? 0)} label="Пробник" value={l.exam ?? 0} />
+                            <Kpi accent={metricAccent(l.topics, data.monthTopicGoal ?? 0)} label="Задания" value={l.topics} />
+                            <Kpi accent={metricAccent(l.tasks, data.monthTaskGoal)} label="Задачи" value={monthTaskGoal ? `${l.tasks}/${monthTaskGoal}` : l.tasks} />
                         </div>
                     </>}
                 </Card>
@@ -182,9 +183,9 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
     );
 }
 
-function Kpi({ label, value }: { label: string; value: string | number }) {
+function Kpi({ label, value, accent }: { label: string; value: string | number; accent?: Accent }) {
     return (
-        <div class="kpi">
+        <div class="kpi accent-tile" data-accent={accent}>
             <b>{value}</b>
             <span>{label}</span>
         </div>

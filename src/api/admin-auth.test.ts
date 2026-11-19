@@ -201,7 +201,7 @@ test('главная считает посещения текущей недел
     function home() {
         return call('GET', '/api/admin/home') as {
             weekStart: number;
-            month: { start: number; earnedKopecks: number };
+            month: { start: number; earnedKopecks: number; plannedKopecks: number };
             attendance: { visits: number; visitors: number; participants: number };
             lessons: { id: number; name: string; status: string; priceKopecks: number }[];
         };
@@ -267,6 +267,7 @@ test('главная считает посещения текущей недел
     insertOn(nextMonth - dayMs, 'held', 300000);
     insertOn(nextMonth, 'paid', 500000);
     assert.equal(home().month.earnedKopecks, 360000);
+    assert.equal(home().month.plannedKopecks, 660000);
 });
 
 test('админские правки статуса учитываются в месячной цели по заданиям', async () => {

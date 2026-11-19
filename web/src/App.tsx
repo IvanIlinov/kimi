@@ -8,7 +8,6 @@ import { Empty, Loading, Screen } from './components/ui';
 import { ArenaPage } from './pages/ArenaPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AdminHomePage } from './pages/AdminHomePage';
-import { ProfilePage } from './pages/ProfilePage';
 import { TopicsPage } from './pages/TopicsPage';
 import { StudentHomePage } from './pages/StudentHomePage';
 import { insideTelegram, useBackButton } from './lib/telegram';
@@ -92,11 +91,11 @@ export function App() {
     };
 
     let page;
-    if (openId !== null) page = <ProfilePage id={openId} />;
+    if (openId !== null) page = <StudentHomePage key={openId} id={openId} />;
     else if (active === 'week') page = <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'adminHistory') page = <HistoryPage />;
     else if (active === 'home') page = <StudentHomePage />;
-    else if (active === 'topics') page = <TopicsPage correction={editingStudent} readOnly={preview !== null && !editingStudent} />;
+    else if (active === 'topics') page = <TopicsPage readOnly={preview !== null && !editingStudent} />;
     else {
         const admin = tabs === ADMIN_TABS;
         page = <ArenaPage onOpen={admin ? (id) => startPreview(id, true) : open}

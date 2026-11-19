@@ -52,16 +52,16 @@ export function HistoryPage() {
                             const examBefore = row.examBefore ?? 0;
                             const exam = row.examAfter ?? 0;
                             const change = exam - examBefore;
-                            const examTone = change > 0 ? ' improved' : change < 0 ? ' declined' : '';
+                            const examAccent = change > 0 ? 'green' : change < 0 ? 'red' : undefined;
                             const examStatus = change > 0 ? 'балл вырос' : change < 0 ? 'балл снизился' : 'балл без изменений';
                             return (
                                 <div class="history-row between" key={row.id}>
                                     <strong>{cap(row.name)}</strong>
                                     <span class="stats">
-                                        <b aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
-                                        <b aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
-                                        <b aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
-                                        <b class={`history-exam${examTone}`} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
+                                        <b class="accent-tile" aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
+                                        <b class="accent-tile" aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
+                                        <b class="accent-tile" aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
+                                        <b class="accent-tile" data-accent={examAccent} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
                                     </span>
                                 </div>
                             );
