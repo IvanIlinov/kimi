@@ -9,16 +9,17 @@ interface ApiResponse<T> {
 export async function callApi<T = unknown>(
     token: string,
     method: string,
-    params: Record<string, unknown> = {},
+    params: Record<string, unknown> | FormData = {},
 ): Promise<T> {
     const t0 = Date.now();
     // getUpdates держит соединение до 30 с (long polling), остальные вызовы должны отвечать быстро
     const limit = method === 'getUpdates' ? 45_000 : 15_000;
 
+    const multipart = params instanceof FormData;
     const response = await fetch(`${API_BASE}/bot${token}/${method}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        headers: multipart ? undefined : { 'Content-Type': 'application/json' },
+        body: multipart ? params : JSON.stringify(params),
         signal: AbortSignal.timeout(limit),
     });
 

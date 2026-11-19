@@ -1,3 +1,4 @@
+import { openAsBlob } from 'node:fs';
 import { ADMIN_IDS, BOT_TOKEN, MINIAPP_URL } from './config.ts';
 import {
     answerCallbackQuery,
@@ -458,13 +459,20 @@ async function showPanel(chatId: number, html: Reply): Promise<void> {
 
 async function showMiniApp(chatId: number): Promise<void> {
     const previous = panel.get(chatId);
-    const sent = await sendMessage(BOT_TOKEN, chatId,
-        'Добро пожаловать в Арену! В приложении можно записывать результаты, следить за прогрессом и смотреть рейтинг.',
-        {
-            reply_markup: {
-                inline_keyboard: [[{ text: 'Открыть Арену', web_app: { url: MINIAPP_URL } }]],
-            },
-        });
+    const animation = await openAsBlob(new URL('../assets/sunny-study-breeze.gif', import.meta.url), {
+        type: 'image/gif',
+    });
+    const form = new FormData();
+    form.set('chat_id', String(chatId));
+    form.set('animation', animation, 'sunny-study-breeze.gif');
+    form.set('caption',
+        'Добро пожаловать на Арену!\n\n'
+        + '27 заданий | 900 задач | 100 баллов | 1 год\n\n'
+        + 'Отслеживай прогресс, обгоняй участников, покажи свой потенциал!');
+    form.set('reply_markup', JSON.stringify({
+        inline_keyboard: [[{ text: 'Открыть Арену', web_app: { url: MINIAPP_URL } }]],
+    }));
+    const sent = await callApi<{ message_id: number }>(BOT_TOKEN, 'sendAnimation', form);
     panel.set(chatId, sent.message_id);
     if (previous) await deleteQuietly(chatId, previous);
 }
