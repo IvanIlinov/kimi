@@ -45,7 +45,7 @@ export function StudentHomePage() {
                         {daysLeft != null && (
                             <div class="student-countdown">
                                 <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
-                                <small>до конца учебного плана</small>
+                                <small>до начала экзаменов</small>
                             </div>
                         )}
                     </>
