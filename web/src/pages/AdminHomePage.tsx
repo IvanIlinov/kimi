@@ -139,7 +139,7 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                                             <h3>{day}</h3>
                                             {lessons.length === 0 && <span class="muted admin-calendar-empty" aria-label="Нет занятий">—</span>}
                                             {lessons.map((item) => (
-                                                <button type="button" class="admin-lesson accent-tile" data-accent={STATUS_ACCENTS[item.status]} key={item.id}
+                                                <button type="button" class="admin-lesson" data-accent={STATUS_ACCENTS[item.status]} key={item.id}
                                                     disabled={cycling}
                                                     onClick={() => editing ? setLesson(item) : void cycleLesson(item.id)}
                                                     aria-label={`${editing ? 'Изменить занятие' : 'Сменить статус'}: ${cap(item.name)}, ${day} ${item.time}, ${STATUS_LABELS[item.status]}`}>

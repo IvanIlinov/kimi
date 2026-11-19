@@ -179,7 +179,6 @@
     gap: 3px;
     min-width: 0;
     padding: 6px 2px;
-    border: 1px solid var(--border);
     border-radius: 9px;
     text-align: center;
 }
@@ -278,7 +277,6 @@
     gap: 5px;
     min-height: 59px;
     padding: 8px 0;
-    border: 1px solid var(--border);
     border-radius: 14px;
     background: var(--surface-strong);
     color: var(--tile-accent, var(--muted));
@@ -554,7 +552,6 @@
 .week-leader-stats { gap: 5px; }
 .week-leader-stats b {
     padding: 4px 7px;
-    border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 13px;
 }
@@ -617,7 +614,6 @@
 .history-row .stats b,
 .admin-attendance b {
     padding: 3px 4px;
-    border: 1px solid var(--border);
     border-radius: 6px;
     text-align: center;
 }
@@ -721,7 +717,6 @@
     gap: 4px;
     padding: 8px 3px;
     text-align: center;
-    border: 1px solid var(--border);
     border-radius: 12px;
 }
 .metric-tile svg { width: 16px; height: 16px; }
@@ -777,7 +772,7 @@
     justify-self: center;
     width: min(100%, 15rem);
     padding: 8px 12px;
-    border: 1px solid var(--border);
+    background: var(--surface-strong);
     border-radius: 12px;
     justify-items: center;
     line-height: 1.15;
@@ -801,7 +796,6 @@
 .layout-topics .cell {
     min-height: clamp(29px, 7.1dvh, 45px);
     justify-content: center;
-    --tile-glow-strength: 15%;
 }
 .layout-topics .cell b { font-size: 14px; }
 .layout-topics .topic-order-toggle {
@@ -911,7 +905,7 @@
     display: grid;
     gap: 2px;
     min-width: 0;
-    border: 1px solid var(--border);
+    border-inline-start: 2px solid var(--tile-accent);
     border-radius: 6px;
     background: var(--surface-strong);
     padding: 4px 1px 4px 2px;
@@ -968,27 +962,13 @@
 .arena-icon.arena-add { width: 36px; height: 36px; min-height: 0; padding: 0; }
 .arena-add svg { width: 21px; height: 21px; }
 
-.cell:is(.done, .learning, .reinforced),
-.accent-tile[data-accent] {
-    border-color: color-mix(in srgb, var(--tile-accent) 34%, var(--border));
-    box-shadow:
-        inset 0 var(--tile-edge-offset, -2px) var(--tile-accent),
-        0 0 3px color-mix(in srgb, var(--tile-accent) var(--tile-glow-strength, 22%), transparent);
+.cell:is(.done, .learning, .reinforced) {
+    background: color-mix(in srgb, var(--tile-accent) 18%, var(--surface));
 }
 .accent-tile {
     background: var(--surface-strong);
     color: var(--tile-accent, var(--text));
 }
-.layout-ranking .leader .accent-tile[data-accent] {
-    --tile-glow-strength: 15%;
-}
-.layout-ranking .pill[data-accent] {
-    --tile-edge-offset: -1.5px;
-    --tile-glow-strength: 10%;
-}
-.admin-lesson-metrics .metric-tile:not([data-accent]) {
-    border-color: color-mix(in srgb, var(--muted) 24%, var(--border));
-    box-shadow:
-        inset 0 -2px var(--muted),
-        0 0 6px color-mix(in srgb, var(--muted) 24%, transparent);
+.pill.accent-tile[data-accent] {
+    background: color-mix(in srgb, var(--tile-accent) 12%, transparent);
 }
