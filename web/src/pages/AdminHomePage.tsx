@@ -70,14 +70,16 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
 
     return (
         <Screen hideTitle title="Главная" className="layout-admin-home">
-            <Card class="admin-preview-actions">
-                <Label>Предпросмотр</Label>
-                <div class="chips">
-                    <button class="chip" disabled={openingPreview || !data?.previewEnabled} onClick={onGuestPreview}>Как гость</button>
-                    <button class="chip" disabled={openingPreview || !data?.previewEnabled} onClick={previewLeader}>Как ученик</button>
-                </div>
-                {previewError && <p class="warn" role="alert">{previewError}</p>}
-            </Card>
+            {data?.previewEnabled && (
+                <Card class="admin-preview-actions">
+                    <Label>Предпросмотр</Label>
+                    <div class="chips">
+                        <button class="chip" disabled={openingPreview} onClick={onGuestPreview}>Как гость</button>
+                        <button class="chip" disabled={openingPreview} onClick={previewLeader}>Как ученик</button>
+                    </div>
+                    {previewError && <p class="warn" role="alert">{previewError}</p>}
+                </Card>
+            )}
             {error && <Empty text={error} />}
             {!data && !error && <Loading />}
             {data && (
