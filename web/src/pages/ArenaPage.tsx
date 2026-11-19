@@ -149,7 +149,7 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                         <strong class="leader-name">{cap(l.name)}</strong>
                         <div class="kpis">
                             <Kpi label="Прогресс" value={`${l.pct}%`} />
-                            <Kpi label="Успеваемость" value={`${l.monthPct}%`} />
+                            <Kpi label="Программа" value={`${l.monthPct}%`} />
                             <Kpi label="Пробник" value={l.exam ?? 0} />
                             <Kpi label="Задания" value={l.topics} />
                             <Kpi label="Задачи" value={monthTaskGoal ? `${l.tasks}/${monthTaskGoal}` : l.tasks} />
