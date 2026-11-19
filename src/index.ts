@@ -464,7 +464,7 @@ async function showMiniApp(chatId: number): Promise<void> {
     });
     const form = new FormData();
     form.set('chat_id', String(chatId));
-    form.set('document', image, 'arena-welcome.png');
+    form.set('photo', image, 'arena-welcome.png');
     form.set('caption',
         'Добро пожаловать на Арену!\n\n'
         + '27 заданий | 900 задач | 100 баллов | 1 год\n\n'
@@ -472,7 +472,7 @@ async function showMiniApp(chatId: number): Promise<void> {
     form.set('reply_markup', JSON.stringify({
         inline_keyboard: [[{ text: 'Открыть Арену', web_app: { url: MINIAPP_URL } }]],
     }));
-    const sent = await callApi<{ message_id: number }>(BOT_TOKEN, 'sendDocument', form);
+    const sent = await callApi<{ message_id: number }>(BOT_TOKEN, 'sendPhoto', form);
     panel.set(chatId, sent.message_id);
     if (previous) await deleteQuietly(chatId, previous);
 }
