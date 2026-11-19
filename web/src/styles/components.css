@@ -168,7 +168,7 @@
 
 .kpis {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(max-content, 1fr) repeat(3, minmax(0, 1fr));
     gap: 9px;
 }
 
