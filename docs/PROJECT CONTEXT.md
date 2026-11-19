@@ -78,60 +78,95 @@
 ssh arena@82.148.234.108
 ```
 
-Рабочие директории на VPS:
+| Окружение | Ветка | Рабочий каталог | Сервис | Файл окружения | Порт API |
+| --- | --- | --- | --- | --- | --- |
+| Staging | `development` | `/home/arena/staging` | `arena-staging.service` | `.env.staging` | `3001` |
+| Production | `main` | `/home/arena/bot` | `arena-bot.service` | `.env` | `3002` |
 
-| Окружение  | Путь                  |
-| ---------- | --------------------- |
-| Staging    | `/home/arena/staging` |
-| Production | `/home/arena/bot`     |
+| Окружение | Mini App | HTTPS API |
+| --- | --- | --- |
+| Staging | <https://kimi-five-rho.vercel.app/> | <https://staging-82-148-234-108.sslip.io> |
+| Production | <https://kimi-production.vercel.app/> | <https://kimi-82-148-234-108.sslip.io> |
+
+Caddy направляет запросы к HTTPS API на соответствующие локальные порты. `deploy/Caddyfile` хранит старый пример для одного сервиса на порту 3000. Действующие адреса и порты указаны в таблицах выше.
 
 ### Выкладка в Staging
 
-После разрешения на выкладку запусти локальные проверки из [Quickstart](PROJECT%20QUICKSTART.md#локальный-запуск-и-проверки) и закоммить изменения в `development`. Отправь ветку на GitHub и запомни хеш коммита:
+1. Запусти [локальные проверки](PROJECT%20QUICKSTART.md#локальный-запуск-и-проверки), закоммить согласованные изменения в `development` и отправь ветку на GitHub. Запомни полный хеш проверяемого коммита.
 
-```bash
-git push origin development
-git rev-parse HEAD
-ssh arena@82.148.234.108
-```
+   ```bash
+   git push origin development
+   git rev-parse HEAD
+   ```
 
-На VPS проверь рабочий каталог, ветку и состояние репозитория. Обновляй через fast-forward:
+2. Для изменений backend обнови рабочий каталог Staging и перезапусти тестовый сервис по [общей процедуре](#обновление-backend-на-vps). Предпросмотр гостя и ученика включается строкой `STAGING_PREVIEW_ENABLED=1` в `.env.staging`. Проверить настройку из каталога сервиса можно без вывода файла.
 
-```bash
-cd /home/arena/staging &&
-test "$(git branch --show-current)" = development &&
-test -z "$(git status --porcelain)" &&
-test "$(systemctl show arena-staging.service -p WorkingDirectory --value)" = /home/arena/staging &&
-git pull --ff-only origin development &&
-git log -1 --oneline
-```
+   ```bash
+   node --env-file=.env.staging -e 'process.exit(process.env.STAGING_PREVIEW_ENABLED === "1" ? 0 : 1)'
+   ```
 
-Сверь хеш с отправленным коммитом. Тестовый сервис загружает `.env.staging` из этого каталога. Для предпросмотра Mini App в этом файле нужна строка `STAGING_PREVIEW_ENABLED=1`. Если она уже есть, повторно добавлять её не нужно. Проверить значение без вывода содержимого файла можно так:
+3. [Проверь API и Mini App](#проверка-выкладки) на тестовых адресах. Через тестового бота проверь открытие Mini App, нужные операции сохранения и предпросмотр админки.
 
-```bash
-node --env-file=.env.staging -e 'process.exit(process.env.STAGING_PREVIEW_ENABLED === "1" ? 0 : 1)'
-```
+### Выкладка в Production
 
-Перезапусти `arena-staging.service` командой `sudo systemctl restart arena-staging.service`, если штатный перезапуск доступен. При подключении по SSH без пароля `sudo` на этом VPS может потребовать интерактивную аутентификацию. У тестового сервиса есть `Restart=always`, поэтому проверенный способ в таком случае — послать `SIGTERM` его собственному процессу. Команды ниже сначала проверяют владельца, рабочий каталог, политику рестарта и принадлежность PID к тестовому сервису:
+Релиз начинается после явного разрешения на Production и проверки конкретного коммита на Staging.
+
+1. Проверь ветку `main`, чистоту рабочего каталога `/home/arena/bot` и состояние `arena-bot.service`. Для релиза с изменениями SQLite сначала сделай [резервную копию и пробную миграцию](#резервная-копия-sqlite).
+2. С локального компьютера обнови `main` до согласованного коммита обычным fast-forward. В примере `release` — полный хеш проверенного коммита из `development`.
+
+   ```bash
+   release='<полный хеш проверенного коммита>'
+   git fetch origin main &&
+   git merge-base --is-ancestor origin/main "$release" &&
+   git push origin "$release:refs/heads/main"
+   ```
+
+3. Если релиз меняет backend, обнови Production по [общей процедуре](#обновление-backend-на-vps). Для правки только фронтенда или документации достаточно публикации из `main`. Для таких правок checkout и запущенный backend на VPS могут оставаться на предыдущем коммите.
+4. [Проверь API и Mini App](#проверка-выкладки) на рабочих адресах. В Production оставь `STAGING_PREVIEW_ENABLED` выключенным. Блок «Предпросмотр» скрыт, запросы предпросмотра отклоняются, редактирование результатов ученика через рейтинг доступно администратору.
+
+### Обновление backend на VPS
+
+Подключись к VPS, подставь ожидаемый полный хеш релиза и выбери окружение в `target`. Команды проверяют каталог, ветку и коммит перед обновлением. Сервисы работают под пользователем `arena` с `Restart=always`. Когда `sudo` требует пароль, проверенный способ перезапуска — послать `SIGTERM` главному процессу выбранного сервиса после проверки владельца и cgroup. Результат подтверждают новый PID и ответ локального API.
 
 ```bash
 (
     set -eu
-    service=arena-staging.service
-    test "$(systemctl show "$service" -p WorkingDirectory --value)" = /home/arena/staging
+    target=staging
+    release='<полный хеш проверенного коммита>'
+    case "$target" in
+        staging)
+            app=/home/arena/staging; branch=development
+            service=arena-staging.service; port=3001
+            ;;
+        production)
+            app=/home/arena/bot; branch=main
+            service=arena-bot.service; port=3002
+            ;;
+        *) exit 1 ;;
+    esac
+
+    cd "$app"
+    test "$(git branch --show-current)" = "$branch"
+    test -z "$(git status --porcelain)"
+    test "$(systemctl show "$service" -p WorkingDirectory --value)" = "$app"
     test "$(systemctl show "$service" -p User --value)" = "$(id -un)"
     test "$(systemctl show "$service" -p Restart --value)" = always
+
+    git fetch origin "$branch"
+    test "$(git rev-parse FETCH_HEAD)" = "$release"
+    git merge --ff-only FETCH_HEAD
+
     old_pid="$(systemctl show "$service" -p MainPID --value)"
     test "$old_pid" -gt 1
     test "$(stat -c %U "/proc/$old_pid")" = "$(id -un)"
     cut -d: -f3 "/proc/$old_pid/cgroup" | grep -Fxq "/system.slice/$service"
     kill -TERM "$old_pid"
 
-    for attempt in $(seq 1 20); do
+    for attempt in $(seq 1 25); do
         new_pid="$(systemctl show "$service" -p MainPID --value)"
         if test "$new_pid" -gt 1 && test "$new_pid" != "$old_pid" &&
             systemctl is-active --quiet "$service" &&
-            curl -fsS --max-time 2 http://127.0.0.1:3001/api/health; then
+            curl -fsS --max-time 2 "http://127.0.0.1:$port/api/health"; then
             exit 0
         fi
         sleep 1
@@ -141,15 +176,48 @@ node --env-file=.env.staging -e 'process.exit(process.env.STAGING_PREVIEW_ENABLE
 )
 ```
 
-После перезапуска проверь HTTPS API и сайт Mini App. Запрос с `Origin` должен вернуть `200`, `{"ok":true}` и `Access-Control-Allow-Origin` с адресом Staging Mini App:
+### Резервная копия SQLite
+
+На VPS выполни из Production. SQLite `.backup` создаёт согласованный снимок работающей базы. Копия хранится в отдельном каталоге с доступом для владельца. Для прогона миграций используется второй файл и код из уже проверенного checkout Staging.
 
 ```bash
-curl -fsS -D - -H 'Origin: https://kimi-five-rho.vercel.app' \
-    https://staging-82-148-234-108.sslip.io/api/health
-curl -fsS https://kimi-five-rho.vercel.app/
+(
+    set -eu
+    cd /home/arena/bot
+    release='<полный хеш проверенного коммита>'
+    test "$(git branch --show-current)" = main
+    test "$(git -C /home/arena/staging rev-parse HEAD)" = "$release"
+    umask 077
+    db_path="$(node --env-file=.env -p 'process.env.DB_PATH ?? "data/arena.db"')"
+    test -f "$db_path"
+    mkdir -p /home/arena/backups
+    backup_dir="$(mktemp -d /home/arena/backups/arena-prod.XXXXXX)"
+    sqlite3 -readonly "$db_path" ".timeout 10000" ".backup $backup_dir/pre-release.db"
+    test "$(sqlite3 -readonly "$backup_dir/pre-release.db" 'PRAGMA integrity_check;')" = ok
+    cp "$backup_dir/pre-release.db" "$backup_dir/migration-check.db"
+    DB_PATH="$backup_dir/migration-check.db" node --disable-warning=ExperimentalWarning --input-type=module -e '
+        const { db } = await import("/home/arena/staging/src/db.ts");
+        db.close();
+    '
+    test "$(sqlite3 -readonly "$backup_dir/migration-check.db" 'PRAGMA integrity_check;')" = ok
+    test -z "$(sqlite3 -readonly "$backup_dir/migration-check.db" 'PRAGMA foreign_key_check;')"
+    printf 'Резервная копия: %s\n' "$backup_dir/pre-release.db"
+)
 ```
 
-На Vercel проверь, что Staging обслуживает тот же коммит из `development`. Если доступен только публичный URL, собери этот коммит локально с `VITE_API_URL=https://staging-82-148-234-108.sslip.io` и сверь имена JS и CSS с теми, что указаны в опубликованном HTML. Для проверки входа и сохранения данных открой Mini App через тестового Telegram-бота. Проверка сайта и `/api/health` покрывает доступность фронтенда и API.
+Для миграции данных проверь на копии и ожидаемые изменения записей. Например, при приведении имён к заглавной букве сравни число записей, сами преобразования и поля, не связанные с именем.
+
+### Проверка выкладки
+
+1. Проверь HTTPS API с заголовком `Origin` Mini App. Ожидаются `200`, `{"ok":true}` и `Access-Control-Allow-Origin` с адресом нужного окружения. Пример для Production.
+
+   ```bash
+   curl -fsS -D - -H 'Origin: https://kimi-production.vercel.app' https://kimi-82-148-234-108.sslip.io/api/health
+   curl -fsS https://kimi-production.vercel.app/
+   ```
+
+2. Сверь коммит в Deployments проекта Vercel. По публичному URL можно проверить сборку иначе: собери тот же коммит с `VITE_API_URL` нужного окружения и сопоставь опубликованные JS и CSS с локальными файлами.
+3. Проверь сценарий релиза через Telegram-бота нужного окружения. Проверка `/api/health` подтверждает доступность API, а проверка сборки Vercel подтверждает публикацию фронтенда. Вход и сохранение проверяются отдельно в Mini App.
 
 ### Git и SSH
 
@@ -227,7 +295,9 @@ Staging — полноценное отдельное тестовое окру�
 
 - `status.ts` — типы и переходы статусов заданий.
 
-- `admin.ts` — административная логика.
+- `admin.ts` — добавление, переименование, удаление и восстановление участников.
+
+- `names.ts` — формат имён при записи и отображении.
 
 - `telegram.ts` — взаимодействие с Telegram.
 
@@ -257,7 +327,9 @@ Staging — полноценное отдельное тестовое окру�
 
 - `data/` — файлы данных приложения.
 
-- `deploy/` — файлы развёртывания.
+- `deploy/` — примеры конфигурации развёртывания.
+
+- `web/scripts/build-demo.mjs` — генерация автономных HTML-демо в `web/demos/`.
 
 - `docs/` — документация проекта.
 
@@ -349,9 +421,9 @@ XP используется для места в профиле и сортир�
 
 ### Главная и задания ученика
 
-Главная показывает общий прогресс, место по XP и текущие показатели. Нижняя свайп-карточка содержит прогресс месяца и недели, обратный отсчёт до 31 мая и остатки до ближайших целей. Новый учебный период начинается 1 сентября, а с июня по август счётчик дней равен нулю.
+Главная показывает общий прогресс, место по XP и текущие показатели. Нижняя свайп-карточка содержит прогресс месяца и недели, отсчёт до 31 мая по Москве с подписью «до начала экзаменов» и остатки до ближайших целей. Новый учебный период начинается 1 сентября, а с июня по август счётчик дней равен нулю.
 
-Во вкладке «Задания» шкала под кнопками изменения числа задач показывает недельный прогресс к цели в 25 задач. На главной и в поле пробника отсутствие балла отображается как 0.
+Во вкладке «Задания» шкала под кнопками изменения числа задач показывает недельный прогресс к цели в 25 задач. Кнопка «По плану» переключает сетку заданий между числовым порядком и последовательностью из таблицы рангов. На главной и в поле пробника отсутствие балла отображается как 0.
 
 ### Админка Mini App
 
@@ -373,7 +445,7 @@ XP используется для места в профиле и сортир�
 
 - Балл пробного экзамена.
 
-Цели рассчитаны на период с сентября по май.
+Цели рассчитаны на период с сентября по май. С июня по август применяются майские значения. Пример накопительной цели — 16 закреплённых заданий к концу ноября. В неё входят текущие закреплённые задания с начала учебного года, включая статусы, выставленные администратором.
 
 Месячный процент рассчитывается с теми же весами, что и общий прогресс: 40% / 40% / 20%.
 
