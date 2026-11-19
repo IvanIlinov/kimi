@@ -549,8 +549,7 @@
 .layout-profile .display,
 .layout-admin .display,
 .layout-journal .display,
-.layout-members .display,
-.layout-preview .display {
+.layout-members .display {
     flex: 0 0 auto;
     margin-top: 0;
     margin-bottom: 1px;
@@ -631,23 +630,6 @@
 .layout-admin .admin-input { padding: 8px 11px; margin-bottom: 6px; }
 .layout-admin .chip { min-height: 34px; padding: 6px 13px; }
 .layout-admin .label { margin-bottom: 7px; }
-
-.layout-preview { gap: 9px; }
-.layout-preview > .card { flex: 0 0 auto; padding: 11px; }
-.layout-preview > .card:last-of-type {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.layout-preview .admin-list {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-}
-.layout-preview .admin-member { flex: 0 0 auto; padding: 8px 10px; }
 
 .layout-journal { gap: 9px; }
 .layout-journal > .card {
@@ -813,4 +795,100 @@
 @media (max-height: 460px) {
     .tasks-week { margin-top: 4px; }
     .tasks-week .seg { height: 8px; min-height: 8px; }
+}
+
+.layout-admin-home > .card { padding: 12px; }
+.admin-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+}
+.admin-preview-actions .label,
+.admin-schedule > .between .label { margin: 0; }
+.admin-attendance { display: grid; gap: 5px; }
+.admin-attendance .label { margin-bottom: 2px; }
+.admin-attendance .seg { height: 13px; min-height: 13px; }
+.admin-attendance small { margin-bottom: 4px; }
+.admin-schedule {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 9px;
+    min-height: 0;
+}
+.admin-schedule-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.admin-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+    padding-bottom: 6px;
+}
+.admin-schedule-day {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.admin-schedule-day h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 5px 0;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 14px;
+}
+.admin-calendar-empty { text-align: center; font-size: 12px; }
+.admin-lesson {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    border-inline-start: 2px solid var(--lesson-color);
+    border-radius: 6px;
+    background: var(--surface-strong);
+    padding: 4px 1px 4px 2px;
+    text-align: start;
+    line-height: 1.2;
+}
+.admin-lesson.planned { --lesson-color: var(--bad); }
+.admin-lesson.held { --lesson-color: var(--good); }
+.admin-lesson.paid { --lesson-color: var(--blue); }
+.admin-lesson b { font-size: 11px; overflow-wrap: anywhere; }
+.admin-lesson time {
+    color: var(--muted);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+}
+button.admin-lesson { box-shadow: inset 0 0 0 1px var(--border); }
+
+.lesson-form { display: grid; gap: 9px; }
+.lesson-form label { display: grid; gap: 3px; }
+.lesson-form input, .lesson-form select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 9px;
+    background: var(--surface-strong);
+    color: var(--text);
+    font: inherit;
+}
+
+.admin-lesson .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

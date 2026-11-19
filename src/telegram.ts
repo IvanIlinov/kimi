@@ -45,6 +45,7 @@ export interface Update {
     update_id: number;
     message?: {
         message_id: number;
+        date: number;
         chat: { id: number; type?: string };
         from?: { id: number; first_name: string };
         text?: string;

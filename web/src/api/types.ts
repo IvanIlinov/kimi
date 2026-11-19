@@ -75,3 +75,19 @@ export interface AdminJournalEntry {
     actorTgId: number | null;
     details: string;
 }
+
+export type LessonStatus = 'planned' | 'held' | 'paid';
+
+export interface Lesson {
+    id: number;
+    weekday: number;
+    time: string;
+    name: string;
+    status: LessonStatus;
+}
+
+export interface AdminHome {
+    weekStart: number;
+    attendance: { visits: number; visitors: number; participants: number };
+    lessons: Lesson[];
+}

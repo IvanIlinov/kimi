@@ -123,3 +123,23 @@ CREATE TABLE IF NOT EXISTS admin_log (
   created_at      INTEGER NOT NULL
 );
 `);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS bot_visits (
+  user_id    INTEGER NOT NULL REFERENCES users(id),
+  message_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, message_id)
+);
+CREATE INDEX IF NOT EXISTS bot_visits_created_at ON bot_visits(created_at);
+
+CREATE TABLE IF NOT EXISTS lessons (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  week_start INTEGER NOT NULL,
+  weekday    INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+  time       TEXT NOT NULL,
+  name       TEXT NOT NULL,
+  status     TEXT NOT NULL CHECK (status IN ('planned', 'held', 'paid'))
+);
+CREATE INDEX IF NOT EXISTS lessons_week ON lessons(week_start, weekday, time);
+`);

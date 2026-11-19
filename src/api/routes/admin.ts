@@ -2,7 +2,7 @@
 import { addUser, renameUser, removeUser, restoreUser } from '../../admin.ts';
 import { db } from '../../db.ts';
 import { setTasksTotal, setExam, setTopicStatus } from '../../write.ts';
-import { getAdminMembers, getAdminJournal } from '../../store.ts';
+import { getAdminMembers, getAdminJournal, weekStartMs } from '../../store.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
 
@@ -85,6 +85,63 @@ function guard<T>(fn: () => T): T {
 }
 
 export function registerAdmin(router: Router): void {
+    router.get('/api/admin/home', ({ viewer }) => {
+        requireAdmin(viewer);
+        const weekStart = weekStartMs(Date.now());
+        const attendance = db.prepare(`
+            SELECT COUNT(v.message_id) AS visits,
+                   COUNT(DISTINCT v.user_id) AS visitors,
+                   COUNT(DISTINCT u.id) AS participants
+            FROM users u
+            LEFT JOIN bot_visits v ON v.user_id = u.id
+                AND v.created_at >= ? AND v.created_at < ?
+            WHERE u.removed = 0
+        `).get(weekStart, weekStart + 7 * 86_400_000);
+        const lessons = db.prepare(`
+            SELECT id, weekday, time, name, status
+            FROM lessons WHERE week_start = ?
+            ORDER BY weekday, time, id
+        `).all(weekStart);
+        return { weekStart, attendance, lessons };
+    });
+
+    router.post('/api/admin/lessons', ({ viewer, body }) => {
+        requireAdmin(viewer);
+        const data = objectBody(body);
+        const weekStart = weekStartMs(Date.now());
+        if (data.weekStart !== weekStart) {
+            throw new HttpError(409, 'Неделя сменилась. Обновите расписание.');
+        }
+        const { id, weekday, time, status } = data;
+        const name = typeof data.name === 'string' ? data.name.trim() : '';
+        if (typeof weekday !== 'number' || !Number.isInteger(weekday) || weekday < 0 || weekday > 6 ||
+            typeof time !== 'string' || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ||
+            !name || name.length > 80 || (status !== 'planned' && status !== 'held' && status !== 'paid')) {
+            throw new HttpError(400, 'Проверьте день, время, имя и статус занятия');
+        }
+        if (id === undefined) {
+            db.prepare(`
+                INSERT INTO lessons (week_start, weekday, time, name, status) VALUES (?, ?, ?, ?, ?)
+            `).run(weekStart, weekday, time, name, status);
+        } else {
+            const result = db.prepare(`
+                UPDATE lessons SET weekday = ?, time = ?, name = ?, status = ?
+                WHERE id = ? AND week_start = ?
+            `).run(weekday, time, name, status, positiveId(String(id)), weekStart);
+            if (!result.changes) throw new HttpError(404, 'Занятие не найдено');
+        }
+        return { ok: true };
+    });
+
+    router.post('/api/admin/lessons/:id/remove', ({ viewer, params }) => {
+        requireAdmin(viewer);
+        const id = positiveId(params.id);
+        const result = db.prepare('DELETE FROM lessons WHERE id = ? AND week_start = ?')
+            .run(id, weekStartMs(Date.now()));
+        if (!result.changes) throw new HttpError(404, 'Занятие не найдено на этой неделе');
+        return { ok: true };
+    });
+
     router.get('/api/admin/members', ({ viewer }) => {
         requireAdmin(viewer);
         return getAdminMembers();

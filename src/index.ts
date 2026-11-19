@@ -11,6 +11,7 @@ import {
     setChatMenuButton,
 } from './telegram.ts';
 import type { CallbackQuery, Update } from './telegram.ts';
+import { db } from './db.ts';
 import { rank } from './logic.ts';
 import type { Person, Ranked } from './logic.ts';
 import {
@@ -480,6 +481,13 @@ async function handle(u: Update): Promise<void> {
     if (m.chat.type === 'group' || m.chat.type === 'supergroup') {
         await handleGroup(m, text);
         return;
+    }
+
+    if (m.chat.type === 'private' && /^\/start(?:@\w+)?(?:\s|$)/.test(text)) {
+        db.prepare(`
+            INSERT OR IGNORE INTO bot_visits (user_id, message_id, created_at)
+            SELECT id, ?, ? FROM users WHERE tg_id = ? AND removed = 0
+        `).run(m.message_id, m.date * 1000, viewerId);
     }
 
     await deleteQuietly(chatId, m.message_id); // ваши сообщения не остаются в чате

@@ -22,6 +22,9 @@ test('все административные маршруты запрещен�
     registerAdmin(router);
 
     const routes = [
+        ['GET', '/api/admin/home'],
+        ['POST', '/api/admin/lessons'],
+        ['POST', '/api/admin/lessons/1/remove'],
         ['GET', '/api/admin/members'],
         ['GET', '/api/admin/journal'],
         ['POST', '/api/admin/members'],
@@ -180,4 +183,47 @@ test('администратор выполняет операции, а дей�
     assert.ok(journalApi.some(
         entry => entry.targetId === id && entry.actorTgId === viewer.tgId,
     ));
+});
+
+test('главная считает посещения текущей недели и редактирует её расписание', () => {
+    const router = new Router();
+    registerAdmin(router);
+    const viewer = { tgId: 900001, firstName: 'Администратор', role: 'admin' as const, personId: null };
+    function call(method: string, path: string, body: unknown = {}) {
+        const match = router.match(method, path);
+        assert.ok(match);
+        return match.handler({ viewer, params: match.params, query: new URLSearchParams(), body });
+    }
+    function home() {
+        return call('GET', '/api/admin/home') as {
+            weekStart: number;
+            attendance: { visits: number; visitors: number; participants: number };
+            lessons: { id: number; status: string }[];
+        };
+    }
+
+    const before = home();
+    const user = db.prepare('INSERT INTO users (tg_id, name) VALUES (?, ?)').run(810001, 'Ученик');
+    const visit = db.prepare('INSERT INTO bot_visits (user_id, message_id, created_at) VALUES (?, ?, ?)');
+    visit.run(user.lastInsertRowid, 1, before.weekStart - 1);
+    visit.run(user.lastInsertRowid, 2, before.weekStart);
+    visit.run(user.lastInsertRowid, 3, before.weekStart + 1);
+    assert.deepEqual({ ...home().attendance }, {
+        visits: before.attendance.visits + 2,
+        visitors: before.attendance.visitors + 1,
+        participants: before.attendance.participants + 1,
+    });
+
+    const lesson = { weekStart: before.weekStart, weekday: 0, time: '16:30', name: 'Ученик', status: 'planned' };
+    assert.throws(() => call('POST', '/api/admin/lessons', { ...lesson, time: '24:00' }),
+        (error: unknown) => error instanceof HttpError && error.status === 400);
+    assert.throws(() => call('POST', '/api/admin/lessons', { ...lesson, weekStart: before.weekStart - 1 }),
+        (error: unknown) => error instanceof HttpError && error.status === 409);
+    call('POST', '/api/admin/lessons', lesson);
+    const [saved] = home().lessons;
+    assert.equal(saved.status, 'planned');
+    call('POST', '/api/admin/lessons', { ...lesson, id: saved.id, status: 'paid' });
+    assert.equal(home().lessons[0].status, 'paid');
+    call('POST', `/api/admin/lessons/${saved.id}/remove`);
+    assert.deepEqual(home().lessons, []);
 });

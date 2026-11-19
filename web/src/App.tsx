@@ -7,6 +7,7 @@ import type { Tab } from './components/TabBar';
 import { Empty, Loading, Screen } from './components/ui';
 import { ArenaPage } from './pages/ArenaPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminHomePage } from './pages/AdminHomePage';
 import { MembersPage } from './pages/MembersPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { TopicsPage } from './pages/TopicsPage';
@@ -14,7 +15,7 @@ import { StudentHomePage } from './pages/StudentHomePage';
 import { WeekPage } from './pages/WeekPage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
-type TabId = 'home' | 'week' | 'topics' | 'arena' | 'members' | 'adminMembers' | 'adminJournal' | 'adminPreview';
+type TabId = 'home' | 'week' | 'topics' | 'arena' | 'members' | 'adminMembers' | 'adminJournal';
 
 const STUDENT_TABS: Tab<TabId>[] = [
     { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
@@ -33,12 +34,9 @@ const ADMIN_TABS: Tab<TabId>[] = [
     { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
     { id: 'adminMembers', icon: 'users-round', label: 'Участники' },
     { id: 'adminJournal', icon: 'clipboard-list', label: 'Журнал' },
-    { id: 'adminPreview', icon: 'eye', label: 'Предпросмотр' },
 ];
 
-type Preview =
-    | { mode: 'student'; id: number; name: string }
-    | { mode: 'guest' };
+type Preview = { mode: 'student'; id: number } | { mode: 'guest' };
 
 export function App() {
     const [preview, setPreview] = useState<Preview | null>(null);
@@ -48,9 +46,9 @@ export function App() {
 
     useBackButton(openId !== null ? () => setOpenId(null) : null);
 
-    const startPreview = (id: number, name: string) => {
+    const startPreview = (id: number) => {
         setPreviewAs(String(id));
-        setPreview({ mode: 'student', id, name });
+        setPreview({ mode: 'student', id });
         setOpenId(null);
         setTab('home');
     };
@@ -66,7 +64,7 @@ export function App() {
         setPreviewAs(null);
         setPreview(null);
         setOpenId(null);
-        setTab('adminPreview');
+        setTab('week');
     };
 
     if (!insideTelegram) return <Screen title="Арена"><Empty text="Откройте Арену через Telegram-бота" /></Screen>;
@@ -99,10 +97,13 @@ export function App() {
 
     let page;
     if (openId !== null) page = <ProfilePage id={openId} />;
-    else if (active === 'week') page = <WeekPage onOpen={open} />;
+    else if (active === 'week') {
+        page = tabs === ADMIN_TABS
+            ? <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />
+            : <WeekPage onOpen={open} />;
+    }
     else if (active === 'adminMembers') page = <AdminPage section="members" />;
     else if (active === 'adminJournal') page = <AdminPage section="journal" />;
-    else if (active === 'adminPreview') page = <AdminPage section="preview" onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'home') page = <StudentHomePage />;
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null} />;
     else if (active === 'arena') page = <ArenaPage onOpen={open} />;

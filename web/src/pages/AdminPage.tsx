@@ -20,61 +20,8 @@ const STATUS_NAME: Record<TopicStatus, string> = {
     reinforced: 'Закреплено',
 };
 
-type Section = 'members' | 'journal' | 'preview';
-
-export function AdminPage({ section, onPreview, onGuestPreview }: {
-    section: Section;
-    onPreview?: (id: number, name: string) => void;
-    onGuestPreview?: () => void;
-}) {
-    if (section === 'journal') return <JournalPage />;
-    if (section === 'preview') return <PreviewPage onPreview={onPreview!} onGuestPreview={onGuestPreview!} />;
-    return <MembersAdminPage />;
-}
-
-function PreviewPage({ onPreview, onGuestPreview }: {
-    onPreview: (id: number, name: string) => void;
-    onGuestPreview: () => void;
-}) {
-    const { data, error } = useApi<AdminMember[]>('/api/admin/members');
-
-    if (error) return <Screen hideTitle title="Предпросмотр" className="layout-preview"><Empty text={error} /></Screen>;
-    if (!data) return <Screen hideTitle title="Предпросмотр" className="layout-preview"><Loading /></Screen>;
-
-    const active = data.filter((member) => !member.removed);
-
-    return (
-        <Screen hideTitle title="Предпросмотр" className="layout-preview">
-            <Card>
-                <Label>Как видит Арену гость</Label>
-                <p class="muted">Режим родителя: профили, главная, успеваемость и глобальный прогресс. Данные доступны только для просмотра.</p>
-                <button class="chip primary" onClick={onGuestPreview}>Посмотреть как гость</button>
-            </Card>
-            <Card>
-                <Label>Как видит Арену ученик</Label>
-                <p class="muted">Выберите участника. Откроется весь интерфейс с его данными, без возможности что-либо изменить.</p>
-            </Card>
-            <Card>
-                <Label>Активные участники · {active.length}</Label>
-                {active.length === 0 && <Empty text="Нет активных участников" />}
-                <div class="admin-list">
-                    {active.map((member) => (
-                        <button
-                            key={member.id}
-                            class="admin-member"
-                            onClick={() => onPreview(member.id, member.name)}
-                        >
-                            <span>
-                                <b>{cap(member.name)}</b>
-                                <small>{member.tasksTotal} задач · пробник: {member.exam ?? '—'}</small>
-                            </span>
-                            <span class="muted">Открыть ›</span>
-                        </button>
-                    ))}
-                </div>
-            </Card>
-        </Screen>
-    );
+export function AdminPage({ section }: { section: 'members' | 'journal' }) {
+    return section === 'journal' ? <JournalPage /> : <MembersAdminPage />;
 }
 
 function MembersAdminPage() {
