@@ -27,19 +27,8 @@ export function getPersons(): Person[] {
 
     // Статусы всех заданий одним запросом
     const statuses = db
-        .prepare(`
-            SELECT s.user_id, s.topic_no, s.status,
-                CASE WHEN EXISTS (
-                    SELECT 1 FROM topic_log c
-                    WHERE c.user_id = s.user_id AND c.topic_no = s.topic_no AND c.is_correction = 1
-                ) THEN (SELECT CASE WHEN t.is_correction = 1 THEN t.from_status ELSE t.to_status END
-                        FROM topic_log t WHERE t.user_id = s.user_id AND t.topic_no = s.topic_no
-                        ORDER BY t.is_correction,
-                            CASE WHEN t.is_correction = 1 THEN t.id ELSE -t.id END LIMIT 1)
-                  ELSE s.status END AS month_status
-            FROM topic_status s
-        `)
-        .all() as unknown as { user_id: number; topic_no: number; status: string; month_status: string }[];
+        .prepare('SELECT user_id, topic_no, status FROM topic_status')
+        .all() as unknown as { user_id: number; topic_no: number; status: string }[];
 
     // Сумма решённых задач: всего и за текущую неделю (с понедельника 00:00 по Москве)
     const totals = db
@@ -67,6 +56,7 @@ export function getPersons(): Person[] {
         const mine = statuses.filter((s) => s.user_id === u.id);
         const pick = (st: string) => mine.filter((s) => s.status === st).map((s) => s.topic_no);
         const t = totalsById.get(u.id);
+        const reinforced = pick('reinforced');
 
         return {
             id: u.id,
@@ -75,13 +65,13 @@ export function getPersons(): Person[] {
             exam: u.exam,
             comment: u.comment,
             done: pick('done'),
-            reinforced: pick('reinforced'),
+            reinforced,
             learning: pick('learning'),
             tasksTotal: Number(t?.total ?? 0),
             tasksWeek: Number(t?.week ?? 0),
             monthResults: {
                 tasks: Math.max(0, Number(t?.month_total ?? 0)),
-                topics: mine.filter((s) => s.month_status === 'reinforced').length,
+                topics: reinforced.length,
                 exam: u.month_exam,
             },
         };

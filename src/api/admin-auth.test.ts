@@ -268,7 +268,7 @@ test('главная считает посещения текущей недел
     assert.equal(home().month.earnedKopecks, 360000);
 });
 
-test('правки в заданиях ученика меняют итоги без зачёта в прогресс недели и месяца', async () => {
+test('админские правки статуса учитываются в месячной цели по заданиям', async () => {
     const { registerSelf } = await import('./routes/self.ts');
     const { getPersons, getWeekStats } = await import('../store.ts');
     const { monthlyResults } = await import('../logic.ts');
@@ -296,7 +296,7 @@ test('правки в заданиях ученика меняют итоги б
     assert.equal(edited.tasksWeek, 0);
     assert.equal(edited.exam, 70);
     assert.deepEqual(edited.reinforced, [1]);
-    assert.deepEqual(monthlyResults(edited), { tasks: 0, topics: 0, exam: 0 });
+    assert.deepEqual(monthlyResults(edited), { tasks: 0, topics: 1, exam: 0 });
     assert.equal(getWeekStats().find((s) => s.userId === id)?.topics, 0);
 
     post('/api/self/tasks', { amount: 3 }, student);
