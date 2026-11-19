@@ -1,5 +1,5 @@
 // Формы ответов API. Зеркало этих типов лежит в web/src/api/types.ts.
-import { EXAM_MAX, TASKS_GOAL, TOPICS_TOTAL, WEEK_GOAL, monthGoal, monthPct, onTrack, visible, weekPct } from '../logic.ts';
+import { EXAM_MAX, TASKS_GOAL, TOPICS_TOTAL, WEEK_GOAL, monthGoal, monthPct, onTrack, studyPeriod, visible, weekPct } from '../logic.ts';
 import type { Ranked } from '../logic.ts';
 import type { WeekStat } from '../store.ts';
 import { statusOf } from '../status.ts';
@@ -25,8 +25,10 @@ export interface ProfileDto {
     pct: number; // глобальный прогресс
     standing: Standing;
     monthPct: number;
+    daysLeft: number;
     week: { tasks: number; topics: number; goal: number; goalPct: number }; // goalPct может быть больше 100
     month: {
+        name: string;
         topics: { value: number; goal: number };
         tasks: { value: number; goal: number };
         exam: { value: number | null; goal: number };
@@ -38,6 +40,7 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
     const p = r.person;
     const w = week ?? emptyWeek(p.id);
     const m = monthGoal(now);
+    const period = studyPeriod(now);
     return {
         id: p.id,
         name: p.name,
@@ -45,8 +48,10 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
         pct: r.pct,
         standing: standing(r, now),
         monthPct: monthPct(r, now),
+        daysLeft: period.daysLeft,
         week: { tasks: w.tasks, topics: w.topics, goal: WEEK_GOAL, goalPct: Math.round((w.tasks / WEEK_GOAL) * 100) },
         month: {
+            name: period.monthName,
             topics: { value: p.reinforced.length, goal: m.topics },
             tasks: { value: p.tasksTotal, goal: m.tasks },
             exam: { value: p.exam, goal: m.exam },
@@ -84,9 +89,10 @@ export type ArenaMode = 'global' | 'month';
 
 export interface ArenaDto {
     mode: ArenaMode;
+    monthTaskGoal: number;
     // Первое место в выбранном режиме
     leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
-    rows: { id: number; name: string; pct: number; standing: Standing }[];
+    rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
 }
 
 export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, now: Date): ArenaDto {
@@ -96,6 +102,7 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
     const first = ordered[0];
     return {
         mode,
+        monthTaskGoal: monthGoal(now).tasks,
         leader: first
             ? {
                   name: first.person.name,
@@ -110,6 +117,7 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
             id: r.person.id,
             name: r.person.name,
             pct: mode === 'global' ? r.pct : r.monthPct,
+            tasks: r.person.tasksTotal,
             standing: standing(r, now),
         })),
     };

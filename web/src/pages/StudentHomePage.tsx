@@ -3,14 +3,14 @@ import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
 import { Card, Empty, Loading, Screen, SegmentBar } from '../components/ui';
-import { plural } from '../lib/format';
+import { cap, plural } from '../lib/format';
 
 export function StudentHomePage() {
     const { data: profile, error } = useApi<Profile>('/api/profile/me');
     if (error) return <Screen hideTitle title="Главная"><Empty text={error} /></Screen>;
     if (!profile) return <Screen hideTitle title="Главная"><Loading /></Screen>;
 
-    const { name, place, pct, monthPct, month, week } = profile;
+    const { name, place, pct, monthPct, daysLeft, month, week } = profile;
     const topicsLeft = Math.max(0, month.topics.goal - month.topics.value);
     const tasksLeft = Math.max(0, week.goal - week.tasks);
     const examLeft = Math.max(0, month.exam.goal - (month.exam.value ?? 0));
@@ -32,24 +32,30 @@ export function StudentHomePage() {
                 <div class="student-metrics">
                     <Metric icon="clipboard-list" label="Балл пробника" value={month.exam.value ?? '—'} />
                     <Metric icon="calendar-days" label="Решено задач" value={month.tasks.value} />
-                    <Metric icon="target" label="Закреплено заданий" value={month.topics.value} />
+                    <Metric icon="target" label="Изучено заданий" value={month.topics.value} />
                 </div>
             </Card>
             <SwipeCard
                 label="Прогресс и ближайшие цели"
                 first={
                     <>
-                        <Goal label="Прогресс месяца" value={monthPct} />
+                        <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} />
                         <Goal label="Прогресс недели" value={week.goalPct} />
+                        {daysLeft != null && (
+                            <div class="student-countdown">
+                                <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
+                                <small>до конца учебного плана</small>
+                            </div>
+                        )}
                     </>
                 }
                 second={
                     <>
-                        <Goal label="Закрепить за месяц" value={month.topics.value} max={month.topics.goal}
+                        <Goal icon="target" label="Изучено" value={month.topics.value} max={month.topics.goal}
                             note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
-                        <Goal label="Решить за неделю" value={week.tasks} max={week.goal}
+                        <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
                             note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
-                        <Goal label="Балл за пробник" value={month.exam.value} max={month.exam.goal}
+                        <Goal icon="clipboard-list" label="Пробник" value={month.exam.value} max={month.exam.goal}
                             note={month.exam.value === null ? 'Балл ещё не внесён' : remaining(examLeft, ['балл', 'балла', 'баллов'])} />
                     </>
                 }
@@ -72,14 +78,29 @@ function Metric({ icon, label, value }: { icon: string; label: string; value: nu
     );
 }
 
-function Goal({ label, value, max, note }: { label: string; value: number | null; max?: number; note?: string }) {
+function Goal({ icon, label, value, max, note }: {
+    icon?: string;
+    label: string;
+    value: number | null;
+    max?: number;
+    note?: string;
+}) {
+    const shown = max === undefined ? `${value}%` : `${value ?? '—'}/${max}`;
+
     return (
-        <div class="student-goal">
-            <div class="between">
-                <span>{label}</span>
-                <strong>{max === undefined ? `${value}%` : `${value ?? '—'}/${max}`}</strong>
-            </div>
-            <SegmentBar value={value ?? 0} max={max} />
+        <div class="student-goal" role={icon ? 'group' : undefined} aria-label={icon ? label : undefined}>
+            {icon ? (
+                <div class="student-goal-with-icon">
+                    <NavIcon name={icon} />
+                    <SegmentBar value={value ?? 0} max={max} />
+                    <strong>{shown}</strong>
+                </div>
+            ) : (
+                <>
+                    <div class="between"><span>{label}</span><strong>{shown}</strong></div>
+                    <SegmentBar value={value ?? 0} max={max} />
+                </>
+            )}
             {note && <small>{note}</small>}
         </div>
     );

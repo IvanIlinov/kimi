@@ -13,8 +13,8 @@ export function SwipeCard({ label, first, second }: {
         <Card class="swipe-card">
             <div class="swipe-card-track" tabIndex={0} role="region" aria-label={label}
                 onScroll={({ currentTarget }) => {
-                    const { scrollLeft, clientWidth } = currentTarget;
-                    setSecondActive(scrollLeft > clientWidth / 2);
+                    const { scrollLeft, scrollWidth, clientWidth } = currentTarget;
+                    setSecondActive(scrollLeft > (scrollWidth - clientWidth) / 2);
                 }}>
                 <div class="swipe-card-page">{first}</div>
                 <div class="swipe-card-page">{second}</div>

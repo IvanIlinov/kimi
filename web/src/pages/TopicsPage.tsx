@@ -2,8 +2,15 @@ import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { SelfData } from '../api/types';
-import { Card, Empty, Label, Loading, Screen } from '../components/ui';
+import { Card, Empty, Label, Loading, Screen, SegmentBar } from '../components/ui';
 import { haptic } from '../lib/telegram';
+
+const STATUS_LABEL = {
+    todo: 'Не изучено',
+    learning: 'Изучается',
+    done: 'Изучено',
+    reinforced: 'Закреплено',
+};
 
 const AMOUNTS = [-1, 1, 3, 5, 10];
 
@@ -38,7 +45,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                 <div class="between">
                     <Label>Задачи</Label>
                     <span class="muted">
-                        за неделю {data.tasksWeek} · всего {data.tasksTotal}
+                        за неделю {data.tasksWeek}<span class="tasks-total-compact"> · всего {data.tasksTotal}</span>
                     </span>
                 </div>
                 <div class="amounts">
@@ -53,6 +60,12 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                         </button>
                     ))}
                 </div>
+                <div class="tasks-total">
+                    <SegmentBar value={data.tasksTotal} max={data.limits.tasks} />
+                    <strong aria-label={`Всего решено задач: ${data.tasksTotal} из ${data.limits.tasks}`}>
+                        {data.tasksTotal}/{data.limits.tasks}
+                    </strong>
+                </div>
                 {note && <p class="warn">⚠️ {note}</p>}
             </Card>
 
@@ -63,10 +76,10 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                         <button
                             key={i}
                             class={`cell ${status}`}
+                            aria-label={`Задание ${i + 1}. ${STATUS_LABEL[status]}`}
                             disabled={readOnly || busy}
                             onClick={() => run(`/api/self/topics/${i + 1}/cycle`)}
                         >
-                            <span class={`status-dot ${status}`} aria-hidden="true" />
                             <b>{i + 1}</b>
                         </button>
                     ))}

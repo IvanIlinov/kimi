@@ -46,6 +46,17 @@ function moscow(now: Date) {
     return { y: d.getUTCFullYear(), m: d.getUTCMonth(), day: d.getUTCDate() };
 }
 
+const monthName = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', month: 'long' });
+
+export function studyPeriod(now: Date) {
+    const { y, m, day } = moscow(now);
+    const end = Date.UTC(m >= 8 ? y + 1 : y, 4, 31);
+    return {
+        monthName: monthName.format(now),
+        daysLeft: Math.max(0, (end - Date.UTC(y, m, day)) / 864e5),
+    };
+}
+
 // Сколько заданий должно быть изучено на сегодня: внутри месяца нарастает линейно.
 export function planTopics(now: Date): number {
     const { y, m, day } = moscow(now);

@@ -22,8 +22,10 @@ export interface Profile {
     pct: number;
     standing: Standing;
     monthPct: number;
+    daysLeft: number;
     week: { tasks: number; topics: number; goal: number; goalPct: number };
     month: {
+        name: string;
         topics: { value: number; goal: number };
         tasks: { value: number; goal: number };
         exam: { value: number | null; goal: number };
@@ -40,8 +42,9 @@ export type ArenaMode = 'global' | 'month';
 
 export interface Arena {
     mode: ArenaMode;
+    monthTaskGoal: number;
     leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
-    rows: { id: number; name: string; pct: number; standing: Standing }[];
+    rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
 }
 
 export interface SelfData {
