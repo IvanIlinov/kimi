@@ -1,5 +1,5 @@
 import { db } from './db.ts';
-import { MAX_TASKS_PER_ENTRY, weekPct, weekStartMs } from './logic.ts';
+import { MAX_TASKS_PER_ENTRY, monthStartMs, weekPct, weekStartMs } from './logic.ts';
 import type { Person } from './logic.ts';
 export { weekStartMs } from './logic.ts';
 
@@ -33,11 +33,21 @@ export function getPersons(): Person[] {
 
     // Стартовые суммы в старых данных превышают лимит записи и входят только в накопительные показатели.
     // Текущая неделя начинается в понедельник в 00:00 по Москве.
+    const now = Date.now();
     const totals = db
         .prepare(`
             SELECT user_id,
                    SUM(amount) AS total,
                    SUM(CASE WHEN source <> 'admin' THEN amount ELSE 0 END) AS month_total,
+                   SUM(CASE
+                       WHEN created_at BETWEEN ? AND ?
+                        AND source <> 'admin'
+                        AND ABS(amount) <= ?
+                        AND (actor_tg_id IS NULL OR actor_tg_id = (
+                            SELECT tg_id FROM users WHERE id = task_log.user_id
+                        ))
+                       THEN amount ELSE 0
+                   END) AS tasks_this_month,
                    SUM(CASE
                        WHEN created_at >= ?
                         AND source <> 'admin'
@@ -51,7 +61,9 @@ export function getPersons(): Person[] {
             WHERE cancelled = 0
             GROUP BY user_id
         `)
-        .all(weekStartMs(Date.now()), MAX_TASKS_PER_ENTRY) as unknown as { user_id: number; total: number; week: number; month_total: number }[];
+        .all(monthStartMs(now), now, MAX_TASKS_PER_ENTRY, weekStartMs(now), MAX_TASKS_PER_ENTRY) as unknown as {
+            user_id: number; total: number; week: number; month_total: number; tasks_this_month: number;
+        }[];
 
     const totalsById = new Map(totals.map((t) => [t.user_id, t]));
 
@@ -72,6 +84,7 @@ export function getPersons(): Person[] {
             learning: pick('learning'),
             tasksTotal: Number(t?.total ?? 0),
             tasksWeek: Number(t?.week ?? 0),
+            tasksThisMonth: Math.max(0, Number(t?.tasks_this_month ?? 0)),
             monthResults: {
                 tasks: Math.max(0, Number(t?.month_total ?? 0)),
                 topics: reinforced.length,

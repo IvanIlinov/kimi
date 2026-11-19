@@ -26,7 +26,7 @@ export function registerRead(router: Router): void {
         const currentWeekStats = getWeekStats(now);
         const week = currentWeekStats.find((s) => s.userId === r.person.id);
         const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
-        const { week: closedWeek, season, year, currentFall } = recapPeriods(now);
+        const { week: closedWeek, season, year, currentFall, currentYear } = recapPeriods(now);
         profile.weeklyRecap = weeklyRecapDto(
             ranked, r, getWeekStats(closedWeek.start, closedWeek.end), closedWeek.start, closedWeek.end,
         );
@@ -40,6 +40,9 @@ export function registerRead(router: Router): void {
         };
         profile.studyRecaps = {
             year: studyRecap(year, year.start),
+            currentYear: currentYear
+                ? { ...studyRecap(currentYear, currentYear.start, currentYear.goalAt), inProgress: true }
+                : undefined,
             season: currentFall
                 ? { ...studyRecap(currentFall, currentFall.start, currentFall.goalAt), inProgress: true }
                 : studyRecap(season, season.studyStart),

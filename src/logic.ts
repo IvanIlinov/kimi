@@ -12,6 +12,7 @@ export interface Person {
     exam: number | null; // балл пробника, пока не внесён: null
     tasksTotal: number; // решено всего
     monthResults?: { tasks: number; topics: number; exam: number | null };
+    tasksThisMonth?: number;
     tasksWeek: number; // решено на этой неделе
     done: number[]; // изучено, но ещё не закреплено
     reinforced: number[]; // окончательно освоено
@@ -53,6 +54,11 @@ export function weekStartMs(now: number): number {
     const msk = new Date(now + 3 * 3600e3);
     const dow = (msk.getUTCDay() + 6) % 7; // понедельник = 0
     return Date.UTC(msk.getUTCFullYear(), msk.getUTCMonth(), msk.getUTCDate() - dow) - 3 * 3600e3;
+}
+
+export function monthStartMs(now: number): number {
+    const { y, m } = moscow(new Date(now));
+    return Date.UTC(y, m, 1) - 3 * 3600e3;
 }
 
 const monthName = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', month: 'long' });

@@ -70,7 +70,7 @@ export interface ProfileDto {
     canEdit: boolean;
     weeklyRecap?: WeeklyRecapDto;
     currentWeekRecap?: WeeklyRecapDto;
-    studyRecaps?: { year: StudyRecapDto; season: StudyRecapDto };
+    studyRecaps?: { year: StudyRecapDto; season: StudyRecapDto; currentYear?: StudyRecapDto };
 }
 
 export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, canEdit: boolean): ProfileDto {
@@ -163,14 +163,14 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
                   monthPct: first.monthPct,
                   exam: results.exam,
                   topics: results.topics,
-                  tasks: results.tasks,
+                  tasks: mode === 'month' ? first.person.tasksThisMonth ?? 0 : results.tasks,
               }
             : null,
         rows: (showAll ? ordered : visible(ordered, viewerTgId)).map((r) => ({
             id: r.person.id,
             name: r.person.name,
             pct: mode === 'global' ? r.pct : r.monthPct,
-            tasks: mode === 'month' ? monthlyResults(r.person).tasks : r.person.tasksTotal,
+            tasks: mode === 'month' ? r.person.tasksThisMonth ?? 0 : r.person.tasksTotal,
             standing: standing(r, now),
         })),
     };

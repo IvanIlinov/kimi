@@ -1,7 +1,7 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Viewer } from './context.ts';
-import type { ProfileDto } from './dto.ts';
+import type { ArenaDto, ProfileDto } from './dto.ts';
 
 process.env.DB_PATH = ':memory:';
 process.env.BOT_TOKEN = 'test-token';
@@ -42,9 +42,10 @@ test('итоги закрываются в понедельник по Моск�
 
     const student = { tgId: 700001, personId: 1, firstName: 'Лера', role: 'student' as const };
     function call(method: string, path: string, body: unknown = {}, viewer: Viewer = student) {
-        const route = router.match(method, path);
+        const [pathname, query] = path.split('?');
+        const route = router.match(method, pathname);
         assert.ok(route);
-        return route.handler({ viewer, params: route.params, query: new URLSearchParams(), body });
+        return route.handler({ viewer, params: route.params, query: new URLSearchParams(query), body });
     }
     const profile = () => call('GET', '/api/profile/me') as ProfileDto;
     const open = (end: number, viewer = student) => call('POST', '/api/self/weekly-recap/open', { end }, viewer);
@@ -86,9 +87,10 @@ test('сезонные и годовые итоги закрываются по 
     db.exec("INSERT INTO users (id, tg_id, name, exam) VALUES (3, 700003, 'Миша', 85)");
     const viewer = { tgId: 700003, personId: 3, firstName: 'Миша', role: 'student' as const };
     function call(method: string, path: string, body: unknown = {}) {
-        const route = router.match(method, path);
+        const [pathname, query] = path.split('?');
+        const route = router.match(method, pathname);
         assert.ok(route);
-        return route.handler({ viewer, params: route.params, query: new URLSearchParams(), body });
+        return route.handler({ viewer, params: route.params, query: new URLSearchParams(query), body });
     }
     const fallEnd = Date.parse('2026-11-30T21:00:00Z');
     const winterEnd = Date.parse('2027-02-28T21:00:00Z');
@@ -118,11 +120,19 @@ test('сезонные и годовые итоги закрываются по 
     }
     assert.equal(profile().studyRecaps?.season.inProgress, true);
     assert.equal(profile().studyRecaps?.season.tasks, 100);
+    const monthRanking = () => call('GET', '/api/arena?mode=month') as ArenaDto;
+    const monthTasks = () => monthRanking().rows.find((row) => row.id === 3)?.tasks;
+    assert.equal(monthTasks(), 0);
+    assert.equal(profile().studyRecaps?.currentYear?.topics, 1);
+    assert.equal(profile().studyRecaps?.currentYear?.goals.topics, 27);
+    assert.equal(profile().studyRecaps?.currentYear?.inProgress, true);
     t.mock.timers.tick(1);
     assert.deepEqual(profile().studyRecaps?.season, {
         start: fallStart, end: fallEnd, tasks: 100, topics: 1, examBefore: 30, exam: 55,
         goals: { tasks: 321, topics: 16, exam: 67 }, pct: 31,
     });
+    assert.equal(monthTasks(), 10);
+    assert.equal(profile().studyRecaps?.currentYear?.topics, 2);
     assert.deepEqual(open(), { open: 'season' });
     assert.deepEqual(open(), { open: null });
 
@@ -136,6 +146,8 @@ test('сезонные и годовые итоги закрываются по 
     assert.equal(profile().studyRecaps?.season.end, yearEnd);
     assert.equal(profile().studyRecaps?.year.end, yearEnd);
     assert.equal(profile().studyRecaps?.year.start, fallStart);
+    assert.equal(profile().studyRecaps?.year.topics, 2);
+    assert.equal(profile().studyRecaps?.currentYear, undefined);
     assert.deepEqual(open(), { open: 'year' });
     assert.deepEqual(open(), { open: null });
     t.mock.timers.tick(7 * 86400_000);

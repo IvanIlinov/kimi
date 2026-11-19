@@ -7,6 +7,11 @@ export function recapPeriods(now: number) {
     const midnight = (y: number, m: number) => Date.UTC(y, m, 1) - 3 * 3600e3;
     const yearEnd = midnight(month >= 5 ? year : year - 1, 5);
     const yearStart = midnight(month >= 5 ? year - 1 : year - 2, 8);
+    const currentYear = month <= 4 || month >= 8 ? {
+        start: midnight(month >= 8 ? year : year - 1, 8),
+        end: now + 1,
+        goalAt: midnight(month >= 8 ? year + 1 : year, 5) - 1,
+    } : null;
     const seasonYear = month < 2 ? year - 1 : year;
     const seasonMonth = month >= 11 || month < 2 ? 11 : month >= 5 ? 5 : 2;
     const seasonEnd = midnight(seasonYear, seasonMonth);
@@ -17,6 +22,7 @@ export function recapPeriods(now: number) {
     const currentFall = fallInProgress ? { start: midnight(year, 8), end: now, goalAt: midnight(year, 11) - 1 } : null;
     return {
         currentFall,
+        currentYear,
         year: { start: yearStart, end: yearEnd },
         season: { start: seasonStart, end: seasonEnd, studyStart },
         week: { start: weekStartMs(weekEnd - 1), end: weekEnd },

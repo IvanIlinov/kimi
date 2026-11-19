@@ -24,7 +24,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
 }) {
     const modal = useRef<HTMLDialogElement>(null);
     const gesture = useRef<{ id: number; x: number; y: number } | null>(null);
-    const [selection, setSelection] = useState<{ kind: Kind; completed: boolean } | null>(null);
+    const [selection, setSelection] = useState<{ kind: Kind; completed: boolean; completedYear?: boolean } | null>(null);
     const active = selection?.kind;
     const showingCompletedWeek = !currentWeek || selection?.completed === true;
     const keepKeyboardFocus = useRef(false);
@@ -38,7 +38,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
         void api<{ open: Kind | null }>('/api/self/recaps/open', {
             method: 'POST', body: { week: weekEnd, season: seasonEnd, year: yearEnd },
         }).then(({ open }) => {
-            if (open && attached) setSelection((current) => current ?? { kind: open, completed: true });
+            if (open && attached) setSelection((current) => current ?? { kind: open, completed: true, completedYear: open === 'year' });
         }).catch(() => {});
         return () => { attached = false; };
     }, [autoOpen, weekEnd, seasonEnd, yearEnd]);
@@ -50,7 +50,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
         else dialog.showModal();
     }, [active, showingCompletedWeek]);
 
-    const recaps = { week, ...study };
+    const recaps = { week, ...study, year: selection?.completedYear ? study?.year : study?.currentYear ?? study?.year };
     const kinds: Kind[] = study ? ['week', 'season', 'year'] : ['week'];
     const recap = active === 'week'
         ? (showingCompletedWeek ? week : currentWeek)
@@ -61,7 +61,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
     function step(direction: 1 | -1) {
         if (!selection || kinds.length < 2) return;
         const index = kinds.indexOf(selection.kind);
-        setSelection({ ...selection, kind: kinds[(index + direction + kinds.length) % kinds.length] });
+        setSelection({ ...selection, kind: kinds[(index + direction + kinds.length) % kinds.length], completedYear: false });
     }
 
     return (
@@ -128,6 +128,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
                                 <p id="weekly-recap-goal">{active === 'year' ? 'Общий прогресс' : 'Цель к концу сезона'}</p>
                                 <strong>{recap.pct}%</strong>
                                 <progress aria-labelledby="weekly-recap-goal" max={100} value={recap.pct} />
+                                {active === 'year' && recap.inProgress && <p>Учебный год ещё идёт</p>}
                                 {active === 'season' && <p>{recap.inProgress ? 'Сезон ещё идёт' : 'Показатели с начала учебного года'}</p>}
                             </section>
                             <dl>

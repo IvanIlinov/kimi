@@ -136,7 +136,7 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
     if (!data) return <Loading />;
 
     const l = data.leader;
-    const monthTaskGoal = mode === 'month' ? data.monthTaskGoal : undefined;
+    const isMonth = mode === 'month';
     return (
         <>
             {(l || addAction) && (
@@ -152,7 +152,7 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                             <Kpi label="Программа" value={`${l.monthPct}%`} />
                             <Kpi label="Пробник" value={l.exam ?? 0} />
                             <Kpi label="Задания" value={l.topics} />
-                            <Kpi label="Задачи" value={monthTaskGoal ? `${l.tasks}/${monthTaskGoal}` : l.tasks} />
+                            <Kpi label={isMonth ? "За месяц" : "Задачи"} value={l.tasks} />
                         </div>
                     </>}
                 </Card>
@@ -167,8 +167,8 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                         bar={<SegmentBar value={r.pct} segments={12} />}
                         right={
                             <span class="stats">
-                                {monthTaskGoal
-                                    ? <span aria-label={`Решено задач: ${r.tasks} из ${monthTaskGoal}`}>{r.tasks}/{monthTaskGoal}</span>
+                                {isMonth
+                                    ? <span aria-label={`Решено задач за месяц: ${r.tasks}`}>{r.tasks}</span>
                                     : <span>{r.pct}%</span>}
                                 <Pill standing={r.standing} />
                             </span>
