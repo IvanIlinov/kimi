@@ -1,6 +1,7 @@
 import { recapPeriods } from '../../recap-periods.ts';
 import { db } from '../../db.ts';
-import { weekStartMs } from '../../store.ts';
+import { coreWeekTasks, weekStartMs } from '../../store.ts';
+import { coreStudyBounds, studyCore } from '../../study-core.ts';
 import { selfDto } from '../dto.ts';
 import { loadRanked } from '../context.ts';
 import type { Viewer } from '../context.ts';
@@ -9,6 +10,8 @@ import type { Router } from '../router.ts';
 import { nextStatus, statusOf } from '../../status.ts';
 import { addTasks, setExam, setTopicStatus } from '../../write.ts';
 import { syncTag } from '../../tags.ts';
+import { challengeFor } from '../../challenge-catalog.ts';
+import { openChallenge, submitChallengeAnswer, timedChallengeView } from '../../challenges.ts';
 
 // Свой участник: только тот, чей Telegram id пришёл в подписи
 function me(viewer: Viewer) {
@@ -31,6 +34,10 @@ function guard<T>(fn: () => T): T {
 
 function claimRecap(kind: 'week' | 'season' | 'year', personId: number, end: number): boolean {
     const key = kind === 'week' ? 'weekly_recap_seen' : `${kind}_recap_seen`;
+    return claimPeriod(key, personId, end);
+}
+
+function claimPeriod(key: string, personId: number, end: number): boolean {
     return db.prepare(`
         INSERT INTO meta (key, value) VALUES (?, ?)
         ON CONFLICT (key) DO UPDATE SET value = excluded.value
@@ -38,8 +45,61 @@ function claimRecap(kind: 'week' | 'season' | 'year', personId: number, end: num
     `).run(`${key}:${personId}`, String(end)).changes > 0;
 }
 
+function studentChallenge(viewer: Viewer, topic: number) {
+    if (viewer.role !== 'student' || viewer.personId === null || viewer.correctionActorTgId !== undefined) {
+        throw new HttpError(403, 'Доступно только ученикам');
+    }
+    const course = challengeFor(topic);
+    if (!course) throw new HttpError(404, 'Испытание ещё недоступно');
+    return { userId: viewer.personId, course };
+}
+
 export function registerSelf(router: Router): void {
     router.get('/api/self', ({ viewer }) => selfDto(me(viewer)));
+
+    router.get('/api/self/challenges/:n', ({ viewer, params }) => {
+        const topic = Number(params.n);
+        const { userId, course } = studentChallenge(viewer, topic);
+        return timedChallengeView(userId, topic, course);
+    });
+
+    router.post('/api/self/challenges/:n/start', ({ viewer, params, body }) => {
+        const topic = Number(params.n);
+        const { userId } = studentChallenge(viewer, topic);
+        const challenge = openChallenge(userId, topic, viewer.tgId, asObject(body).restart === true);
+        return { challenge, self: selfDto(me(viewer)) };
+    });
+
+    router.post('/api/self/challenges/:n/answer', ({ viewer, params, body }) => {
+        const topic = Number(params.n);
+        const { userId } = studentChallenge(viewer, topic);
+        const { exercise, answer, startedAt } = asObject(body);
+        if (typeof exercise !== 'string' || typeof answer !== 'number' || !Number.isSafeInteger(answer) || answer < 0) {
+            throw new HttpError(400, 'Введи целое неотрицательное число');
+        }
+        const result = submitChallengeAnswer(userId, topic, viewer.tgId, exercise, answer,
+            typeof startedAt === 'number' && Number.isSafeInteger(startedAt) ? startedAt : null);
+        if (result.credited) void syncTag(userId);
+        return { ...result, self: selfDto(me(viewer)) };
+    });
+
+    router.post('/api/self/core/celebration', ({ viewer }) => {
+        if (viewer.role !== 'student' || viewer.personId === null || viewer.correctionActorTgId !== undefined) {
+            throw new HttpError(403, 'Доступно только ученикам');
+        }
+        const { personId } = viewer;
+        const now = Date.now();
+        const bounds = coreStudyBounds(now);
+        const core = studyCore(now, coreWeekTasks(personId, bounds.start, Math.min(now + 1, bounds.end)));
+        const oldest = weekStartMs(now) - 7 * 86_400_000;
+        const crystal = core.seasons.flatMap(({ months }) => months.flatMap(({ crystals }) => crystals))
+            .reverse().find((week) => week.start >= oldest && week.state === 'lit');
+        return {
+            celebration: crystal && claimPeriod('core_crystal_seen', personId, crystal.end)
+                ? { core, week: crystal.start }
+                : null,
+        };
+    });
 
     router.post('/api/self/weekly-recap/open', ({ viewer, body }) => {
         if (viewer.role !== 'student' || viewer.personId === null) {
@@ -95,6 +155,9 @@ export function registerSelf(router: Router): void {
     router.post('/api/self/topics/:n/cycle', ({ viewer, params }) => {
         const r = me(viewer);
         const n = Number(params.n);
+        if (challengeFor(n) && viewer.role === 'student' && viewer.correctionActorTgId === undefined) {
+            throw new HttpError(403, 'Пройди испытание и практику в Mini App');
+        }
         guard(() => setTopicStatus(r.person.id, n, nextStatus(statusOf(r.person, n)),
             viewer.correctionActorTgId ?? viewer.tgId, viewer.correctionActorTgId !== undefined));
         return selfDto(me(viewer));

@@ -16,11 +16,12 @@ const labels = { week: 'Неделя', season: 'Сезон', year: 'Год' };
 const titles = { week: 'Итоги недели', season: 'Итоги сезона', year: 'Итоги года' };
 const seasonNames = { '03': 'Весна', '09': 'Осень', '12': 'Зима' } as Record<string, string>;
 
-export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
+export function PeriodRecaps({ week, currentWeek, study, autoOpen, onAutoDone }: {
     week: WeeklyRecap;
     currentWeek?: WeeklyRecap;
     study: Profile['studyRecaps'];
     autoOpen: boolean;
+    onAutoDone?: () => void;
 }) {
     const modal = useRef<HTMLDialogElement>(null);
     const gesture = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -28,6 +29,7 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
     const active = selection?.kind;
     const showingCompletedWeek = !currentWeek || selection?.completed === true;
     const keepKeyboardFocus = useRef(false);
+    const autoRecapPending = useRef(false);
     const yearEnd = study?.year.end;
     const seasonEnd = study?.season.inProgress ? undefined : study?.season.end;
     const weekEnd = week.end;
@@ -38,10 +40,14 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
         void api<{ open: Kind | null }>('/api/self/recaps/open', {
             method: 'POST', body: { week: weekEnd, season: seasonEnd, year: yearEnd },
         }).then(({ open }) => {
-            if (open && attached) setSelection((current) => current ?? { kind: open, completed: true, completedYear: open === 'year' });
-        }).catch(() => {});
+            if (!attached) return;
+            if (open) {
+                autoRecapPending.current = true;
+                setSelection((current) => current ?? { kind: open, completed: true, completedYear: open === 'year' });
+            } else onAutoDone?.();
+        }).catch(() => { if (attached) onAutoDone?.(); });
         return () => { attached = false; };
-    }, [autoOpen, weekEnd, seasonEnd, yearEnd]);
+    }, [autoOpen, onAutoDone, weekEnd, seasonEnd, yearEnd]);
 
     useLayoutEffect(() => {
         const dialog = modal.current;
@@ -90,6 +96,10 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
                     keepKeyboardFocus.current = false;
                     gesture.current = null;
                     setSelection(null);
+                    if (autoRecapPending.current) {
+                        autoRecapPending.current = false;
+                        onAutoDone?.();
+                    }
                 }}
                 onPointerDown={(event) => {
                     if (!event.isPrimary || event.pointerType === 'mouse') return;

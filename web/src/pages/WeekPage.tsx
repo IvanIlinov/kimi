@@ -2,6 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
 import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
+import { RankBadge } from '../components/RankPanel';
 import { cap, sgn } from '../lib/format';
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
@@ -23,7 +24,10 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                         {addAction}
                     </div>
                     {data.leader && <div class="between">
-                        <strong>{cap(data.leader.name)}</strong>
+                        <div class="leader-identity">
+                            <strong>{cap(data.leader.name)}</strong>
+                            <RankBadge rank={data.leader.rank} />
+                        </div>
                         <span class="stats">
                             <b>{sgn(data.leader.pct)}%</b>
                             <b>{sgn(data.leader.tasks)}</b>
@@ -39,6 +43,7 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                     <Row
                         key={r.id}
                         name={r.name}
+                        subtitle={r.rank && <RankBadge rank={r.rank} />}
                         bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
                         right={
                             <span class="stats">

@@ -4,21 +4,27 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
 import { arenaDto, membersDto, profileDto, selfDto, weekDto, weeklyRecapDto } from '../../src/api/dto.ts';
 import { recapPeriods } from '../../src/recap-periods.ts';
-import { monthGoal, monthPct, rank } from '../../src/logic.ts';
+import { monthGoal, monthPct, rank, weekStartMs } from '../../src/logic.ts';
+import { studyCore } from '../../src/study-core.ts';
+import { challengeFor } from '../../src/challenge-catalog.ts';
+import { rankProgress } from '../../src/ranks.ts';
 
 const now = new Date();
 const goals = monthGoal(now);
+// У Леры до первого ранга остаётся закрепить задание №11.
+const demoRouteStart = [1, 4, 7, ...Array.from({ length: 27 }, (_, i) => i + 1)
+    .filter((number) => ![1, 4, 7, 11].includes(number))];
 const ranked = rank([
-    { name: 'Лера', tasksTotal: Math.round(goals.tasks * 0.6), tasksWeek: 17, exam: Math.round(goals.exam * 0.3), topics: goals.topics },
+    { name: 'Лера', tasksTotal: Math.max(104, Math.round(goals.tasks * 0.6)), tasksWeek: 17, exam: 40, topics: goals.topics },
     { name: 'Саша', tasksTotal: 341, tasksWeek: 22, exam: 70, topics: 16 },
     { name: 'Миша', tasksTotal: 276, tasksWeek: 27, exam: 59, topics: 13 },
 ].map(({ topics, ...person }, i) => ({
     ...person,
     id: i + 1,
     tgId: i + 1,
-    reinforced: Array.from({ length: topics }, (_, n) => n + 1),
-    done: topics < 27 ? [topics + 1] : [],
-    learning: topics < 26 ? [topics + 2] : [],
+    reinforced: i === 0 ? demoRouteStart.slice(0, topics) : Array.from({ length: topics }, (_, n) => n + 1),
+    done: i === 0 ? [] : topics < 27 ? [topics + 1] : [],
+    learning: i === 0 ? demoRouteStart.slice(topics, topics + 1) : topics < 26 ? [topics + 2] : [],
     comment: '',
 })));
 const adminDemo = process.argv.includes('--admin');
@@ -52,6 +58,14 @@ function sampleStudyRecap(entry, { start, end, goalAt = end - 1 }, factor) {
     return { start, end, ...stats, goals, pct, examBefore: 42 };
 }
 
+function sampleCore(at, currentTasks) {
+    const crystals = studyCore(at, new Map()).seasons.flatMap(({ months }) => months.flatMap(({ crystals }) => crystals));
+    const totals = new Map(crystals.map(({ start, end, goal }, index) => [
+        weekStartMs(start), at >= end ? goal + (index % 4 === 2 ? -7 : 3) : start <= at ? currentTasks : 0,
+    ]));
+    return studyCore(at, totals);
+}
+
 function demoRoutes(role, student) {
     const viewer = student?.person;
     const tgId = viewer?.tgId ?? 0;
@@ -65,6 +79,10 @@ function demoRoutes(role, student) {
     for (const entry of ranked) {
         const { id } = entry.person;
         const profile = profileDto(entry, week.get(id), now, id === viewer?.id);
+        if (profile.canEdit && !recapPlacement) {
+            profile.core = sampleCore(now.getTime(), profile.week.tasks);
+            if (demoPeriods.currentYear) profile.previousCore = sampleCore(demoPeriods.year.end, 0);
+        }
         if (!recapPlacement || id !== viewer?.id) {
             profile.weeklyRecap = weeklyRecapDto(ranked, entry, lastWeek, demoPeriods.week.start, weekStart);
             const nextWeek = weekStart + (weekStart - demoPeriods.week.start);
@@ -152,13 +170,16 @@ if (recapPlacement) {
 const bundle = await build({
     envFile: false,
     define: { 'import.meta.env.VITE_API_URL': '""' },
-    build: { write: false, modulePreload: { polyfill: false } },
+    build: { write: false, assetsInlineLimit: Infinity, modulePreload: { polyfill: false } },
     plugins: [{
         name: 'arena-browser-demo',
         enforce: 'pre',
         transform(code, id) {
-            if (recapPlacement && id.endsWith('/src/main.tsx')) {
-                return `import { RecapHome } from '../scripts/recap-home';\n` +
+            if (id.endsWith('/src/main.tsx')) {
+                const demoHelpers = "import { challengeSession } from '../../src/challenge-catalog.ts';\nwindow.demoChallengeSession = challengeSession;\n" +
+                    "import { rankProgress } from '../../src/ranks.ts';\nwindow.demoRankProgress = rankProgress;\n";
+                if (!recapPlacement) return demoHelpers + code;
+                return demoHelpers + `import { RecapHome } from '../scripts/recap-home';\n` +
                     code.replace('<App />', `<App StudentHome={() => <RecapHome placement="${recapPlacement}" />} />`);
             }
             if (id.endsWith('/src/lib/telegram.ts')) {
@@ -171,13 +192,51 @@ const files = new Map(bundle.output.map((file) => [file.fileName, file.type === 
 const demo = `<script>
 const routes = ${JSON.stringify(routes).replaceAll('<', '\\u003c')};
 let recapOpened = false;
+let crystalCelebrated = false;
 let nextLessonId = 5;
 let nextMemberId = 4;
 const normalizeName = (name) => name.trim().replace(/\\p{L}/u, (letter) => letter.toUpperCase());
 const profileTemplate = routes.default['/api/profile/1'];
 const selfTemplate = routes['1']?.['/api/self'];
+const demoChallenge = ${JSON.stringify(challengeFor(11))};
+const demoSolved = new Set();
+let demoStartedAt = null;
+let demoFinishedAt = null;
+const initialStudyRank = ${JSON.stringify(rankProgress([], 0, 0))};
 const topicCycle = { todo: 'learning', learning: 'done', done: 'reinforced', reinforced: 'todo' };
 const lessonCycle = { planned: 'held', held: 'paid', paid: 'planned' };
+function refreshDemoProgress(current, result, previousTotal, ownPractice, examChanged) {
+    const personId = current['/api/me'].personId;
+    const reinforced = result.topics.flatMap((status, index) => status === 'reinforced' ? [index + 1] : []);
+    const totals = { tasks: result.tasksTotal, exam: result.exam, topics: reinforced.length };
+    const progress = Math.round(40 * Math.min(1, totals.topics / result.limits.topics) +
+        40 * Math.min(1, totals.tasks / result.limits.tasks) + 20 * Math.min(1, totals.exam / result.limits.exam));
+    const updateProfile = (item) => {
+        item.totals = totals;
+        item.pct = progress;
+        item.month.topics.value = reinforced.length;
+        if (ownPractice) {
+            item.week.tasks = result.tasksWeek;
+            item.week.goalPct = Math.round(100 * result.tasksWeek / result.limits.week);
+            const activeCrystal = item.core?.seasons.flatMap(({ months }) => months.flatMap(({ crystals }) => crystals))
+                .find(({ start, end }) => start <= item.core.asOf && item.core.asOf < end);
+            if (activeCrystal) {
+                activeCrystal.tasks = result.tasksWeek;
+                activeCrystal.state = activeCrystal.tasks >= activeCrystal.goal ? 'lit' : 'charging';
+            }
+            item.month.tasks.value += result.tasksTotal - previousTotal;
+            if (examChanged) item.month.exam.value = result.exam;
+        }
+        item.rank = window.demoRankProgress(reinforced, item.month.tasks.value, item.month.exam.value);
+    };
+    for (const view of Object.values(routes)) {
+        const profile = view['/api/profile/' + personId];
+        if (profile) updateProfile(profile);
+        const personal = view['/api/profile/me'];
+        if (personal && personal !== profile && view['/api/me'].personId === personId) updateProfile(personal);
+    }
+    result.rank = current['/api/profile/me'].rank;
+}
 window.fetch = async (path, options) => {
     const read = !options?.method || options.method === 'GET';
     const preview = options?.headers?.['X-Arena-Preview'];
@@ -185,6 +244,14 @@ window.fetch = async (path, options) => {
     const target = editing ? preview.slice(5) : preview;
     const current = target ? routes[target] : routes.default;
     const endpoint = target && path === '/api/me?preview=' + target ? '/api/me' : path;
+    if (!preview && options?.method === 'POST' && path === '/api/self/core/celebration') {
+        const core = current['/api/profile/me']?.core;
+        const crystal = core?.seasons.flatMap(({ months }) => months.flatMap(({ crystals }) => crystals))
+            .find((week) => week.start <= core.asOf && core.asOf < week.end);
+        if (crystalCelebrated || crystal?.state !== 'lit') return Response.json({ celebration: null });
+        crystalCelebrated = true;
+        return Response.json({ celebration: { core, week: crystal.start } });
+    }
     if (!preview && options?.method === 'POST' && path === '/api/self/recaps/open') {
         if (${swipeNavigation}) return Response.json({ open: null });
         const requested = new URLSearchParams(window.location.search).get('recap');
@@ -195,21 +262,65 @@ window.fetch = async (path, options) => {
         if (open) recapOpened = true;
         return Response.json({ open });
     }
-    if (editing && current && options?.method === 'POST') {
+    const ownPractice = !preview && current?.['/api/me'].role === 'student';
+    const challengePath = '/api/self/challenges/11';
+    if (ownPractice && (path === challengePath || path.startsWith(challengePath + '/'))) {
+        const self = current['/api/self'];
+        const view = () => window.demoChallengeSession(demoChallenge, demoSolved,
+            demoStartedAt === null ? null : { startedAt: demoStartedAt, finishedAt: demoFinishedAt }, Date.now());
+        if (read && path === challengePath) return Response.json(view());
+        if (options?.method === 'POST' && path === challengePath + '/start') {
+            const before = view();
+            const restart = options.body && JSON.parse(options.body).restart === true;
+            if (before.phase === 'lesson' && (demoStartedAt === null || (before.expired && restart))) {
+                if (before.expired) demoSolved.clear();
+                demoStartedAt = Date.now();
+            }
+            if (self.topics[10] === 'todo') self.topics[10] = 'learning';
+            return Response.json({ challenge: view(), self });
+        }
+        if (options?.method === 'POST' && path === challengePath + '/answer') {
+            const { exercise, answer, startedAt } = JSON.parse(options.body);
+            const before = view();
+            const item = [...demoChallenge.lesson, ...demoChallenge.practice].find(({ id }) => id === exercise);
+            let result = before.expired ? 'expired' : 'stale';
+            let credited = false;
+            const activeAttempt = before.phase !== 'lesson' || before.timer?.startedAt === startedAt;
+            if (!before.expired && activeAttempt && item && (demoSolved.has(exercise) || before.exercise?.id === exercise)) {
+                result = item.answer === answer ? 'solved' : 'wrong';
+                if (result === 'solved' && !demoSolved.has(exercise)) {
+                    demoSolved.add(exercise);
+                    const after = view();
+                    const previousTotal = self.tasksTotal;
+                    if (before.phase === 'practice') {
+                        self.tasksTotal++;
+                        self.tasksWeek++;
+                        credited = true;
+                        if (after.phase === 'complete') self.topics[10] = 'reinforced';
+                    } else if (after.phase === 'practice') {
+                        demoFinishedAt ??= Date.now();
+                        self.topics[10] = 'done';
+                    }
+                    else if (self.topics[10] === 'todo') self.topics[10] = 'learning';
+                    refreshDemoProgress(current, self, previousTotal, true, false);
+                }
+            }
+            return Response.json({ result, explanation: result === 'solved' ? item.explanation : null, credited, challenge: view(), self });
+        }
+    }
+    if ((editing || ownPractice) && current && options?.method === 'POST') {
         const result = current['/api/self'];
+        const previousTotal = result.tasksTotal;
         const topic = path.match(/^\\/api\\/self\\/topics\\/(\\d+)\\/cycle$/);
         if (topic) result.topics[Number(topic[1]) - 1] = topicCycle[result.topics[Number(topic[1]) - 1]];
         else if (path === '/api/self/exam') result.exam = JSON.parse(options.body).value;
-        else if (path === '/api/self/tasks') result.tasksTotal = Math.max(0, result.tasksTotal + JSON.parse(options.body).amount);
-        else return Response.json({ error: 'Действие недоступно' }, { status: 403 });
-        const totals = { tasks: result.tasksTotal, exam: result.exam, topics: result.topics.filter((s) => s === 'reinforced').length };
-        for (const view of Object.values(routes)) {
-            const profile = view['/api/profile/' + target];
-            if (profile) {
-                profile.totals = totals;
-                if (view['/api/me'].personId === Number(target)) view['/api/profile/me'].totals = totals;
-            }
-        }
+        else if (path === '/api/self/tasks') {
+            const amount = JSON.parse(options.body).amount;
+            const total = Math.max(0, result.tasksTotal + amount);
+            if (ownPractice) result.tasksWeek = Math.max(0, result.tasksWeek + total - result.tasksTotal);
+            result.tasksTotal = total;
+        } else return Response.json({ error: 'Действие недоступно' }, { status: 403 });
+        refreshDemoProgress(current, result, previousTotal, ownPractice, path === '/api/self/exam');
         return Response.json(result);
     }
     const home = !preview && routes.default['/api/admin/home'];
@@ -225,7 +336,7 @@ window.fetch = async (path, options) => {
             const member = { id, name: normalizeName(name) };
             const profile = structuredClone(profileTemplate);
             Object.assign(profile, member, {
-                place: members.length + 1, pct: 0, monthPct: 0,
+                place: members.length + 1, pct: 0, monthPct: 0, rank: initialStudyRank,
                 totals: { tasks: 0, topics: 0, exam: 0 },
             });
             Object.assign(profile.week, { tasks: 0, topics: 0, goalPct: 0 });
@@ -237,7 +348,7 @@ window.fetch = async (path, options) => {
             const newView = structuredClone(routes.guest);
             newView['/api/me'] = { role: 'student', name: member.name, personId: id };
             newView['/api/profile/me'] = { ...profile, canEdit: true };
-            newView['/api/self'] = { ...selfTemplate, topics, tasksTotal: 0, tasksWeek: 0, exam: 0 };
+            newView['/api/self'] = { ...selfTemplate, topics, tasksTotal: 0, tasksWeek: 0, exam: 0, rank: initialStudyRank };
             routes[id] = newView;
             for (const view of Object.values(routes)) {
                 view['/api/profile/' + id] = profile;
@@ -320,6 +431,15 @@ window.fetch = async (path, options) => {
         return Response.json({ ...home, month: { start, earnedKopecks, plannedKopecks } });
     }
     const found = read && current && Object.hasOwn(current, endpoint);
+    if (found && (endpoint === '/api/week' || endpoint.startsWith('/api/arena?'))) {
+        const { rows, leader, ...details } = current[endpoint];
+        const rankFor = (id) => current['/api/profile/' + id]?.rank.current;
+        return Response.json({
+            ...details,
+            rows: rows.map((row) => ({ ...row, rank: rankFor(row.id) ?? row.rank })),
+            leader: leader && { ...leader, rank: rankFor(rows[0]?.id) ?? leader.rank },
+        });
+    }
     if (found && endpoint === '/api/profile/me' && new URLSearchParams(window.location.search).get('recap') === 'season') {
         const fall = current[endpoint].studyRecaps?.season;
         if (fall?.inProgress) {

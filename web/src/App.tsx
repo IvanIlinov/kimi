@@ -1,7 +1,8 @@
-import { useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import { useApi } from './api/useApi';
-import { setPreviewAs } from './api/client';
-import type { Me } from './api/types';
+import { api, setPreviewAs } from './api/client';
+import type { CrystalCelebrationData, Me } from './api/types';
+import { CrystalCelebration } from './components/CitadelCore';
 import { TabBar } from './components/TabBar';
 import type { Tab } from './components/TabBar';
 import { Empty, Loading, Screen } from './components/ui';
@@ -16,8 +17,8 @@ type TabId = 'home' | 'week' | 'topics' | 'arena' | 'adminHistory';
 
 const STUDENT_TABS: Tab<TabId>[] = [
     { id: 'arena', icon: 'trophy', label: 'Рейтинг' },
-    { id: 'home', icon: 'user-round', label: 'Главная' },
-    { id: 'topics', icon: 'target', label: 'Задания' },
+    { id: 'home', icon: 'crystal', label: 'Штаб' },
+    { id: 'topics', icon: 'map', label: 'Миссии' },
 ];
 
 const GUEST_TABS: Tab<TabId>[] = [
@@ -37,6 +38,12 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     const me = useApi<Me>(preview ? `/api/me?preview=${preview.mode === 'guest' ? 'guest' : preview.id}` : '/api/me');
     const [tab, setTab] = useState<TabId | null>(null);
     const [openId, setOpenId] = useState<number | null>(null);
+    const [celebration, setCelebration] = useState<CrystalCelebrationData | null>(null);
+    const checkCrystal = useCallback(() => {
+        void api<{ celebration: CrystalCelebrationData | null }>('/api/self/core/celebration', { method: 'POST' })
+            .then(({ celebration }) => { if (celebration) setCelebration(celebration); })
+            .catch(() => {});
+    }, []);
 
     const startPreview = (id: number, editing = false, initialTab: 'home' | 'topics' = 'home') => {
         setPreviewAs(editing ? `edit:${id}` : String(id));
@@ -59,7 +66,7 @@ export function App({ StudentHome = StudentHomePage } = {}) {
         setTab(preview?.mode === 'student' && preview.editing ? 'arena' : 'week');
     };
 
-    useBackButton(openId !== null ? () => setOpenId(null) : preview ? stopPreview : null);
+    useBackButton(celebration ? () => setCelebration(null) : openId !== null ? () => setOpenId(null) : preview ? stopPreview : null);
 
     if (!insideTelegram) return <Screen title="Арена"><Empty text="Откройте Арену через Telegram-бота" /></Screen>;
     if (me.error) {
@@ -83,6 +90,7 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     const defaultTab = tabs === STUDENT_TABS ? 'home' : tabs === ADMIN_TABS ? 'week' : tabs[0].id;
     const active = tab && tabs.some((t) => t.id === tab) ? tab : defaultTab;
     const editingStudent = preview?.mode === 'student' && preview.editing;
+    const ownCrystalCheck = me.data.role === 'student' && !preview ? checkCrystal : undefined;
     const open = (id: number) => setOpenId(id);
 
     const go = (id: TabId) => {
@@ -94,8 +102,11 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     if (openId !== null) page = <StudentHomePage key={openId} id={openId} />;
     else if (active === 'week') page = <AdminHomePage onPreview={startPreview} onGuestPreview={startGuestPreview} />;
     else if (active === 'adminHistory') page = <HistoryPage />;
-    else if (active === 'home') page = <StudentHome autoOpenWeeklyRecap={me.data.role === 'student' && !preview} />;
-    else if (active === 'topics') page = <TopicsPage readOnly={preview !== null && !editingStudent} />;
+    else if (active === 'home') page = <StudentHome onMissions={() => go('topics')}
+        onRecapsReady={ownCrystalCheck}
+        autoOpenWeeklyRecap={me.data.role === 'student' && !preview} />;
+    else if (active === 'topics') page = <TopicsPage readOnly={preview !== null && !editingStudent} studentMode={preview === null}
+        onTasksSaved={ownCrystalCheck} />;
     else {
         const admin = tabs === ADMIN_TABS;
         page = <ArenaPage onOpen={admin ? (id) => startPreview(id, true) : open}
@@ -110,6 +121,8 @@ export function App({ StudentHome = StudentHomePage } = {}) {
                     label: editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра',
                     onClick: stopPreview,
                 } : undefined} />
+            {celebration && <CrystalCelebration key={celebration.week} data={celebration}
+                onClose={() => setCelebration(null)} />}
         </>
     );
 }

@@ -18,19 +18,22 @@ function person(id: number, overrides: Partial<Person> = {}): Person {
 test('global and monthly standings choose their own leaders before selecting the top ten', () => {
     const others = Array.from({ length: 10 }, (_, i) => person(i + 3, { tasksTotal: 2000 }));
     const globalLeader = person(1, { tasksTotal: 900, exam: 20 });
-    const monthLeader = person(2, { tasksTotal: 104, exam: 40, reinforced: [1, 2, 3, 4, 5, 6] });
+    const monthLeader = person(2, { tasksTotal: 104, exam: 40, reinforced: [1, 2, 3, 4, 7, 11] });
     const ranked = rank([...others, globalLeader, monthLeader]);
     assert.ok(ranked.slice(0, 10).every(({ person }) => person.id > 2));
 
     const global = arenaDto(ranked, monthLeader.tgId, 'global', now);
     assert.equal(global.rows[0].id, globalLeader.id);
     assert.equal(global.leader?.name, globalLeader.name);
+    assert.equal(global.leader?.rank.name, 'Пыль');
     assert.equal(global.rows.length, 11);
     assert.equal(global.rows.at(-1)?.id, monthLeader.id);
 
     const month = arenaDto(ranked, monthLeader.tgId, 'month', now);
     assert.equal(month.rows[0].id, monthLeader.id);
     assert.equal(month.leader?.name, monthLeader.name);
+    assert.deepEqual(month.leader?.rank, { level: 1, name: 'Неофит' });
+    assert.deepEqual(month.rows[0].rank, month.leader?.rank);
     assert.equal(month.rows[0].pct, 100);
     assert.equal(month.rows.length, 10);
     for (const mode of ['global', 'month'] as const) {
@@ -50,6 +53,7 @@ test('weekly standings sort by tasks then reinforced delta before selecting the 
 
     assert.deepEqual(week.rows.slice(0, 3).map((row) => row.id), [13, 12, 1]);
     assert.equal(week.leader?.name, people[12].name);
+    assert.deepEqual(week.leader?.rank, week.rows[0].rank);
     assert.equal(week.rows.length, 11);
     assert.equal(week.rows.at(-1)?.id, 11);
 });

@@ -49,9 +49,12 @@ test('итоги закрываются в понедельник по Моск�
     }
     const profile = () => call('GET', '/api/profile/me') as ProfileDto;
     const open = (end: number, viewer = student) => call('POST', '/api/self/weekly-recap/open', { end }, viewer);
+    const celebrate = () => call('POST', '/api/self/core/celebration') as { celebration: { week: number } | null };
 
     assert.equal(profile().weeklyRecap?.end, start);
     assert.deepEqual(open(end), { open: false });
+    assert.equal(celebrate().celebration?.week, start);
+    assert.equal(celebrate().celebration, null);
 
     t.mock.timers.tick(1);
     assert.deepEqual(profile().weeklyRecap, { start, end, tasks: 32, topics: 1, goal: 25, place: 2 });
@@ -59,8 +62,13 @@ test('итоги закрываются в понедельник по Моск�
     assert.equal(profile().currentWeekRecap?.tasks, 5);
     assert.equal(profile().currentWeekRecap?.topics, 1);
     assert.equal(profile().currentWeekRecap?.start, end);
+    const crystals = profile().core?.seasons.flatMap(({ months }) => months.flatMap(({ crystals }) => crystals));
+    assert.deepEqual(crystals?.find((week) => week.start === start), { start, end, goal: 25, tasks: 32, state: 'lit' });
+    assert.equal(crystals?.find((week) => week.start === end)?.state, 'charging');
+    assert.equal(celebrate().celebration, null);
     const guest = { ...student, role: 'guest', personId: null } as const;
     const guestProfile = call('GET', '/api/profile/1', {}, guest) as ProfileDto;
+    assert.equal(guestProfile.core, undefined);
     assert.deepEqual(guestProfile.weeklyRecap, profile().weeklyRecap);
     assert.deepEqual(guestProfile.currentWeekRecap, profile().currentWeekRecap);
     assert.equal(guestProfile.studyRecaps?.season.inProgress, true);

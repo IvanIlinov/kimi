@@ -4,6 +4,53 @@ export type Role = 'admin' | 'student' | 'guest';
 export type Standing = 'ontrack' | 'behind';
 export type TopicStatus = 'done' | 'learning' | 'todo' | 'reinforced';
 
+export interface StudyRank {
+    current: { level: number; name: string };
+    next: {
+        name: string;
+        topics: RankMetric;
+        tasks: RankMetric;
+        exam: RankMetric;
+    } | null;
+}
+
+export interface RankMetric {
+    value: number;
+    goal: number;
+}
+
+export interface RankSector {
+    name: string;
+    rank?: string;
+    missions: number[];
+}
+
+export interface CoreCrystal {
+    start: number;
+    end: number;
+    goal: number;
+    tasks: number;
+    state: 'future' | 'charging' | 'lit' | 'missed';
+}
+
+export interface CoreMonth {
+    start: number;
+    closed: boolean;
+    crystals: CoreCrystal[];
+}
+
+export interface StudyCore {
+    year: number;
+    asOf: number;
+    closed: boolean;
+    seasons: { closed: boolean; months: CoreMonth[] }[];
+}
+
+export interface CrystalCelebrationData {
+    core: StudyCore;
+    week: number;
+}
+
 export interface Me {
     role: Role;
     name: string;
@@ -41,6 +88,9 @@ export interface Profile {
     name: string;
     place: number;
     pct: number;
+    rank?: StudyRank;
+    core?: StudyCore;
+    previousCore?: StudyCore;
     standing: Standing;
     monthPct: number;
     totals: { tasks: number; topics: number; exam: number | null };
@@ -59,8 +109,8 @@ export interface Profile {
 }
 
 export interface Week {
-    leader: { name: string; pct: number; tasks: number; topics: number; goalPct?: number } | null;
-    rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
+    leader: { name: string; pct: number; tasks: number; topics: number; goalPct?: number; rank?: StudyRank['current'] } | null;
+    rows: { id: number; name: string; tasks: number; topics: number; goalPct: number; rank?: StudyRank['current'] }[];
 }
 
 export type ArenaMode = 'global' | 'month';
@@ -70,16 +120,30 @@ export interface Arena {
     monthTaskGoal: number;
     monthTopicGoal?: number;
     monthExamGoal?: number;
-    leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
-    rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
+    leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number; rank?: StudyRank['current'] } | null;
+    rows: { id: number; name: string; pct: number; tasks: number; rank?: StudyRank['current'] }[];
 }
 
 export interface SelfData {
     topics: TopicStatus[];
+    challengeTopics?: number[];
     tasksTotal: number;
     tasksWeek: number;
     exam: number | null;
+    rank?: StudyRank;
+    rankRoute?: RankSector[];
     limits: { topics: number; tasks: number; week: number; exam: number };
+}
+
+export interface ChallengeProgress {
+    title: string;
+    phase: 'lesson' | 'practice' | 'complete';
+    lesson: { solved: number; total: number };
+    practice: { solved: number; total: number };
+    limitMs: number;
+    expired: boolean;
+    timer: { startedAt: number; finishedAt: number | null; deadline: number; asOf: number } | null;
+    exercise: { id: string; title: string; prompt: string; hint: string } | null;
 }
 
 export interface AdminMember {

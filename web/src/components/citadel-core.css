@@ -1,0 +1,287 @@
+.citadel-preview {
+    min-width: 0;
+    width: clamp(112px, 40vw, 190px);
+    justify-self: end;
+}
+.citadel-trigger {
+    display: grid;
+    width: 100%;
+    gap: 2px;
+    padding: 4px 3px 7px;
+    justify-items: center;
+    border-radius: 15px;
+    background: radial-gradient(ellipse at center, #081527aa, transparent 73%);
+    text-align: center;
+}
+.citadel-trigger:hover { background-color: #071a3255; }
+.citadel-preview-text {
+    display: grid;
+    padding: 3px 7px;
+    border: 1px solid #82dfff55;
+    border-radius: 9px;
+    background: #07182bdc;
+    line-height: 1.2;
+}
+.citadel-preview-text strong { font-size: 12px; }
+.citadel-preview-text small { color: #acd4f2; font-size: 10px; }
+.citadel-trigger .citadel-pattern { width: min(100%, clamp(96px, 20dvh, 155px)); --gem-size: 3px; }
+.citadel-trigger .citadel-blade[data-charged="true"] { filter: drop-shadow(0 0 4px var(--blade-light)); }
+
+.citadel-dialog {
+    width: min(460px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    padding: 0;
+    color: var(--text);
+    background: radial-gradient(ellipse at 50% 20%, #173b67, #0b162b 68%);
+    border: 1px solid #8edbff72;
+    border-radius: 23px;
+    box-shadow: 0 28px 90px #02070de0, inset 0 1px #c5eeff30;
+    overscroll-behavior: contain;
+}
+.citadel-dialog::backdrop { background: #020714dd; }
+.citadel-content { padding: clamp(12px, 4vw, 20px); }
+.citadel-content header { position: relative; padding-right: 44px; }
+.citadel-content h2 { margin: 0; font-size: clamp(24px, 7vw, 32px); line-height: 1.15; }
+.citadel-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: 24px;
+}
+
+.citadel-figure {
+    display: grid;
+    justify-items: center;
+    margin: 10px 0;
+    color: #adc9e9;
+    font-size: 12px;
+}
+.citadel-figure strong { color: #e8faff; }
+.citadel-figure figcaption span { margin-inline: 4px; color: #84e6ff; }
+.citadel-pattern {
+    --gem-size: 5px;
+    --weave-time: 2.25s;
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+    width: min(100%, 242px);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, #67bbff38, transparent 67%);
+}
+.citadel-orbit {
+    position: absolute;
+    inset: 5%;
+    border: 1px solid #95c7ff50;
+    border-radius: 50%;
+    background: repeating-conic-gradient(#a9e3ff22 0deg 1deg, transparent 1deg 15deg);
+    mask-image: radial-gradient(transparent 62%, black 66% 73%, transparent 74%);
+}
+.citadel-pattern::before, .citadel-pattern::after {
+    position: absolute;
+    inset: 9%;
+    border: 1px solid #9decff4a;
+    border-radius: 50%;
+    content: '';
+}
+.citadel-pattern::after { inset: 25%; border-style: dashed; }
+.citadel-blade {
+    --blade-light: #79f4ff;
+    position: absolute;
+    left: 33%;
+    bottom: 50%;
+    width: 34%;
+    height: 44%;
+    transform-origin: 50% 100%;
+    transform: rotate(var(--angle));
+    filter: drop-shadow(0 0 4px #5285ad80);
+}
+.citadel-blade[data-season="1"] { --blade-light: #a7aaff; }
+.citadel-blade[data-season="2"] { --blade-light: #96ffe0; }
+.citadel-blade[data-charged="true"] { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--blade-light) 72%, transparent)); }
+.citadel-blade-face,
+.citadel-blade-face::after {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0%, 95% 41%, 75% 80%, 50% 100%, 25% 80%, 5% 41%);
+    background: #557da099;
+    content: '';
+}
+.citadel-blade-face::after {
+    inset: 2px;
+    background: linear-gradient(90deg, #132b47 0 50%, #193454 50%);
+}
+.citadel-blade[data-charged="true"] .citadel-blade-face { background: var(--blade-light); }
+.citadel-blade[data-charged="true"] .citadel-blade-face::after {
+    background: linear-gradient(90deg, #193754 0 50%, #305377 50%);
+}
+.citadel-blade[data-sealed="true"][data-charged="true"] .citadel-blade-face::after {
+    background: linear-gradient(130deg, var(--blade-light), #235581 48%, #15335a 49%, var(--blade-light));
+}
+.citadel-rune {
+    position: absolute;
+    z-index: 1;
+    top: var(--rune-position);
+    left: 50%;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    place-items: center;
+    width: 63%;
+    height: 15%;
+    transform: translate(-50%, -50%);
+}
+.citadel-rune[data-woven="true"] { border-block: 1px solid color-mix(in srgb, var(--blade-light) 25%, transparent); }
+.citadel-week-gem {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: var(--gem-size);
+    height: var(--gem-size);
+    grid-row: 1;
+}
+.citadel-week-gem::before {
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    border: 1px solid #9bc1df89;
+    background: #112740;
+    content: '';
+}
+.citadel-week-gem[data-state="charging"]::before { border-color: #c6dfff; }
+.citadel-week-gem[data-state="missed"]::before { opacity: 0.46; }
+.citadel-week-gem[data-state="lit"]::before {
+    border-color: #c5ffff;
+    background: var(--blade-light);
+    box-shadow: 0 0 6px 1px var(--blade-light);
+}
+.citadel-rune[data-woven="true"] .citadel-week-gem[data-state="lit"]::before { box-shadow: 0 0 8px 2px var(--blade-light); }
+
+.citadel-week-gem[data-weaving="true"] { z-index: 5; }
+.citadel-week-gem[data-weaving="true"]::before {
+    animation: citadel-ignite var(--weave-time) both;
+}
+.citadel-flying-gem {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    color: #d8ffff;
+    filter: drop-shadow(0 0 8px var(--blade-light)) drop-shadow(0 0 12px #5bbdff);
+    pointer-events: none;
+    animation: citadel-weave var(--weave-time) both;
+}
+.citadel-flying-gem svg { width: 100%; height: 100%; fill: #6cdfff40; }
+@keyframes citadel-weave {
+    0% { opacity: 0; transform: translate(-50%, -50%) translate(-42px, -53px) scale(0.84); }
+    16% { opacity: 1; }
+    54% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(-32px, -45px) rotate(-9deg) scale(1.08);
+        animation-timing-function: cubic-bezier(.68, .04, .9, .35);
+    }
+    82% { opacity: 1; transform: translate(-50%, -50%) scale(0.19); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.14); }
+}
+@keyframes citadel-ignite {
+    0%, 80% { background: #112740; border-color: #9bc1df89; box-shadow: none; }
+    83% { background: #fff; box-shadow: 0 0 19px 8px #d8ffff, 0 0 30px 13px var(--blade-light); }
+    100% { background: var(--blade-light); box-shadow: 0 0 7px 2px var(--blade-light); }
+}
+.citadel-blade:has([data-weaving="true"]) { z-index: 3; }
+.citadel-celebration .citadel-figure { margin-block: 16px; }
+.citadel-weave-note { display: grid; justify-items: center; gap: 3px; margin: 8px 0 16px; }
+.citadel-weave-note strong { color: #bdf8ff; }
+.citadel-weave-note span { font-size: 12px; color: var(--muted); }
+.citadel-done { width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    .citadel-flying-gem { display: none; animation: none; }
+    .citadel-week-gem[data-weaving="true"]::before { animation: none; }
+}
+
+.citadel-heart {
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 24%;
+    aspect-ratio: 1;
+    border: 1px solid #91d8ffb0;
+    border-radius: 38%;
+    color: #b8ecff;
+    background: radial-gradient(circle at top, #315886, #101e3a 75%);
+    box-shadow: 0 0 18px #65c5ff52;
+}
+.citadel-heart svg { width: 51%; height: 51%; }
+.citadel-pattern[data-complete="true"] .citadel-heart {
+    color: #fff8dc;
+    border-color: #fff1c7;
+    background: radial-gradient(circle at top, #ae8561, #304c7c 75%);
+    box-shadow: 0 0 38px #ffe4a39e;
+}
+
+.citadel-years, .citadel-seasons, .citadel-months {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    margin-block: 7px;
+}
+.citadel-years { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.citadel-years button, .citadel-seasons button, .citadel-months button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: #b4d0ec;
+    font-size: 12px;
+}
+.citadel-years button[aria-pressed="true"], .citadel-seasons button[aria-pressed="true"], .citadel-months button[aria-pressed="true"] {
+    border-color: #8edfff80;
+    color: #f1fcff;
+    background: #264874;
+}
+.citadel-seasons svg { width: 13px; height: 13px; color: var(--good); }
+.citadel-month {
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #08162b85;
+}
+.citadel-month .between { gap: 6px; font-size: 12px; }
+.citadel-month .between span, .citadel-rule { color: var(--muted); font-size: 12px; }
+.citadel-month p { margin: 8px 0 0; color: #acf2ff; font-size: 12px; }
+.citadel-rule { margin-bottom: 0; }
+.citadel-crystals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 5px;
+    padding: 0;
+    margin: 8px 0 0;
+    list-style: none;
+}
+.citadel-crystals li {
+    display: grid;
+    place-items: center;
+    align-content: start;
+    gap: 2px;
+    padding: 6px 2px;
+    color: #b2c5dc;
+    border: 1px solid #83adcd35;
+    border-radius: 8px;
+    background: #14243b;
+    text-align: center;
+    font-size: 10px;
+    overflow-wrap: anywhere;
+}
+.citadel-crystals li[data-state="lit"] { color: #cdffff; background: #15394b; border-color: #84faff70; }
+.citadel-crystals li[data-state="lit"] svg { fill: #5ce5ff4d; filter: drop-shadow(0 0 5px #54ddffb5); }
+.citadel-crystals li[data-state="charging"] { color: #d7edff; border-color: #8bbcff; }
+.citadel-crystals li[data-state="future"] { background: #0e1e32; }
+.citadel-crystals svg { width: 26px; height: 26px; }
+.citadel-crystals small { font-size: 10px; }

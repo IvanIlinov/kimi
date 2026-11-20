@@ -115,6 +115,28 @@ const creditedTopicFromStatus = `CASE WHEN EXISTS (
     LIMIT 1
 ) ELSE t.from_status END`;
 
+// Учитываем только учебные записи в недельных итогах и кристаллах.
+const weeklyTaskFilter = `t.cancelled = 0
+    AND t.source <> 'admin'
+    AND ABS(t.amount) <= ?
+    AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)`;
+
+export function coreWeekTasks(userId: number, start: number, end: number): Map<number, number> {
+    const monday = weekStartMs(start);
+    const duration = 7 * 86_400_000;
+    const rows = db.prepare(`
+        SELECT ? + CAST((t.created_at - ?) / ? AS INTEGER) * ? AS week, SUM(t.amount) AS tasks
+        FROM task_log t
+        JOIN users u ON u.id = t.user_id
+        WHERE t.user_id = ?
+          AND t.created_at >= ? AND t.created_at < ?
+          AND ${weeklyTaskFilter}
+        GROUP BY week
+    `).all(monday, monday, duration, duration, userId, start, end, MAX_TASKS_PER_ENTRY) as unknown as
+        { week: number; tasks: number }[];
+    return new Map(rows.map(({ week, tasks }) => [week, tasks]));
+}
+
 export function getWeekStats(now: number = Date.now(), until: number | null = null): WeekStat[] {
     const from = weekStartMs(now);
     const stats = new Map<number, WeekStat>();
@@ -133,12 +155,9 @@ export function getWeekStats(now: number = Date.now(), until: number | null = nu
             SELECT t.user_id, SUM(t.amount) AS total, COUNT(*) AS n
             FROM task_log t
             JOIN users u ON u.id = t.user_id
-            WHERE t.cancelled = 0
-              AND t.created_at >= ?
+            WHERE t.created_at >= ?
               AND (? IS NULL OR t.created_at < ?)
-              AND t.source <> 'admin'
-              AND ABS(t.amount) <= ?
-              AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+              AND ${weeklyTaskFilter}
             GROUP BY t.user_id
         `)
         .all(from, until, until, MAX_TASKS_PER_ENTRY) as unknown as { user_id: number; total: number; n: number }[];

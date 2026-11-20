@@ -5,7 +5,8 @@ import type { ArenaMode } from '../dto.ts';
 import { loadRanked } from '../context.ts';
 import { HttpError } from '../errors.ts';
 import type { Router } from '../router.ts';
-import { getWeekStats, studyRecapStats } from '../../store.ts';
+import { coreWeekTasks, getWeekStats, studyRecapStats } from '../../store.ts';
+import { coreStudyBounds, studyCore } from '../../study-core.ts';
 
 // Чтение: доступно всем ролям
 export function registerRead(router: Router): void {
@@ -27,6 +28,15 @@ export function registerRead(router: Router): void {
         const week = currentWeekStats.find((s) => s.userId === r.person.id);
         const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
         const { week: closedWeek, season, year, currentFall, currentYear } = recapPeriods(now);
+        if (profile.canEdit) {
+            const bounds = coreStudyBounds(now);
+            const userId = r.person.id;
+            profile.core = studyCore(now, coreWeekTasks(userId, bounds.start, Math.min(bounds.end, now + 1)));
+            if (currentYear) {
+                const previous = coreWeekTasks(userId, year.start, year.end);
+                if (previous.size) profile.previousCore = studyCore(year.end, previous);
+            }
+        }
         profile.weeklyRecap = weeklyRecapDto(
             ranked, r, getWeekStats(closedWeek.start, closedWeek.end), closedWeek.start, closedWeek.end,
         );

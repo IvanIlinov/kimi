@@ -1,14 +1,22 @@
 // Формы ответов API. Зеркало этих типов лежит в web/src/api/types.ts.
 import { EXAM_MAX, TASKS_GOAL, TOPICS_TOTAL, WEEK_GOAL, monthGoal, monthPct, monthlyResults, onTrack, studyPeriod, visible, weekPct } from '../logic.ts';
-import type { Ranked } from '../logic.ts';
+import type { Person, Ranked } from '../logic.ts';
+import { rankProgress, RANK_ROUTE } from '../ranks.ts';
 import type { WeekStat } from '../store.ts';
 import { statusOf } from '../status.ts';
 import type { TopicStatus } from '../status.ts';
+import type { studyCore } from '../study-core.ts';
+import { CHALLENGE_TOPICS } from '../challenge-catalog.ts';
 
 export type Standing = 'ontrack' | 'behind';
 
 const standing = (r: Ranked, now: Date): Standing => (onTrack(r, now) ? 'ontrack' : 'behind');
 const emptyWeek = (id: number): WeekStat => ({ userId: id, tasks: 0, topics: 0, active: false });
+const studyRankFor = (person: Person) => {
+    const { tasks, exam } = monthlyResults(person);
+    return rankProgress(person.reinforced, tasks, exam);
+};
+type CurrentRank = ReturnType<typeof rankProgress>['current'];
 
 export interface MemberDto {
     id: number;
@@ -56,6 +64,9 @@ export interface ProfileDto {
     name: string;
     place: number;
     pct: number; // глобальный прогресс
+    rank: ReturnType<typeof rankProgress>;
+    core?: ReturnType<typeof studyCore>;
+    previousCore?: ReturnType<typeof studyCore>;
     standing: Standing;
     monthPct: number;
     totals: { tasks: number; topics: number; exam: number | null };
@@ -84,6 +95,7 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
         name: p.name,
         place: r.place,
         pct: r.pct,
+        rank: studyRankFor(p),
         standing: standing(r, now),
         monthPct: monthPct(r, now),
         totals: { tasks: p.tasksTotal, topics: p.reinforced.length, exam: p.exam },
@@ -100,8 +112,8 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
 }
 
 export interface WeekDto {
-    leader: { name: string; pct: number; tasks: number; topics: number; goalPct: number } | null;
-    rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
+    leader: { name: string; pct: number; tasks: number; topics: number; goalPct: number; rank: CurrentRank } | null;
+    rows: { id: number; name: string; tasks: number; topics: number; goalPct: number; rank: CurrentRank }[];
 }
 
 export function weekDto(ranked: Ranked[], viewerTgId: number, week: Map<number, WeekStat>, showAll = false): WeekDto {
@@ -114,12 +126,14 @@ export function weekDto(ranked: Ranked[], viewerTgId: number, week: Map<number, 
         name: person.name,
         tasks: stat.tasks,
         topics: stat.topics,
+        rank: studyRankFor(person).current,
         goalPct: Math.round((stat.tasks / WEEK_GOAL) * 100),
     }));
     return {
         leader: first
             ? {
                   name: first.person.name,
+                  rank: studyRankFor(first.person).current,
                   pct: Math.round(weekPct(first.stat)),
                   tasks: first.stat.tasks,
                   topics: first.stat.topics,
@@ -138,8 +152,8 @@ export interface ArenaDto {
     monthTopicGoal: number;
     monthExamGoal: number;
     // Первое место в выбранном режиме
-    leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number } | null;
-    rows: { id: number; name: string; pct: number; tasks: number; standing: Standing }[];
+    leader: { name: string; pct: number; monthPct: number; exam: number | null; topics: number; tasks: number; rank: CurrentRank } | null;
+    rows: { id: number; name: string; pct: number; tasks: number; standing: Standing; rank: CurrentRank }[];
 }
 
 export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, now: Date, showAll = false): ArenaDto {
@@ -159,6 +173,7 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
         leader: first && results
             ? {
                   name: first.person.name,
+                  rank: studyRankFor(first.person).current,
                   pct: first.pct,
                   monthPct: first.monthPct,
                   exam: results.exam,
@@ -172,15 +187,19 @@ export function arenaDto(ranked: Ranked[], viewerTgId: number, mode: ArenaMode, 
             pct: mode === 'global' ? r.pct : r.monthPct,
             tasks: mode === 'month' ? r.person.tasksThisMonth ?? 0 : r.person.tasksTotal,
             standing: standing(r, now),
+            rank: studyRankFor(r.person).current,
         })),
     };
 }
 
 export interface SelfDto {
     topics: TopicStatus[]; // статусы заданий 1..27
+    challengeTopics: number[];
     tasksTotal: number;
     tasksWeek: number;
     exam: number | null;
+    rank: ReturnType<typeof rankProgress>;
+    rankRoute: typeof RANK_ROUTE;
     limits: { topics: number; tasks: number; week: number; exam: number };
 }
 
@@ -188,9 +207,12 @@ export function selfDto(r: Ranked): SelfDto {
     const p = r.person;
     return {
         topics: Array.from({ length: TOPICS_TOTAL }, (_, i) => statusOf(p, i + 1)),
+        challengeTopics: CHALLENGE_TOPICS,
         tasksTotal: p.tasksTotal,
         tasksWeek: p.tasksWeek,
         exam: p.exam,
+        rank: studyRankFor(p),
+        rankRoute: RANK_ROUTE,
         limits: { topics: TOPICS_TOTAL, tasks: TASKS_GOAL, week: WEEK_GOAL, exam: EXAM_MAX },
     };
 }

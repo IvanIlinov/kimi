@@ -143,6 +143,21 @@ CREATE TABLE IF NOT EXISTS lessons (
   status     TEXT NOT NULL CHECK (status IN ('planned', 'held', 'paid'))
 );
 CREATE INDEX IF NOT EXISTS lessons_week ON lessons(week_start, weekday, time);
+
+CREATE TABLE IF NOT EXISTS challenge_solutions (
+  user_id     INTEGER NOT NULL REFERENCES users(id),
+  topic_no    INTEGER NOT NULL CHECK (topic_no BETWEEN 1 AND 27),
+  exercise_id TEXT NOT NULL,
+  PRIMARY KEY (user_id, topic_no, exercise_id)
+);
+
+CREATE TABLE IF NOT EXISTS challenge_attempts (
+  user_id     INTEGER NOT NULL REFERENCES users(id),
+  topic_no    INTEGER NOT NULL CHECK (topic_no BETWEEN 1 AND 27),
+  started_at  INTEGER NOT NULL,
+  finished_at INTEGER,
+  PRIMARY KEY (user_id, topic_no)
+);
 `);
 
 addColumnIfMissing('lessons', 'price_kopecks', 'INTEGER NOT NULL DEFAULT 0 CHECK (price_kopecks >= 0)');

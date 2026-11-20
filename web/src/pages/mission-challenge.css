@@ -1,0 +1,66 @@
+.mission-challenge { display: grid; gap: 7px; }
+.challenge-summary { display: flex; justify-content: space-between; gap: 8px; color: #c2ddf7; font-size: 12px; }
+.challenge-summary small { display: block; color: var(--muted); font-size: 11px; }
+.challenge-summary strong, .challenge-progress strong { color: var(--good); font-variant-numeric: tabular-nums; }
+.challenge-dialog {
+    width: min(460px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px);
+    padding: 0;
+    color: var(--text);
+    background: radial-gradient(ellipse at top right, #1c4876, #0b192e 70%);
+    border: 1px solid #8edbff80;
+    border-radius: 22px;
+    box-shadow: 0 24px 75px #030816cb;
+    overscroll-behavior: contain;
+}
+.challenge-dialog::backdrop { background: #030814dc; }
+.challenge-content { padding: clamp(13px, 4vw, 21px); }
+.challenge-content header { position: relative; padding-right: 44px; }
+.challenge-content h2 { margin: 3px 0 0; font-size: clamp(19px, 5.8vw, 27px); line-height: 1.1; }
+.challenge-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: 23px;
+}
+.challenge-progress {
+    display: grid;
+    gap: 6px;
+    margin: 14px 0 11px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.challenge-progress .seg { height: 7px; min-height: 7px; }
+.challenge-progress .seg i { max-width: none; }
+.challenge-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: #c0ecff;
+    background: #0a2139;
+    font-variant-numeric: tabular-nums;
+}
+.challenge-timer svg { width: 12px; height: 12px; }
+.challenge-timer[data-urgent="true"] { color: #ffce85; border-color: #eeb05b80; }
+.challenge-exercise, .challenge-review {
+    padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: #08162b9c;
+}
+.challenge-exercise h3 { margin: 0; color: #c2e9ff; font-size: 14px; }
+.challenge-exercise p, .challenge-review p { margin: 8px 0 12px; font-size: 14px; }
+.challenge-hint { margin: 0 0 11px; color: #a9dcfb; font-size: 13px; }
+.challenge-hint summary { cursor: pointer; width: fit-content; padding: 3px 0; font-weight: 700; }
+.challenge-hint p { margin: 4px 0; }
+.challenge-exercise .exam input { min-width: 0; }
+.challenge-review > strong { display: flex; align-items: center; gap: 6px; color: var(--good); }
+.challenge-review > strong svg { width: 17px; height: 17px; }
+.challenge-review .mission-action { width: 100%; }

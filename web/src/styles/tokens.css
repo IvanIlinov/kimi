@@ -1,21 +1,20 @@
-/* Матовая графитовая палитра Арены */
+/* Ночная палитра Арены */
 :root {
     color-scheme: dark;
 
-    --bg: #101114;
-    --bg-glow: #101114;
-    --surface: #191b20;
-    --surface-strong: #22252c;
-    --border: rgba(220, 226, 240, 0.10);
+    --bg: #060d1c;
+    --surface: #0d1a30;
+    --surface-strong: #192d49;
+    --border: rgba(124, 183, 240, 0.17);
 
-    --text: #f0f1f4;
-    --muted: #969ba7;
+    --text: #eff8ff;
+    --muted: #a9bfd8;
 
     /* Основные акценты шкал, плиток и состояний интерфейса. */
-    --good: #35df91;
+    --good: #64edee;
     --warn: #ffd04a;
     --bad: #ff6575;
-    --blue: #42a5ff;
+    --blue: #83aeff;
 
     --good-soft: color-mix(in srgb, var(--good) 12%, transparent);
     --warn-soft: color-mix(in srgb, var(--warn) 12%, transparent);

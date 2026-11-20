@@ -2,7 +2,6 @@ import type { ComponentChildren } from 'preact';
 import { cap, toneFor } from '../lib/format';
 import type { Tone } from '../lib/format';
 import { NavIcon } from './NavIcon';
-import type { Standing } from '../api/types';
 
 // Сегментная шкала: вертикальные штрихи вместо сплошной полосы
 export function SegmentBar({ value, max = 100, segments = 18, tone }: {
@@ -44,17 +43,10 @@ export function MetricTile({ icon, label, value }: {
     );
 }
 
-export function Pill({ standing }: { standing: Standing }) {
-    return standing === 'ontrack' ? (
-        <span class="pill" data-accent="blue">В плане</span>
-    ) : (
-        <span class="pill" data-accent="red">Отстаёт</span>
-    );
-}
-
 // Строка списка: имя, шкала, значение; нажатие открывает профиль
-export function Row({ name, bar, right, onClick, actions }: {
+export function Row({ name, subtitle, bar, right, onClick, actions }: {
     name: string;
+    subtitle?: ComponentChildren;
     bar?: ComponentChildren;
     right: ComponentChildren;
     onClick?: () => void;
@@ -62,7 +54,9 @@ export function Row({ name, bar, right, onClick, actions }: {
 }) {
     const row = (
         <button class="row" onClick={onClick} disabled={!onClick}>
-            <span class="row-name">{cap(name)}</span>
+            {subtitle ? (
+                <span class="row-identity"><span class="row-name">{cap(name)}</span>{subtitle}</span>
+            ) : <span class="row-name">{cap(name)}</span>}
             <span class="row-bar">{bar}</span>
             <span class="row-right">{right}</span>
         </button>

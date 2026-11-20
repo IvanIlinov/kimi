@@ -3,7 +3,8 @@ import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { Arena, ArenaMode } from '../api/types';
-import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
+import { Card, Empty, Label, Loading, Row, Screen, SegmentBar } from '../components/ui';
+import { RankBadge } from '../components/RankPanel';
 import { cap } from '../lib/format';
 import { NavIcon } from '../components/NavIcon';
 import { WeekResults } from './WeekPage';
@@ -146,7 +147,10 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                         {addAction}
                     </div>
                     {l && <>
-                        <strong class="leader-name">{cap(l.name)}</strong>
+                        <div class="leader-identity">
+                            <strong class="leader-name">{cap(l.name)}</strong>
+                            <RankBadge rank={l.rank} />
+                        </div>
                         <div class="kpis">
                             <Kpi label="Прогресс" value={`${l.pct}%`} />
                             <Kpi label="Программа" value={`${l.monthPct}%`} />
@@ -164,13 +168,13 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                     <Row
                         key={r.id}
                         name={r.name}
+                        subtitle={r.rank && <RankBadge rank={r.rank} />}
                         bar={<SegmentBar value={r.pct} segments={12} />}
                         right={
                             <span class="stats">
                                 {isMonth
                                     ? <span aria-label={`Решено задач за месяц: ${r.tasks}`}>{r.tasks}</span>
                                     : <span>{r.pct}%</span>}
-                                <Pill standing={r.standing} />
                             </span>
                         }
                         onClick={() => onOpen(r.id)}
