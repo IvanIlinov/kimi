@@ -87,6 +87,7 @@ export interface Profile {
     id: number;
     name: string;
     place: number;
+    rankPlace?: number;
     pct: number;
     rank?: StudyRank;
     core?: StudyCore;

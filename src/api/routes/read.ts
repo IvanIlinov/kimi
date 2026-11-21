@@ -26,7 +26,7 @@ export function registerRead(router: Router): void {
         const now = Date.now();
         const currentWeekStats = getWeekStats(now);
         const week = currentWeekStats.find((s) => s.userId === r.person.id);
-        const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id);
+        const profile = profileDto(r, week, new Date(now), viewer.personId === r.person.id, ranked);
         const { week: closedWeek, season, year, currentFall, currentYear } = recapPeriods(now);
         if (profile.canEdit) {
             const bounds = coreStudyBounds(now);

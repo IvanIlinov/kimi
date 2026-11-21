@@ -52,7 +52,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                                 </dl>}
                             </div>
                         </div>
-                        {modernLayout ? data.rank && <RankGuide rank={data.rank} />
+                        {modernLayout ? data.rank && <RankGuide rank={data.rank} place={data.rankPlace} />
                             : data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
                     </Card>
                     {gameLayout && <StudentCrystals week={data.week} />}
@@ -73,7 +73,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
     );
 }
 
-function RankGuide({ rank }: { rank: StudyRank }) {
+function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const requirements = rank.next ? [
         { label: 'Задания', ...rank.next.topics },
@@ -88,6 +88,12 @@ function RankGuide({ rank }: { rank: StudyRank }) {
                 aria-label={`Таблица рангов. Текущий ранг: ${rankName(rank.current)}`}
                 aria-describedby={rank.next ? 'tablet-profile-rank-progress' : undefined}
                 onClick={() => dialog.current?.showModal()}>
+                <span class="tablet-standing-label">
+                    <strong>{rankName(rank.current)}</strong>
+                    {place !== undefined && <span class="tablet-standing-place" aria-label={`${place}-е место в ранге`}>
+                        {place}-е место <NavIcon name="trophy" />
+                    </span>}
+                </span>
                 {rank.next ? (
                     <span class="tablet-standing-progress" aria-hidden="true">
                         {requirements.map(({ label, value, goal }, index) => (
@@ -100,10 +106,6 @@ function RankGuide({ rank }: { rank: StudyRank }) {
                         <NavIcon name="arrow-right" />
                     </span>
                 ) : <span class="tablet-standing-class">{rank.current.kingClass ?? <NavIcon name="crown" />}</span>}
-                <span class="tablet-standing-label">
-                    <strong>Ранги</strong>
-                    <small>{rank.next?.name ?? rank.current.name}</small>
-                </span>
             </button>
             {rank.next && <span hidden id="tablet-profile-rank-progress">
                 До ранга «{rank.next.name}». {requirements.map(({ label, value, goal }) => `${label}: ${value} из ${goal}`).join('. ')}

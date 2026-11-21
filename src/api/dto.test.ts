@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { rank } from '../logic.ts';
 import type { Person } from '../logic.ts';
 import type { WeekStat } from '../store.ts';
-import { arenaDto, weekDto } from './dto.ts';
+import { arenaDto, profileDto, weekDto } from './dto.ts';
 
 const now = new Date('2026-09-20T12:00:00Z');
 
@@ -14,6 +14,21 @@ function person(id: number, overrides: Partial<Person> = {}): Person {
         ...overrides,
     };
 }
+
+test('profile rank place excludes other ranks and preserves XP ties', () => {
+    const ranked = rank([
+        person(1, { tasksTotal: 900, exam: 40, reinforced: [1, 4, 7, 11] }),
+        person(2, { tasksTotal: 200 }),
+        person(3, { tasksTotal: 100 }),
+        person(4, { tasksTotal: 100 }),
+    ]);
+    const profile = (id: number) => profileDto(ranked.find((entry) => entry.person.id === id)!, undefined, now, true, ranked);
+    assert.equal(profile(1).rankPlace, 1);
+    assert.equal(profile(2).rankPlace, 1);
+    assert.equal(profile(3).rankPlace, 2);
+    assert.equal(profile(4).rankPlace, 2);
+    assert.equal(profile(3).place, 3);
+});
 
 test('global and monthly standings choose their own leaders before selecting the top ten', () => {
     const others = Array.from({ length: 10 }, (_, i) => person(i + 3, { tasksTotal: 2000 }));

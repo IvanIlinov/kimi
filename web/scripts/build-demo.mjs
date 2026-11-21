@@ -78,7 +78,7 @@ function demoRoutes(role, student) {
     };
     for (const entry of ranked) {
         const { id } = entry.person;
-        const profile = profileDto(entry, week.get(id), now, id === viewer?.id);
+        const profile = profileDto(entry, week.get(id), now, id === viewer?.id, ranked);
         if (profile.canEdit && !recapPlacement) {
             profile.core = sampleCore(now.getTime(), profile.week.tasks);
             if (demoPeriods.currentYear) profile.previousCore = sampleCore(demoPeriods.year.end, 0);

@@ -63,6 +63,7 @@ export interface ProfileDto {
     id: number;
     name: string;
     place: number;
+    rankPlace: number;
     pct: number; // глобальный прогресс
     rank: ReturnType<typeof rankProgress>;
     core?: ReturnType<typeof studyCore>;
@@ -84,18 +85,22 @@ export interface ProfileDto {
     studyRecaps?: { year: StudyRecapDto; season: StudyRecapDto; currentYear?: StudyRecapDto };
 }
 
-export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, canEdit: boolean): ProfileDto {
+export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, canEdit: boolean, ranked: readonly Ranked[]): ProfileDto {
     const p = r.person;
     const w = week ?? emptyWeek(p.id);
     const m = monthGoal(now);
     const results = monthlyResults(p);
     const period = studyPeriod(now);
+    const studyRank = studyRankFor(p);
+    const rankPlace = 1 + ranked.filter((other) => other.xp > r.xp &&
+        studyRankFor(other.person).current.level === studyRank.current.level).length;
     return {
         id: p.id,
         name: p.name,
         place: r.place,
+        rankPlace,
         pct: r.pct,
-        rank: studyRankFor(p),
+        rank: studyRank,
         standing: standing(r, now),
         monthPct: monthPct(r, now),
         totals: { tasks: p.tasksTotal, topics: p.reinforced.length, exam: p.exam },
