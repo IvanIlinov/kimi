@@ -235,6 +235,7 @@
     background: transparent;
     box-shadow: none;
 }
+.tablet-rank-watermark .rank-emblem[data-level] { --rank-glow: #70ebff; }
 .tablet-rank-watermark .rank-emblem::before,
 .tablet-rank-watermark .rank-emblem::after {
     position: absolute;
