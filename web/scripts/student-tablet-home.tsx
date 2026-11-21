@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { KING_CLASSES, RANK_REQUIREMENTS } from '../../src/ranks';
+import { KING_CLASSES, RANK_REQUIREMENTS, RANK_ROUTE } from '../../src/ranks';
 import { useApi } from '../src/api/useApi';
 import type { ChallengeProgress, Profile, SelfData, StudyRank } from '../src/api/types';
 import { CitadelCore } from '../src/components/CitadelCore';
@@ -249,22 +249,70 @@ function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
     onTasksSaved?: () => void;
     preview: boolean;
 }) {
-    return preview
-        ? <PreviewAssignment />
-        : <ActiveAssignment onProgress={onProgress} onTasksSaved={onTasksSaved} />;
-}
-
-function PreviewAssignment() {
-    const dialog = useRef<HTMLDialogElement>(null);
-    const [value, setValue] = useState('');
-    const [feedback, setFeedback] = useState('');
-    const [topic, question, answer, hint] = reviewQuestions[10];
+    const [mission, setMission] = useState(11);
+    const picker = useRef<HTMLDialogElement>(null);
+    const { data, error, reload, setData } = useApi<SelfData>('/api/self');
+    const official = !preview && (data?.challengeTopics ?? [11]).includes(mission);
 
     return (
         <Card class="tablet-current-assignment">
-            <h2 class="tablet-ring tablet-assignment-number" aria-label="Задание 11">11</h2>
-            <div class="tablet-assignment-progress" aria-hidden="true">
-                {Array.from({ length: 5 }, (_, index) => <span key={index} />)}
+            <button type="button" class="tablet-ring tablet-assignment-number" aria-haspopup="dialog"
+                aria-label={`Выбрать задание. Сейчас задание ${mission}`}
+                onClick={() => picker.current?.showModal()}>{mission}</button>
+            {official ? (
+                <div class="tablet-assignment-action">
+                    {error ? <button type="button" class="chip" onClick={reload}>Повторить загрузку</button> : data ? (
+                        <MissionChallenge key={mission} mission={mission} status={data.topics[mission - 1]} studyEntry onTasksSaved={onTasksSaved}
+                            studySummary={(progress) => <AssignmentProgress progress={progress} />} onOpen={() => {}}
+                            onUpdated={(updated) => {
+                                if (data.topics[mission - 1] !== updated.topics[mission - 1] || data.tasksTotal !== updated.tasksTotal) onProgress();
+                                setData(updated);
+                            }} />
+                    ) : <span class="muted" role="status">Загружаем…</span>}
+                </div>
+            ) : <PreviewAssignment key={mission} mission={mission} />}
+            <dialog ref={picker} class="tablet-rank-guide tablet-study-picker" aria-labelledby="tablet-study-picker-title"
+                onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
+                <div class="tablet-rank-guide-content">
+                    <header>
+                        <h2 id="tablet-study-picker-title">Выбрать задание</h2>
+                        <form method="dialog"><button type="submit" aria-label="Закрыть" class="challenge-close">×</button></form>
+                    </header>
+                    <div class="tablet-study-picker-sectors">
+                        {(data?.rankRoute ?? RANK_ROUTE).map((sector) => (
+                            <div class="tablet-study-picker-sector" key={sector.name}>
+                                <h3>{sector.rank ?? sector.name}</h3>
+                                <div class="tablet-study-picker-options">
+                                    {sector.missions.map((number) => (
+                                        <button type="button" key={number} aria-label={`Задание ${number}`}
+                                            aria-pressed={mission === number} data-status={data?.topics[number - 1]}
+                                            onClick={() => {
+                                                setMission(number);
+                                                picker.current?.close();
+                                            }}>{number}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </dialog>
+        </Card>
+    );
+}
+
+function PreviewAssignment({ mission }: { mission: number }) {
+    const dialog = useRef<HTMLDialogElement>(null);
+    const [value, setValue] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const [solved, setSolved] = useState(false);
+    const [topic, question, answer, hint] = reviewQuestions[mission - 1];
+
+    return (
+        <>
+            <div class="tablet-assignment-progress" role="progressbar" aria-label="Демо-прогресс изучения"
+                aria-valuemin={0} aria-valuemax={1} aria-valuenow={solved ? 1 : 0}>
+                <span data-lit={solved} />
             </div>
             <div class="tablet-assignment-action">
                 <div class="mission-challenge">
@@ -280,11 +328,16 @@ function PreviewAssignment() {
             </div>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-study-preview-title">
                 <h2 id="tablet-study-preview-title">{topic}</h2>
-                <p class="tablet-recall-topic">Предпросмотр задания 11</p>
+                <p class="tablet-recall-topic">Демо · задание {mission}</p>
                 <p>{question}</p>
                 <form onSubmit={(event) => {
                     event.preventDefault();
-                    setFeedback(value.trim() && Number(value) === answer ? 'Верно!' : hint);
+                    if (value.trim() && Number(value) === answer) {
+                        setSolved(true);
+                        setFeedback('Верно!');
+                    } else {
+                        setFeedback(hint);
+                    }
                 }}>
                     <label for="tablet-study-preview-answer">Ответ</label>
                     <input id="tablet-study-preview-answer" inputMode="numeric" required value={value}
@@ -294,27 +347,7 @@ function PreviewAssignment() {
                 <p role="status">{feedback}</p>
                 <form method="dialog"><button type="submit" class="tablet-recall">Закрыть</button></form>
             </dialog>
-        </Card>
-    );
-}
-
-function ActiveAssignment({ onProgress, onTasksSaved }: { onProgress: () => void; onTasksSaved?: () => void }) {
-    const { data, error, reload, setData } = useApi<SelfData>('/api/self');
-
-    return (
-        <Card class="tablet-current-assignment">
-            <h2 class="tablet-ring tablet-assignment-number" aria-label="Задание 11">11</h2>
-            <div class="tablet-assignment-action">
-                {error ? <button type="button" class="chip" onClick={reload}>Повторить загрузку</button> : data ? (
-                    <MissionChallenge mission={11} status={data.topics[10]} studyEntry onTasksSaved={onTasksSaved}
-                        studySummary={(progress) => <AssignmentProgress progress={progress} />} onOpen={() => {}}
-                        onUpdated={(updated) => {
-                            if (data.topics[10] !== updated.topics[10] || data.tasksTotal !== updated.tasksTotal) onProgress();
-                            setData(updated);
-                        }} />
-                ) : <span class="muted" role="status">Загружаем…</span>}
-            </div>
-        </Card>
+        </>
     );
 }
 
