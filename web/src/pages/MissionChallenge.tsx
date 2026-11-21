@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { ChallengeProgress, SelfData, TopicStatus } from '../api/types';
@@ -18,12 +19,14 @@ interface AnswerReply extends ChallengeReply {
     credited: boolean;
 }
 
-export function MissionChallenge({ mission, status, onOpen, onUpdated, onTasksSaved }: {
+export function MissionChallenge({ mission, status, onOpen, onUpdated, onTasksSaved, studyEntry = false, studySummary }: {
     mission: number;
     status: TopicStatus;
     onOpen: () => void;
     onUpdated: (self: SelfData) => void;
     onTasksSaved?: () => void;
+    studyEntry?: boolean;
+    studySummary?: (progress: ChallengeProgress) => ComponentChildren;
 }) {
     const path = `/api/self/challenges/${mission}`;
     const { data, error, reload, setData } = useApi<ChallengeProgress>(path);
@@ -43,10 +46,14 @@ export function MissionChallenge({ mission, status, onOpen, onUpdated, onTasksSa
     const practicing = phase !== 'lesson';
     const count = practicing ? data.practice : data.lesson;
     const expired = data.phase === 'lesson' && (data.expired || (data.timer && data.timer.startedAt === expiredAttempt));
-    const label = data.phase === 'complete' ? 'Итоги испытания'
+    const challengeLabel = data.phase === 'complete' ? 'Итоги испытания'
         : data.phase === 'practice' ? 'Практика'
             : expired ? 'Начать заново'
                 : data.timer || data.lesson.solved || status === 'learning' ? 'Продолжить испытание' : 'Начать испытание';
+    const label = studyEntry && data.phase !== 'complete' && !expired
+        ? data.phase === 'lesson' && !data.timer && !data.lesson.solved && status === 'todo'
+            ? 'Начать изучение' : 'Продолжить изучение'
+        : challengeLabel;
     const valid = /^\d+$/.test(answer.trim()) && Number.isSafeInteger(Number(answer));
     const exercise = data.exercise;
 
@@ -109,13 +116,20 @@ export function MissionChallenge({ mission, status, onOpen, onUpdated, onTasksSa
 
     return (
         <div class="mission-challenge">
-            <div class="challenge-summary">
+            {studySummary ? studySummary(data) : <div class="challenge-summary">
                 <span>{data.title}{data.phase === 'lesson' && !data.timer && <small>Лимит {formatTime(data.limitMs)}</small>}</span>
                 <strong>{data.phase === 'lesson' ? `${data.lesson.solved}/${data.lesson.total}`
                     : `${data.practice.solved}/${data.practice.total}`}</strong>
-            </div>
+            </div>}
             <button class="mission-action" type="button" aria-haspopup="dialog" disabled={busy} onClick={() => void open(Boolean(expired))}>
-                {label}<NavIcon name={data.phase === 'complete' ? 'check' : 'arrow-right'} />
+                {studyEntry ? (
+                    <>
+                        <span class="tablet-ring challenge-study-play" data-complete={data.phase === 'complete'} aria-hidden="true">
+                            {data.phase === 'complete' && <NavIcon name="check" />}
+                        </span>
+                        <span>{label}</span>
+                    </>
+                ) : <>{label}<NavIcon name={data.phase === 'complete' ? 'check' : 'arrow-right'} /></>}
             </button>
             {issue && !dialog.current?.open && <p class="warn" role="alert">{issue}</p>}
             <dialog class="challenge-dialog" aria-labelledby="challenge-title" ref={dialog}

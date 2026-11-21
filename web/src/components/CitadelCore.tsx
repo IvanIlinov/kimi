@@ -15,7 +15,7 @@ const crystalLabels: Record<CoreCrystal['state'], string> = {
     missed: 'Не зажжён',
 };
 
-export function CitadelCore({ core, previous }: { core: StudyCore; previous?: StudyCore }) {
+export function CitadelCore({ core, previous, label = 'Ядро Цитадели' }: { core: StudyCore; previous?: StudyCore; label?: string }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const [selected, setSelected] = useState<number | null>(null);
     const [archive, setArchive] = useState(false);
@@ -35,7 +35,7 @@ export function CitadelCore({ core, previous }: { core: StudyCore; previous?: St
             <button type="button" class="citadel-trigger" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
                 <CorePattern core={core} />
                 <span class="citadel-preview-text">
-                    <strong>Ядро Цитадели</strong>
+                    <strong>{label}</strong>
                     <small>{core.closed ? `Узор года · ${count}` : `Зажжено: ${count}`}</small>
                 </span>
             </button>

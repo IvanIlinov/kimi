@@ -1,0 +1,222 @@
+import { useRef, useState } from 'preact/hooks';
+import { useApi } from '../src/api/useApi';
+import type { ChallengeProgress, Profile, SelfData } from '../src/api/types';
+import { CitadelCore } from '../src/components/CitadelCore';
+import { NavIcon } from '../src/components/NavIcon';
+import { PeriodRecaps } from '../src/components/PeriodRecaps';
+import { RankEmblem } from '../src/components/RankPanel';
+import { Card, Empty, Loading, Screen } from '../src/components/ui';
+import { cap } from '../src/lib/format';
+import { MissionChallenge } from '../src/pages/MissionChallenge';
+import { StudentCrystals } from './student-crystals';
+import { reviewQuestions } from './student-review-questions';
+import './student-tablet-home.css';
+import './student-tablet-variants.css';
+
+const showMiniPath = false;
+
+export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false, onRecapsReady, onMissions }: {
+    staging?: boolean;
+    autoOpenWeeklyRecap?: boolean;
+    onRecapsReady?: () => void;
+    onMissions?: () => void;
+} = {}) {
+    const { data, error, reload } = useApi<Profile>('/api/profile/me');
+
+    return (
+        <Screen title="Штаб" hideTitle className="student-home tablet-home">
+            {error ? <Empty text={error} /> : !data ? <Loading /> : (
+                <>
+                    <Card class="student-summary tablet-identity">
+                        <div class="tablet-player">
+                            <div class="tablet-avatar">
+                                <span class="tablet-avatar-portrait" aria-hidden="true" />
+                                {data.rank && <span class="tablet-avatar-crest"><RankEmblem rank={data.rank.current} /></span>}
+                                <span class="tablet-avatar-place" aria-label={`${data.place}-е место в рейтинге`}>{data.place}</span>
+                            </div>
+                            <div class="tablet-player-status">
+                                <h1>{cap(data.name)}</h1>
+                                {data.rank && <dl class="tablet-rank">
+                                    <dt>Ранг</dt>
+                                    <dd>{data.rank.current.name}</dd>
+                                </dl>}
+                            </div>
+                        </div>
+                        {data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
+                    </Card>
+                    <Card class="tablet-metrics">
+                        <MetricRing tone="cyan" label="Готовность" value={data.pct} max={100} unit="%" />
+                        <MetricRing tone="violet" label="Пробник" value={data.totals.exam ?? 0} max={100} />
+                        <MetricRing tone="blue" label="Решено задач" value={data.totals.tasks} max={900} />
+                        <MetricRing tone="mint" label="Закреплено" value={data.totals.topics} max={27} />
+                    </Card>
+                    <CurrentAssignment onProgress={reload} onTasksSaved={onRecapsReady}
+                        openMissions={staging && !autoOpenWeeklyRecap ? onMissions : undefined} />
+                    <StudentCrystals week={data.week} />
+                    <ReviewQueue staging={staging} />
+                    {showMiniPath && <MiniPath />}
+                    {staging && data.weeklyRecap && <Card>
+                        <PeriodRecaps week={data.weeklyRecap} currentWeek={data.currentWeekRecap}
+                            study={data.studyRecaps} autoOpen={autoOpenWeeklyRecap}
+                            onAutoDone={data.core ? onRecapsReady : undefined} />
+                    </Card>}
+                </>
+            )}
+        </Screen>
+    );
+}
+
+const initialLapses = [36, 18, 61, 22, 82, 74, 15, 52, 11, 68, 58, 87, 43, 31, 78, 27, 50, 84, 14, 67, 39, 71, 23, 90, 46, 76, 56];
+
+function reviewStatus(lapse: number) {
+    if (lapse >= 70) return { tone: 'amber', label: 'Пора повторить' };
+    if (lapse >= 40) return { tone: 'blue', label: 'Скоро' };
+    return { tone: 'mint', label: 'В памяти' };
+}
+
+function ReviewQueue({ staging }: { staging: boolean }) {
+    const dialog = useRef<HTMLDialogElement>(null);
+    const [selected, setSelected] = useState(4);
+    const [lapses, setLapses] = useState(initialLapses);
+    const [answer, setAnswer] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const [solved, setSolved] = useState(false);
+    const [topic, question, correctAnswer, hint] = reviewQuestions[selected];
+    const selectedLapse = lapses[selected];
+
+    return (
+        <Card class="tablet-reviews">
+            <div class="tablet-reviews-heading">
+                <h2><NavIcon name="crystal" /> Повторение</h2>
+                <span>{staging ? 'Демо · шкала забывания' : 'Шкала забывания'}</span>
+            </div>
+            <ul class="tablet-review-list" aria-label="Выбор задания для повторения">
+                {lapses.map((lapse, index) => {
+                    const mission = index + 1;
+                    const { tone, label } = reviewStatus(lapse);
+                    return (
+                        <li key={mission}>
+                            <button type="button" class="tablet-review-tile" data-tone={tone}
+                                style={{ '--review-lapse': `${lapse}%` }}
+                                aria-pressed={index === selected} aria-label={`Задание ${mission}. ${label}`}
+                                onClick={() => setSelected(index)}>{mission}</button>
+                        </li>
+                    );
+                })}
+            </ul>
+            <div class="mission-legend tablet-review-legend" aria-label="Цвета шкалы забывания">
+                <span data-tone="mint">В памяти</span>
+                <span data-tone="blue">Скоро</span>
+                <span data-tone="amber">Пора повторить</span>
+            </div>
+            <button type="button" class="tablet-recall" aria-haspopup="dialog"
+                data-tone={reviewStatus(selectedLapse).tone} style={{ '--review-lapse': `${selectedLapse}%` }} onClick={() => {
+                setAnswer('');
+                setFeedback('');
+                setSolved(false);
+                dialog.current?.showModal();
+            }}>Вспомнить</button>
+            <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-recall-title">
+                <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>
+                <p class="tablet-recall-topic">{topic}</p>
+                <p>{question}</p>
+                <form onSubmit={(event) => {
+                    event.preventDefault();
+                    if (answer.trim() && Number(answer) === correctAnswer) {
+                        setLapses((previous) => previous.map((value, index) => index === selected ? 0 : value));
+                        setSolved(true);
+                        setFeedback('Верно! Задание снова в памяти.');
+                    } else {
+                        setFeedback(hint);
+                    }
+                }}>
+                    <label for="tablet-recall-answer">Ответ</label>
+                    <input id="tablet-recall-answer" inputMode="numeric" required value={answer} readOnly={solved}
+                        onInput={(event) => setAnswer(event.currentTarget.value)} />
+                    <button type="submit" class="tablet-recall" disabled={solved}>Проверить</button>
+                </form>
+                <p role="status">{feedback}</p>
+                <button type="button" class="tablet-recall" onClick={() => dialog.current?.close()}>Закрыть</button>
+            </dialog>
+        </Card>
+    );
+}
+
+function MiniPath() {
+    return (
+        <Card class="tablet-path">
+            <h2>Карта пути</h2>
+            <ol>
+                <li data-step="done"><span>Освоено</span><strong>Задание 8</strong></li>
+                <li aria-current="step"><span>Сейчас</span><strong>Задание 11</strong></li>
+                <li><span>Дальше</span><strong>Задание 12</strong></li>
+            </ol>
+        </Card>
+    );
+}
+
+function CurrentAssignment({ onProgress, onTasksSaved, openMissions }: {
+    onProgress: () => void;
+    onTasksSaved?: () => void;
+    openMissions?: () => void;
+}) {
+    if (openMissions) return (
+        <Card class="tablet-current-assignment">
+            <h2 class="tablet-ring tablet-assignment-number" aria-label="Задание 11">11</h2>
+            <div class="tablet-assignment-action">
+                <button type="button" class="chip" onClick={openMissions}>Миссии</button>
+            </div>
+        </Card>
+    );
+    return <ActiveAssignment onProgress={onProgress} onTasksSaved={onTasksSaved} />;
+}
+
+function ActiveAssignment({ onProgress, onTasksSaved }: { onProgress: () => void; onTasksSaved?: () => void }) {
+    const { data, error, reload, setData } = useApi<SelfData>('/api/self');
+
+    return (
+        <Card class="tablet-current-assignment">
+            <h2 class="tablet-ring tablet-assignment-number" aria-label="Задание 11">11</h2>
+            <div class="tablet-assignment-action">
+                {error ? <button type="button" class="chip" onClick={reload}>Повторить загрузку</button> : data ? (
+                    <MissionChallenge mission={11} status={data.topics[10]} studyEntry onTasksSaved={onTasksSaved}
+                        studySummary={(progress) => <AssignmentProgress progress={progress} />} onOpen={() => {}}
+                        onUpdated={(updated) => {
+                            if (data.topics[10] !== updated.topics[10] || data.tasksTotal !== updated.tasksTotal) onProgress();
+                            setData(updated);
+                        }} />
+                ) : <span class="muted" role="status">Загружаем…</span>}
+            </div>
+        </Card>
+    );
+}
+
+function AssignmentProgress({ progress }: { progress: ChallengeProgress }) {
+    const learning = progress.phase === 'lesson';
+    const { solved, total } = learning ? progress.lesson : progress.practice;
+    const label = learning ? 'Изучение' : 'Практика';
+    return (
+        <div class="tablet-assignment-progress" role="progressbar" aria-label={label}
+            aria-valuemin={0} aria-valuemax={total} aria-valuenow={solved} aria-valuetext={`${solved} из ${total}`}>
+            {Array.from({ length: total }, (_, index) => <span key={index} data-lit={index < solved} aria-hidden="true" />)}
+        </div>
+    );
+}
+
+function MetricRing({ tone, label, value, max, unit }: {
+    tone: string; label: string; value: number; max: number; unit?: string;
+}) {
+    const progress = Math.min(max, Math.max(0, value));
+    return (
+        <div class="tablet-metric" data-tone={tone} style={{ '--fill': `${progress / max * 100}%` }}>
+            <div class="tablet-ring" role="progressbar" aria-label={label} aria-valuenow={progress} aria-valuemax={max}
+                aria-valuetext={unit ? `${value}%` : `${value} из ${max}`}>
+                <div class="tablet-ring-reading" aria-hidden="true">
+                    <strong>{value}{unit && <small>{unit}</small>}</strong>
+                    {!unit && <small>/ {max}</small>}
+                </div>
+            </div>
+            <span>{label}</span>
+        </div>
+    );
+}
