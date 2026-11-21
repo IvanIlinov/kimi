@@ -487,6 +487,13 @@
     clip-path: none;
     background: none;
 }
+[data-student-layout="hq-modern"] .tablet-current-assignment .tablet-assignment-number {
+    border-radius: 8px;
+    font-size: clamp(19px, 5.6vw, 24px);
+}
+[data-student-layout="hq-modern"] .tablet-current-assignment .tablet-assignment-number::before {
+    border-radius: 4px;
+}
 [data-student-layout="hq-modern"] .tablet-current-assignment :is(.tablet-assignment-number:active, .mission-action:not(:disabled):active .challenge-study-play) {
     transform: translateY(1px);
     box-shadow: inset 0 1px #e6f2ff55, inset 0 -2px #0b1b33a6, 0 1px 4px #06162ca6;
