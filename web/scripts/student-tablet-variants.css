@@ -469,12 +469,12 @@
 [data-student-layout="hq-modern"] .tablet-current-assignment .tablet-ring {
     --study-rune-light: #a5edff;
     clip-path: none;
-    border: 1px solid #8ed6f7c2;
+    border: 1px solid #a5ddf6;
     border-radius: 50%;
-    background: radial-gradient(ellipse at 50% 112%, #73ceff47, transparent 78%),
+    background: radial-gradient(ellipse at 50% 112%, #73ceff68, transparent 79%),
         linear-gradient(155deg, #294e74, #132a47 78%);
     box-shadow: inset 0 1px #e6f2ff65, inset 0 -3px #0b1b33a6,
-        0 2px #0a1c34, 0 3px 6px #06162ccc, 0 0 8px #69c9f833;
+        0 2px #0a1c34, 0 3px 6px #06162c99, 0 0 9px #8cd9ff63;
     color: #e4fbff;
     text-shadow: 0 0 1px #091a31, 0 0 4px #6acef8a6;
 }
@@ -493,6 +493,10 @@
 }
 [data-student-layout="hq-modern"] .tablet-current-assignment .tablet-assignment-number::before {
     border-radius: 4px;
+}
+[data-student-layout="hq-modern"] .tablet-current-assignment .challenge-study-play {
+    top: -1px;
+    width: calc(clamp(42px, 12vw, 53px) + 4px);
 }
 [data-student-layout="hq-modern"] .tablet-current-assignment :is(.tablet-assignment-number:active, .mission-action:not(:disabled):active .challenge-study-play) {
     transform: translateY(1px);
