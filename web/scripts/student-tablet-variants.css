@@ -180,8 +180,6 @@
     --profile-item-gap: 8px;
     --profile-notch: calc(var(--profile-height) / 2);
     --profile-gap: 6px;
-    container-type: inline-size;
-    animation: tablet-profile-glint 7s ease-in-out infinite;
     height: var(--profile-height);
     grid-template-columns: minmax(0, 1fr) var(--profile-height) minmax(0, 1fr);
     align-items: stretch;
@@ -191,7 +189,7 @@
 }
 [data-student-layout="hq-modern"] .tablet-avatar { width: var(--profile-avatar-size); }
 [data-student-layout="hq-modern"] .tablet-player {
-    --profile-glint-offset: 0px;
+    --profile-sweep: tablet-profile-left;
     --profile-shape: polygon(0 0, 100% 0, calc(100% - var(--profile-notch)) 50%, 100% 100%, 0 100%);
     margin-right: calc(var(--profile-gap) - var(--profile-notch));
     padding: 0 calc(var(--profile-notch) + 1px) 0 12px;
@@ -212,9 +210,10 @@
     isolation: isolate;
     clip-path: var(--profile-shape);
     background:
-        linear-gradient(117deg, transparent 7%, #65bdff55 26%, #bce9ff 44%, #f4fbff 51%, #80ccffb3 63%, transparent 91%)
-            calc(var(--profile-glint-x) * 100cqw - var(--profile-glint-offset)) center / 91px 100% no-repeat,
+        linear-gradient(110deg, transparent 5%, #6cbfff 27%, #f4fcff 51%, #8bd2ff 68%, transparent 95%)
+            -100px center / 72px 100% no-repeat,
         var(--hq-plate-edge);
+    animation: var(--profile-sweep) 6s linear infinite;
 }
 [data-student-layout="hq-modern"] .tablet-player::before,
 .tablet-profile-standing::before,
@@ -247,13 +246,16 @@
     padding: 1px;
     border-radius: inherit;
     background: conic-gradient(from 21deg, var(--rank-glow), #4d7598 15%, transparent 21% 29%, #709abf 35%, var(--rank-glow) 50%, #4d7598 65%, transparent 71% 79%, #709abf 85%, var(--rank-glow));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 .tablet-rank-watermark .rank-emblem::after {
     inset: 14px;
     border: 1px solid color-mix(in srgb, var(--rank-glow) 65%, #285075);
     border-radius: 5px;
-    background: radial-gradient(at 10% 10%, color-mix(in srgb, var(--rank-glow) 37%, #163651), #112945 83%);
+    background: #1b3b5c;
+    background: radial-gradient(circle at center, color-mix(in srgb, var(--rank-glow) 37%, #163651), #112945 83%);
     box-shadow: 0 0 8px color-mix(in srgb, var(--rank-glow) 40%, transparent);
     transform: rotate(45deg);
 }
@@ -264,7 +266,7 @@
     text-shadow: none;
 }
 .tablet-profile-standing {
-    --profile-glint-offset: calc(50cqw + var(--profile-gap));
+    --profile-sweep: tablet-profile-right;
     --profile-shape: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--profile-notch) 50%);
     grid-column: 3;
     grid-row: 1;
@@ -284,7 +286,9 @@
     background: #a3d8ff;
 }
 .tablet-rank-watermark {
-    --profile-glint-offset: calc(50cqw - var(--profile-notch));
+    --profile-sweep: tablet-profile-center;
+    --hq-plate-edge: linear-gradient(180deg, #507fa9, #31587d 55%, #507fa9);
+    --hq-leader-surface: radial-gradient(ellipse at 50% 30%, #174677, #0f2546 70%);
     --profile-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
     grid-column: 2;
     grid-row: 1;
@@ -292,14 +296,17 @@
     place-items: center;
     pointer-events: none;
 }
-@property --profile-glint-x {
-    syntax: '<number>';
-    inherits: true;
-    initial-value: -.4;
+@keyframes tablet-profile-left {
+    0%, 8% { background-position: -100px center, 0 0; }
+    29%, 100% { background-position: calc(100% + 95px) center, 0 0; }
 }
-@keyframes tablet-profile-glint {
-    0%, 12% { --profile-glint-x: -.4; }
-    65%, 100% { --profile-glint-x: 1.12; }
+@keyframes tablet-profile-center {
+    0%, 22% { background-position: -100px center, 0 0; }
+    37%, 100% { background-position: calc(100% + 95px) center, 0 0; }
+}
+@keyframes tablet-profile-right {
+    0%, 30% { background-position: -100px center, 0 0; }
+    52%, 100% { background-position: calc(100% + 95px) center, 0 0; }
 }
 .tablet-rank-watermark .rank-emblem { opacity: .72; width: 58px; }
 .tablet-rank-watermark::after {
@@ -342,6 +349,7 @@
     border-radius: 50%;
     background: conic-gradient(from var(--rank-sector),
         var(--rank-meter-color) var(--sector-fill), #40617e var(--sector-fill) 27.8%, transparent 27.8%);
+    -webkit-mask-image: radial-gradient(circle closest-side, transparent 75%, #000 78%);
     mask: radial-gradient(circle closest-side, transparent 75%, #000 78%);
 }
 .tablet-standing-progress > span[data-done="true"] { --rank-meter-color: #8be6ce; }
@@ -358,7 +366,7 @@
     margin-bottom: 4px;
     overflow: hidden;
     color: var(--hq-ink);
-    font-size: clamp(14px, 4vw, 17px);
+    font-size: clamp(17px, 5vw, 22px);
     line-height: .98;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -424,7 +432,7 @@
     50% { filter: hue-rotate(var(--glass-tint)) saturate(1.22) brightness(calc(var(--crystal-glow-base) * 1.38)); }
 }
 @media (prefers-reduced-motion: reduce) {
-    [data-student-layout="hq-modern"] .tablet-home > .card.tablet-identity,
+    [data-student-layout="hq-modern"] :is(.tablet-player, .tablet-rank-watermark, .tablet-profile-standing),
     [data-student-layout="hq-modern"] .tablet-crystal-art::after { animation: none; }
 }
 [data-student-layout="hq-modern"] .tablet-home > .card:is(.tablet-current-assignment, .tablet-reviews) {
@@ -463,7 +471,7 @@
 @media (prefers-reduced-motion: reduce) {
     [data-student-layout="hq-modern"] .tablet-home > .card.tablet-current-assignment::after { animation: none; opacity: 0; }
 }
-[data-student-layout="hq-modern"] .tablet-profile-standing :is(.tablet-standing-progress, .tablet-standing-class) { top: -1px; }
+[data-student-layout="hq-modern"] .tablet-profile-standing :is(.tablet-standing-progress, .tablet-standing-class) { top: -2px; }
 [data-student-layout="hq-modern"] .tablet-assignment-number:is(:hover, :focus-visible) { filter: brightness(1.2); }
 [data-student-layout="hq-modern"] .tablet-review-list { align-items: center; }
 [data-student-layout="hq-modern"] .tablet-current-assignment .tablet-ring {
@@ -609,7 +617,7 @@
         --profile-avatar-size: 36px;
         --profile-item-gap: 6px;
     }
-    [data-student-layout="hq-modern"] .tablet-player h1 { font-size: 15px; }
+    [data-student-layout="hq-modern"] :is(.tablet-player h1, .tablet-standing-label strong) { font-size: 15px; }
     .tablet-standing-place { font-size: 9px; }
 }
 

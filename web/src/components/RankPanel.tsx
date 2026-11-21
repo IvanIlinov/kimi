@@ -2,7 +2,17 @@ import type { RankMetric, StudyRank } from '../api/types';
 import { NavIcon } from './NavIcon';
 import { Card } from './ui';
 
-const EMBLEMS = ['spark', 'crystal', 'crystal', 'award', 'award', 'award', 'crown', 'crown', 'crown'];
+const EMBLEMS = [
+    <path d="M12 3c0 5-4 9-9 9 5 0 9 4 9 9 0-5 4-9 9-9-5 0-9-4-9-9Z" />,
+    <path d="m12 2 7 6v8l-7 6-7-6V8Zm0 0 3 9-3 11-3-11Zm-7 6 4 3h6l4-3" />,
+    <path d="m12 3 7 4v7l-7 6-7-6V7Zm-3 9 3-4 3 4-3 4Zm-6 2 2 2m16-2-2 2M9 20l3 2 3-2" />,
+    <path d="m18 6 3 6-3 6-6 3-6-3-3-6 3-6 6-3Zm-6 1v3m0 4v3m-5-5h3m4 0h3m-5-2 2 2-2 2-2-2Z" />,
+    <path d="m12 2 4 5 4-1-1 5 2 3-5 3-4 5-4-5-5-3 2-3-1-5 4 1Zm0 6 3 5-3 4-3-4Z" />,
+    <path d="M12 12c-2-3-5-4-9-3v8c4-1 7 0 9 3 2-3 5-4 9-3V9c-4-1-7 0-9 3Zm0 0v8m0-17 2 2-2 2-2-2Z" />,
+    <path d="m3 7 5 4 4-7 4 7 5-4-2 10H5L3 7Zm3 13h12" />,
+    <path d="m12 2 5 6-5 6-5-6Zm0 12v7m-2-4h4M3 7l2 7 4 3m12-10-2 7-4 3M4 20l4-1m12 1-4-1" />,
+    <path d="m3 7 5 3 4-7 4 7 5-3-2 10H5Zm3 13h12m-6-10 2 3-2 3-2-3Z" />,
+];
 
 export function rankName(rank: StudyRank['current']) {
     return rank.kingClass ? `${rank.name} · ${rank.kingClass}` : rank.name;
@@ -10,7 +20,10 @@ export function rankName(rank: StudyRank['current']) {
 
 export function RankEmblem({ rank }: { rank: StudyRank['current'] }) {
     return <span class="rank-emblem" data-level={rank.level}>
-        <NavIcon name={EMBLEMS[rank.level] ?? 'crystal'} />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            {EMBLEMS[rank.level] ?? EMBLEMS[1]}
+        </svg>
     </span>;
 }
 
