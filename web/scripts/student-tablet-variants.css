@@ -471,23 +471,40 @@
 [data-student-layout="hq-modern"] .tablet-assignment-number:is(:hover, :focus-visible) { filter: brightness(1.2); }
 [data-student-layout="hq-modern"] .tablet-review-list { align-items: center; }
 [data-student-layout="hq-modern"] .tablet-review-tile {
-    border: 1px solid var(--review-color);
-    border-color: color-mix(in srgb, var(--review-color) 62%, #27466a);
-    border-radius: 9px 5px 9px 5px;
+    --review-neon: #67cfff;
+    position: relative;
+    border: 1px solid #365d77;
+    border-radius: 7px 3px 7px 3px;
     background:
-        linear-gradient(115deg, transparent 9%, #d5f3ff50 48%, transparent 92%) left 5px top / 65% 1px no-repeat,
-        linear-gradient(145deg, #254b76, #112b4e 78%);
-    background-color: #112b4e;
-    box-shadow: inset 0 -2px var(--review-color), 0 2px 4px #081a336b;
+        linear-gradient(90deg, var(--review-neon), transparent) left 4px top / 43% 1px no-repeat,
+        linear-gradient(270deg, var(--review-neon), transparent) right 4px bottom / 43% 1px no-repeat,
+        linear-gradient(145deg, #153546, #091928 70%);
+    box-shadow: inset 0 0 6px #050e18, 0 2px 4px #06132580;
     color: #f0f8ff;
 }
+[data-student-layout="hq-modern"] .tablet-review-tile[data-tone="mint"] { --review-neon: #58ebcc; }
+[data-student-layout="hq-modern"] .tablet-review-tile[data-tone="amber"] { --review-neon: #ffc26a; }
+[data-student-layout="hq-modern"] .tablet-review-tile::after {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 5px;
+    height: 1px;
+    background: var(--review-neon);
+    opacity: .75;
+    transform: rotate(-45deg);
+    content: '';
+}
 [data-student-layout="hq-modern"] .tablet-review-tile[aria-pressed="true"] {
-    outline: 1px solid #f2fbff;
+    border-color: var(--review-neon);
+    outline: 1px solid var(--review-neon);
     outline-offset: 1px;
     background:
-        radial-gradient(ellipse at 50% 115%, color-mix(in srgb, var(--review-color) 43%, transparent), transparent 77%),
-        linear-gradient(145deg, #315e89, #183459 80%);
-    box-shadow: inset 0 -2px var(--review-color), 0 0 7px color-mix(in srgb, var(--review-color) 32%, transparent);
+        linear-gradient(90deg, #f4fbff, var(--review-neon), transparent) left 4px top / 52% 1px no-repeat,
+        linear-gradient(270deg, var(--review-neon), transparent) right 4px bottom / 52% 1px no-repeat,
+        radial-gradient(ellipse at 50% 105%, color-mix(in srgb, var(--review-neon) 33%, transparent), transparent 78%),
+        #0d2234;
+    box-shadow: inset 0 0 5px #091d32, 0 0 8px color-mix(in srgb, var(--review-neon) 47%, transparent);
 }
 [data-student-layout="hq-modern"] .tablet-review-tile:active { transform: translateY(1px); }
 [data-student-layout="hq-modern"] .tablet-assignment-progress {
