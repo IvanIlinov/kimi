@@ -38,6 +38,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                 <>
                     <Card class="student-summary tablet-identity">
                         <div class="tablet-player">
+                            {modernLayout && <span class="tablet-plate-glint" aria-hidden="true" />}
                             <div class="tablet-avatar">
                                 <span class="tablet-avatar-portrait" aria-hidden="true" />
                                 {!modernLayout && data.rank && <span class="tablet-avatar-crest"><RankEmblem rank={data.rank.current} /></span>}
@@ -88,11 +89,15 @@ function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
 
     return (
         <>
-            <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} engraved /></span>
+            <span class="tablet-rank-watermark" aria-hidden="true">
+                <span class="tablet-plate-glint" />
+                <RankEmblem rank={rank.current} engraved />
+            </span>
             <button type="button" class="tablet-profile-standing" aria-haspopup="dialog"
                 aria-label={`Таблица рангов. Текущий ранг: ${rankName(rank.current)}`}
                 aria-describedby={rank.next ? 'tablet-profile-rank-progress' : undefined}
                 onClick={() => dialog.current?.showModal()}>
+                <span class="tablet-plate-glint" aria-hidden="true" />
                 <span class="tablet-standing-label">
                     <strong>{rankName(rank.current)}</strong>
                     {place !== undefined && <span class="tablet-standing-place" aria-label={`${place}-е место в ранге`}>
