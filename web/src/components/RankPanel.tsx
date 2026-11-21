@@ -24,6 +24,7 @@ export function RankEmblem({ rank, engraved = false }: { rank: StudyRank['curren
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             {engraved && <g class="rank-engraving-cut">{emblem}</g>}
+            {engraved && <g class="rank-engraving-glow">{emblem}</g>}
             <g class={engraved ? 'rank-engraving-light' : undefined}>{emblem}</g>
         </svg>
     </span>;

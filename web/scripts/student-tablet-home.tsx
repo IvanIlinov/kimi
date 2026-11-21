@@ -199,7 +199,11 @@ function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolea
                         setFeedback('');
                         setSolved(false);
                         dialog.current?.showModal();
-                    }}>{iconOnly ? <NavIcon name="repeat-play" /> : 'Вспомнить'}</button>
+                    }}>{iconOnly ? <>
+                        <span class="tablet-recall-inlay" aria-hidden="true" />
+                        <NavIcon name="repeat-play" />
+                        <span class="tablet-recall-inlay" aria-hidden="true" />
+                    </> : 'Вспомнить'}</button>
             </div>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-recall-title">
                 <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>

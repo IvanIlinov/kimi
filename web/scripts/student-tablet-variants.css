@@ -545,11 +545,13 @@
     margin: 0;
     --recall-accent: var(--review-color, #8cbfff);
     display: grid;
-    place-items: center;
+    grid-template-columns: 1fr 21px 1fr;
+    align-items: center;
+    gap: 7px;
     width: 122px;
     min-width: 0;
     min-height: 44px;
-    padding: 0;
+    padding: 0 12px;
     border: 1px solid var(--recall-accent);
     border-radius: 8px;
     background: radial-gradient(ellipse at 50% 112%, color-mix(in srgb, var(--recall-accent) 26%, transparent), transparent 78%),
@@ -559,26 +561,25 @@
     color: var(--recall-accent);
 }
 [data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::before,
-[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::after {
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::after { display: none; }
+.tablet-recall-inlay {
+    position: relative;
+    height: 12px;
+    background: linear-gradient(90deg, transparent, currentColor) left center / calc(100% - 8px) 1px no-repeat;
+    opacity: .7;
+}
+.tablet-recall-inlay:last-child { transform: scaleX(-1); }
+.tablet-recall-inlay::after {
     position: absolute;
-    inset: auto;
     top: 50%;
-    width: 23px;
-    height: 11px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: var(--recall-accent);
-    filter: drop-shadow(0 0 3px var(--recall-accent));
-    mask: none;
-    clip-path: polygon(0 45%, 61% 45%, 79% 0, 100% 50%, 79% 100%, 61% 55%, 0 55%, 0 45%,
-        69% 50%, 79% 74%, 89% 50%, 79% 26%, 69% 50%);
-    pointer-events: none;
-    transform: translateY(-50%);
+    right: 2px;
+    width: 5px;
+    height: 5px;
+    border: 1px solid currentColor;
+    box-shadow: inset 0 0 2px currentColor;
+    transform: translateY(-50%) rotate(45deg);
     content: '';
 }
-[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::before { left: 13px; }
-[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::after { right: 13px; transform: translateY(-50%) scaleX(-1); }
 [data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall svg { width: 21px; height: 21px; }
 [data-student-layout="hq-modern"] :is(.tablet-review-tile, .tablet-recall, .mission-action):focus-visible {
     outline: 2px solid #a3d8ff;
@@ -731,14 +732,16 @@
 .tablet-rank-watermark .rank-emblem svg { filter: none; }
 .rank-engraving-cut {
     stroke: #091a31;
-    stroke-width: 3.5;
-    filter: drop-shadow(0 .7px .15px #b8dcfa8c);
+    stroke-width: 4.2;
+}
+.rank-engraving-glow {
+    stroke: var(--rank-glow);
+    stroke-width: 2.8;
+    opacity: .52;
 }
 .rank-engraving-light {
-    color: #f8fdff;
-    color: color-mix(in srgb, var(--rank-glow) 34%, #fbfeff);
-    stroke-width: 1.6;
-    filter: drop-shadow(0 0 2px var(--rank-glow));
+    stroke: #eafcff;
+    stroke-width: 1.45;
 }
 [data-student-layout="hq-modern"] .tablet-home > :is(.tablet-crystals, .card.tablet-current-assignment, .card.tablet-reviews) {
     border-color: #6296c3;
