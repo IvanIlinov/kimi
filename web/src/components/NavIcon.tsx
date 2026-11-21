@@ -40,7 +40,6 @@ const ICONS: Record<string, ComponentChildren> = {
     bolt: <path d="m13 2-9 12h7l-1 8 10-12h-7l1-8Z" />,
     check: <path d="m5 12 4 4L19 6" />,
     'arrow-right': <path d="M4 12h16m-6-6 6 6-6 6" />,
-    'repeat-play': <path d="M19 8a8 8 0 1 0 1 7m-1-11v4h-4m-5 1 5 3-5 3Z" />,
     hourglass: <path d="M6 3h12M6 21h12M7 3v3a4 4 0 0 0 1.5 3.1L12 12l3.5-2.9A4 4 0 0 0 17 6V3M7 21v-3a4 4 0 0 1 1.5-3.1L12 12l3.5 2.9A4 4 0 0 1 17 18v3" />,
     wallet: <>
         <path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0 0 4h14a1 1 0 0 1 1 1v10H6a2 2 0 0 1-2-2V6" />
