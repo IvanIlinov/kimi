@@ -83,11 +83,11 @@ function RankGuide({ rank }: { rank: StudyRank }) {
 
     return (
         <>
+            <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} /></span>
             <button type="button" class="tablet-profile-standing" aria-haspopup="dialog"
                 aria-label={`Таблица рангов. Текущий ранг: ${rankName(rank.current)}`}
                 aria-describedby={rank.next ? 'tablet-profile-rank-progress' : undefined}
                 onClick={() => dialog.current?.showModal()}>
-                <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} /></span>
                 {rank.next ? (
                     <span class="tablet-standing-progress" aria-hidden="true">
                         {requirements.map(({ label, value, goal }, index) => (
