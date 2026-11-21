@@ -1,9 +1,8 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { useApi } from '../src/api/useApi';
 import type { ChallengeProgress, Profile, SelfData } from '../src/api/types';
 import { CitadelCore } from '../src/components/CitadelCore';
 import { NavIcon } from '../src/components/NavIcon';
-import { PeriodRecaps } from '../src/components/PeriodRecaps';
 import { RankEmblem } from '../src/components/RankPanel';
 import { Card, Empty, Loading, Screen } from '../src/components/ui';
 import { cap } from '../src/lib/format';
@@ -22,6 +21,11 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
 } = {}) {
     const { data, error, reload } = useApi<Profile>('/api/profile/me');
     const gameLayout = document.body.dataset.studentLayout === 'hq-game';
+    const coreYear = data?.core?.year;
+
+    useEffect(() => {
+        if (staging && autoOpenWeeklyRecap && coreYear !== undefined) onRecapsReady?.();
+    }, [staging, autoOpenWeeklyRecap, coreYear, onRecapsReady]);
 
     return (
         <Screen title="Штаб" hideTitle className="student-home tablet-home">
@@ -56,11 +60,6 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                     {!gameLayout && <StudentCrystals week={data.week} />}
                     <ReviewQueue staging={staging} />
                     {showMiniPath && <MiniPath />}
-                    {staging && data.weeklyRecap && <Card class="tablet-periods">
-                        <PeriodRecaps week={data.weeklyRecap} currentWeek={data.currentWeekRecap}
-                            study={data.studyRecaps} autoOpen={autoOpenWeeklyRecap}
-                            onAutoDone={data.core ? onRecapsReady : undefined} />
-                    </Card>}
                 </>
             )}
         </Screen>
