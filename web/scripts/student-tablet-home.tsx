@@ -86,7 +86,7 @@ function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
 
     return (
         <>
-            <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} /></span>
+            <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} engraved /></span>
             <button type="button" class="tablet-profile-standing" aria-haspopup="dialog"
                 aria-label={`Таблица рангов. Текущий ранг: ${rankName(rank.current)}`}
                 aria-describedby={rank.next ? 'tablet-profile-rank-progress' : undefined}

@@ -18,11 +18,13 @@ export function rankName(rank: StudyRank['current']) {
     return rank.kingClass ? `${rank.name} · ${rank.kingClass}` : rank.name;
 }
 
-export function RankEmblem({ rank }: { rank: StudyRank['current'] }) {
+export function RankEmblem({ rank, engraved = false }: { rank: StudyRank['current']; engraved?: boolean }) {
+    const emblem = EMBLEMS[rank.level] ?? EMBLEMS[1];
     return <span class="rank-emblem" data-level={rank.level}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            {EMBLEMS[rank.level] ?? EMBLEMS[1]}
+            {engraved && <g class="rank-engraving-cut">{emblem}</g>}
+            <g class={engraved ? 'rank-engraving-light' : undefined}>{emblem}</g>
         </svg>
     </span>;
 }
