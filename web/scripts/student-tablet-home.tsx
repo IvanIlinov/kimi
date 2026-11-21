@@ -15,13 +15,13 @@ import './student-tablet-variants.css';
 
 const showMiniPath = false;
 
-export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false, onRecapsReady, onMissions }: {
+export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false, onRecapsReady }: {
     staging?: boolean;
     autoOpenWeeklyRecap?: boolean;
     onRecapsReady?: () => void;
-    onMissions?: () => void;
 } = {}) {
     const { data, error, reload } = useApi<Profile>('/api/profile/me');
+    const gameLayout = document.body.dataset.studentLayout === 'hq-game';
 
     return (
         <Screen title="Штаб" hideTitle className="student-home tablet-home">
@@ -44,6 +44,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                         </div>
                         {data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
                     </Card>
+                    {gameLayout && <StudentCrystals week={data.week} />}
                     <Card class="tablet-metrics">
                         <MetricRing tone="cyan" label="Готовность" value={data.pct} max={100} unit="%" />
                         <MetricRing tone="violet" label="Пробник" value={data.totals.exam ?? 0} max={100} />
@@ -51,11 +52,11 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                         <MetricRing tone="mint" label="Закреплено" value={data.totals.topics} max={27} />
                     </Card>
                     <CurrentAssignment onProgress={reload} onTasksSaved={onRecapsReady}
-                        openMissions={staging && !autoOpenWeeklyRecap ? onMissions : undefined} />
-                    <StudentCrystals week={data.week} />
+                        preview={staging && !autoOpenWeeklyRecap} />
+                    {!gameLayout && <StudentCrystals week={data.week} />}
                     <ReviewQueue staging={staging} />
                     {showMiniPath && <MiniPath />}
-                    {staging && data.weeklyRecap && <Card>
+                    {staging && data.weeklyRecap && <Card class="tablet-periods">
                         <PeriodRecaps week={data.weeklyRecap} currentWeek={data.currentWeekRecap}
                             study={data.studyRecaps} autoOpen={autoOpenWeeklyRecap}
                             onAutoDone={data.core ? onRecapsReady : undefined} />
@@ -155,20 +156,58 @@ function MiniPath() {
     );
 }
 
-function CurrentAssignment({ onProgress, onTasksSaved, openMissions }: {
+function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
     onProgress: () => void;
     onTasksSaved?: () => void;
-    openMissions?: () => void;
+    preview: boolean;
 }) {
-    if (openMissions) return (
+    return preview
+        ? <PreviewAssignment />
+        : <ActiveAssignment onProgress={onProgress} onTasksSaved={onTasksSaved} />;
+}
+
+function PreviewAssignment() {
+    const dialog = useRef<HTMLDialogElement>(null);
+    const [value, setValue] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const [topic, question, answer, hint] = reviewQuestions[10];
+
+    return (
         <Card class="tablet-current-assignment">
             <h2 class="tablet-ring tablet-assignment-number" aria-label="Задание 11">11</h2>
-            <div class="tablet-assignment-action">
-                <button type="button" class="chip" onClick={openMissions}>Миссии</button>
+            <div class="tablet-assignment-progress" aria-hidden="true">
+                {Array.from({ length: 5 }, (_, index) => <span key={index} />)}
             </div>
+            <div class="tablet-assignment-action">
+                <div class="mission-challenge">
+                    <button type="button" class="mission-action" aria-haspopup="dialog" onClick={() => {
+                        setValue('');
+                        setFeedback('');
+                        dialog.current?.showModal();
+                    }}>
+                        <span class="tablet-ring challenge-study-play" aria-hidden="true" />
+                        <span>Начать изучение</span>
+                    </button>
+                </div>
+            </div>
+            <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-study-preview-title">
+                <h2 id="tablet-study-preview-title">{topic}</h2>
+                <p class="tablet-recall-topic">Предпросмотр задания 11</p>
+                <p>{question}</p>
+                <form onSubmit={(event) => {
+                    event.preventDefault();
+                    setFeedback(value.trim() && Number(value) === answer ? 'Верно!' : hint);
+                }}>
+                    <label for="tablet-study-preview-answer">Ответ</label>
+                    <input id="tablet-study-preview-answer" inputMode="numeric" required value={value}
+                        onInput={(event) => setValue(event.currentTarget.value)} />
+                    <button type="submit" class="tablet-recall">Проверить</button>
+                </form>
+                <p role="status">{feedback}</p>
+                <form method="dialog"><button type="submit" class="tablet-recall">Закрыть</button></form>
+            </dialog>
         </Card>
     );
-    return <ActiveAssignment onProgress={onProgress} onTasksSaved={onTasksSaved} />;
 }
 
 function ActiveAssignment({ onProgress, onTasksSaved }: { onProgress: () => void; onTasksSaved?: () => void }) {
