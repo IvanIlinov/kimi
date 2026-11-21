@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { KING_CLASSES, RANK_REQUIREMENTS } from '../../src/ranks';
 import { useApi } from '../src/api/useApi';
-import type { ChallengeProgress, Profile, SelfData } from '../src/api/types';
+import type { ChallengeProgress, Profile, SelfData, StudyRank } from '../src/api/types';
 import { CitadelCore } from '../src/components/CitadelCore';
 import { NavIcon } from '../src/components/NavIcon';
-import { RankEmblem } from '../src/components/RankPanel';
+import { RankEmblem, rankName } from '../src/components/RankPanel';
 import { Card, Empty, Loading, Screen } from '../src/components/ui';
 import { cap } from '../src/lib/format';
 import { MissionChallenge } from '../src/pages/MissionChallenge';
@@ -20,7 +21,9 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
     onRecapsReady?: () => void;
 } = {}) {
     const { data, error, reload } = useApi<Profile>('/api/profile/me');
-    const gameLayout = document.body.dataset.studentLayout === 'hq-game';
+    const layout = document.body.dataset.studentLayout;
+    const modernLayout = layout === 'hq-modern';
+    const gameLayout = layout === 'hq-game' || modernLayout;
     const coreYear = data?.core?.year;
 
     useEffect(() => {
@@ -35,18 +38,22 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                         <div class="tablet-player">
                             <div class="tablet-avatar">
                                 <span class="tablet-avatar-portrait" aria-hidden="true" />
-                                {data.rank && <span class="tablet-avatar-crest"><RankEmblem rank={data.rank.current} /></span>}
-                                <span class="tablet-avatar-place" aria-label={`${data.place}-е место в рейтинге`}>{data.place}</span>
+                                {!modernLayout && data.rank && <span class="tablet-avatar-crest"><RankEmblem rank={data.rank.current} /></span>}
+                                {!modernLayout && <span class="tablet-avatar-place" aria-label={`${data.place}-е место в рейтинге`}>{data.place}</span>}
                             </div>
                             <div class="tablet-player-status">
                                 <h1>{cap(data.name)}</h1>
-                                {data.rank && <dl class="tablet-rank">
+                                {modernLayout && <span class="tablet-standing-place">
+                                    <NavIcon name="trophy" /> {data.place}-е место
+                                </span>}
+                                {!modernLayout && data.rank && <dl class="tablet-rank">
                                     <dt>Ранг</dt>
-                                    <dd>{data.rank.current.name}</dd>
+                                    <dd>{rankName(data.rank.current)}</dd>
                                 </dl>}
                             </div>
                         </div>
-                        {data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
+                        {modernLayout ? data.rank && <RankGuide rank={data.rank} />
+                            : data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
                     </Card>
                     {gameLayout && <StudentCrystals week={data.week} />}
                     <Card class="tablet-metrics">
@@ -63,6 +70,86 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                 </>
             )}
         </Screen>
+    );
+}
+
+function RankGuide({ rank }: { rank: StudyRank }) {
+    const dialog = useRef<HTMLDialogElement>(null);
+    const requirements = rank.next ? [
+        { label: 'Задания', ...rank.next.topics },
+        { label: 'Задачи', ...rank.next.tasks },
+        { label: 'Пробник', ...rank.next.exam },
+    ] : [];
+
+    return (
+        <>
+            <button type="button" class="tablet-profile-standing" aria-haspopup="dialog"
+                aria-label={`Таблица рангов. Текущий ранг: ${rankName(rank.current)}`}
+                aria-describedby={rank.next ? 'tablet-profile-rank-progress' : undefined}
+                onClick={() => dialog.current?.showModal()}>
+                <span class="tablet-rank-watermark" aria-hidden="true"><RankEmblem rank={rank.current} /></span>
+                {rank.next ? (
+                    <span class="tablet-standing-progress" aria-hidden="true">
+                        {requirements.map(({ label, value, goal }, index) => (
+                            <span key={label} title={`${label}: ${value} из ${goal}`} data-done={value >= goal}
+                                style={{
+                                    '--rank-fill': `${Math.min(100, value / goal * 100)}%`,
+                                    '--rank-sector': `${index * 120 - 50}deg`,
+                                }} />
+                        ))}
+                        <NavIcon name="arrow-right" />
+                    </span>
+                ) : <span class="tablet-standing-class">{rank.current.kingClass ?? <NavIcon name="crown" />}</span>}
+                <span class="tablet-standing-label">
+                    <strong>Ранги</strong>
+                    <small>{rank.next?.name ?? rank.current.name}</small>
+                </span>
+            </button>
+            {rank.next && <span hidden id="tablet-profile-rank-progress">
+                До ранга «{rank.next.name}». {requirements.map(({ label, value, goal }) => `${label}: ${value} из ${goal}`).join('. ')}
+            </span>}
+            <dialog ref={dialog} class="tablet-rank-guide" aria-labelledby="tablet-rank-guide-title"
+                onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
+                <div class="tablet-rank-guide-content">
+                    <header>
+                        <h2 id="tablet-rank-guide-title">Ранги подготовки</h2>
+                        <form method="dialog"><button type="submit" aria-label="Закрыть" class="challenge-close" autofocus>×</button></form>
+                    </header>
+                    <p class="tablet-rank-next">
+                        {rank.next ? <>Следующий ранг <strong>{rank.next.name}</strong> · закреплено {rank.next.topics.value}/{rank.next.topics.goal}</>
+                            : 'Все ранги пройдены'}
+                    </p>
+                    <table>
+                        <thead><tr><th scope="col">Ранг</th><th scope="col">Задания</th><th scope="col">Задачи</th><th scope="col">Пробник</th></tr></thead>
+                        <tbody>
+                            {[{ level: 0, name: 'Пыль', missions: [], tasks: 0, exam: 0 }, ...RANK_REQUIREMENTS].map((entry) => {
+                                const current = entry.level === rank.current.level;
+                                return (
+                                    <tr key={entry.level} aria-current={current ? 'step' : undefined}>
+                                        <th scope="row">
+                                            <span class="tablet-rank-guide-name"><RankEmblem rank={entry} /><span>{current ? rankName(rank.current) : entry.name}
+                                                {current && <small>Текущий</small>}
+                                            </span></span>
+                                        </th>
+                                        <td>{entry.missions.length}</td>
+                                        <td>{entry.tasks || '—'}</td>
+                                        <td>{entry.exam || '—'}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div class="tablet-king-classes" aria-label="Классы Короля по баллу пробника">
+                        <strong>Класс Короля</strong>
+                        {KING_CLASSES.map(({ label, min }, index) => {
+                            const next = KING_CLASSES[index + 1];
+                            const range = !next ? `${min}` : min ? `${min}–${next.min - 1}` : `<${next.min}`;
+                            return <span key={label} data-active={rank.current.kingClass === label}><b>{label}</b> {range}</span>;
+                        })}
+                    </div>
+                </div>
+            </dialog>
+        </>
     );
 }
 

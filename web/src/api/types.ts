@@ -5,7 +5,7 @@ export type Standing = 'ontrack' | 'behind';
 export type TopicStatus = 'done' | 'learning' | 'todo' | 'reinforced';
 
 export interface StudyRank {
-    current: { level: number; name: string };
+    current: { level: number; name: string; kingClass?: 'B' | 'A' | 'S' | 'SSS' };
     next: {
         name: string;
         topics: RankMetric;

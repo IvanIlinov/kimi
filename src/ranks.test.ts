@@ -21,9 +21,17 @@ test('first rank requires the designated missions, practice and exam score', () 
     assert.equal(rankProgress(first, 104, 40).current.name, 'Неофит');
 });
 
-test('Grand requires all mission stages, 900 solved tasks and a score of 100', () => {
-    assert.equal(rankProgress(all.slice(0, -1), 900, 100).current.name, 'Младший Магистр');
-    assert.equal(rankProgress(all, 899, 100).current.name, 'Старший Магистр');
-    assert.equal(rankProgress(all, 900, 99).current.name, 'Младший Магистр');
-    assert.deepEqual(rankProgress(all, 900, 100), { current: { level: 8, name: 'Гранд' }, next: null });
+test('King requires the complete route, 900 solved tasks and at least 79 on the mock exam', () => {
+    assert.equal(rankProgress(all.slice(0, -1), 900, 100).current.name, 'Архимаг');
+    assert.equal(rankProgress(all, 899, 100).current.name, 'Гранд');
+    assert.equal(rankProgress(all, 900, 78).current.name, 'Гранд');
+});
+
+test('King classes change at 80, 95 and exactly 100', () => {
+    for (const [score, kingClass] of [[79, 'B'], [80, 'A'], [94, 'A'], [95, 'S'], [99, 'S'], [100, 'SSS']] as const) {
+        assert.deepEqual(rankProgress(all, 900, score), {
+            current: { level: 8, name: 'Король', kingClass },
+            next: null,
+        });
+    }
 });

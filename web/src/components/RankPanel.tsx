@@ -4,6 +4,10 @@ import { Card } from './ui';
 
 const EMBLEMS = ['spark', 'crystal', 'crystal', 'award', 'award', 'award', 'crown', 'crown', 'crown'];
 
+export function rankName(rank: StudyRank['current']) {
+    return rank.kingClass ? `${rank.name} · ${rank.kingClass}` : rank.name;
+}
+
 export function RankEmblem({ rank }: { rank: StudyRank['current'] }) {
     return <span class="rank-emblem" data-level={rank.level}>
         <NavIcon name={EMBLEMS[rank.level] ?? 'crystal'} />
@@ -13,7 +17,7 @@ export function RankEmblem({ rank }: { rank: StudyRank['current'] }) {
 export function RankBadge({ rank }: { rank?: StudyRank['current'] }) {
     return rank ? <span class="rank-badge">
         <RankEmblem rank={rank} />
-        <span>{rank.name}</span>
+        <span>{rankName(rank)}</span>
     </span> : null;
 }
 
@@ -25,7 +29,7 @@ export function RankPanel({ rank, showHeading = true }: { rank: StudyRank; showH
                 <RankEmblem rank={current} />
                 <div>
                     <span class="student-brand">Ранг подготовки</span>
-                    <h2 aria-live="polite">{current.name}</h2>
+                    <h2 aria-live="polite">{rankName(current)}</h2>
                 </div>
                 <span class="rank-level">{current.level}/{EMBLEMS.length - 1}</span>
             </div>}
