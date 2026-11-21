@@ -80,6 +80,9 @@ function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
         { label: 'Задачи', ...rank.next.tasks },
         { label: 'Пробник', ...rank.next.exam },
     ] : [];
+    const rankFill = requirements.length
+        ? requirements.reduce((sum, { value, goal }) => sum + Math.min(1, value / goal), 0) / requirements.length
+        : 1;
 
     return (
         <>
@@ -94,18 +97,8 @@ function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
                         {place}-е место <NavIcon name="trophy" />
                     </span>}
                 </span>
-                {rank.next ? (
-                    <span class="tablet-standing-progress" aria-hidden="true">
-                        {requirements.map(({ label, value, goal }, index) => (
-                            <span key={label} title={`${label}: ${value} из ${goal}`} data-done={value >= goal}
-                                style={{
-                                    '--rank-fill': `${Math.min(100, value / goal * 100)}%`,
-                                    '--rank-sector': `${index * 120 - 50}deg`,
-                                }} />
-                        ))}
-                        <NavIcon name="arrow-right" />
-                    </span>
-                ) : <span class="tablet-standing-class">{rank.current.kingClass ?? <NavIcon name="crown" />}</span>}
+                <span class="tablet-standing-progress" aria-hidden="true" data-done={!rank.next}
+                    style={{ '--rank-fill': `${rankFill * 100}%` }} />
             </button>
             {rank.next && <span hidden id="tablet-profile-rank-progress">
                 До ранга «{rank.next.name}». {requirements.map(({ label, value, goal }) => `${label}: ${value} из ${goal}`).join('. ')}
