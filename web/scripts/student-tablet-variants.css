@@ -469,21 +469,27 @@
 [data-student-layout="hq-modern"] .tablet-current-assignment .tablet-ring {
     --study-rune-light: #a5edff;
     clip-path: none;
-    border: 1px solid #85bfdf69;
+    border: 1px solid #8ed6f7c2;
     border-radius: 50%;
-    background: radial-gradient(circle, #1c4166, #122b49 65%, #102540);
-    box-shadow: inset 0 0 5px #071a32;
+    background: radial-gradient(ellipse at 50% 112%, #73ceff47, transparent 78%),
+        linear-gradient(155deg, #294e74, #132a47 78%);
+    box-shadow: inset 0 1px #e6f2ff65, inset 0 -3px #0b1b33a6,
+        0 2px #0a1c34, 0 3px 6px #06162ccc, 0 0 8px #69c9f833;
     color: #e4fbff;
     text-shadow: 0 0 1px #091a31, 0 0 4px #6acef8a6;
 }
 [data-student-layout="hq-modern"] .tablet-current-assignment .tablet-ring::before {
-    inset: 17%;
-    border: 1px solid #73bcdc91;
-    border-radius: 4px;
+    inset: 5px;
+    border: 1px solid #91cbec46;
+    border-top-color: #bbecfd82;
+    border-bottom-color: #66c9fb24;
+    border-radius: 50%;
     clip-path: none;
-    background: radial-gradient(circle, #264f72, #142d4b 76%);
-    box-shadow: inset 0 0 4px #0a1c35, 0 0 4px #6bcdfa29;
-    transform: rotate(45deg);
+    background: none;
+}
+[data-student-layout="hq-modern"] .tablet-current-assignment :is(.tablet-assignment-number:active, .mission-action:not(:disabled):active .challenge-study-play) {
+    transform: translateY(1px);
+    box-shadow: inset 0 1px #e6f2ff55, inset 0 -2px #0b1b33a6, 0 1px 4px #06162ca6;
 }
 [data-student-layout="hq-modern"] .challenge-study-play:not([data-complete="true"])::after {
     width: 15px;
