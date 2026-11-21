@@ -2,6 +2,34 @@ import { useEffect } from 'preact/hooks';
 
 export function useStudentDialogViewport(enabled: boolean) {
     useEffect(() => {
+        if (!enabled) return;
+        const home = document.querySelector<HTMLElement>('.tablet-home');
+        if (!home) return;
+
+        let frame = 0;
+        const observer = new MutationObserver((changes) => {
+            if (!changes.some(({ target }) => target instanceof HTMLDialogElement)) return;
+            cancelAnimationFrame(frame);
+            if (!home.querySelector('dialog[open]')) {
+                delete home.dataset.dialogSettled;
+                return;
+            }
+            // Let the dialog's first frame render before touching background animation styles.
+            frame = requestAnimationFrame(() => {
+                frame = requestAnimationFrame(() => {
+                    home.dataset.dialogSettled = '';
+                });
+            });
+        });
+        observer.observe(home, { attributes: true, attributeFilter: ['open'], subtree: true });
+        return () => {
+            observer.disconnect();
+            cancelAnimationFrame(frame);
+            delete home.dataset.dialogSettled;
+        };
+    }, [enabled]);
+
+    useEffect(() => {
         if (!enabled || !matchMedia('(pointer: coarse)').matches) return;
         const visualViewport = window.visualViewport;
         const screen = document.querySelector<HTMLElement>('.tablet-home');

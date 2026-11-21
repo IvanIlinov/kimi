@@ -286,7 +286,7 @@ function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
                 <div class="tablet-rank-guide-content">
                     <header>
                         <h2 id="tablet-study-picker-title">Выбрать задание</h2>
-                        <form method="dialog"><button type="submit" aria-label="Закрыть" class="challenge-close">×</button></form>
+                        <form method="dialog"><button type="submit" aria-label="Закрыть" class="challenge-close" autofocus>×</button></form>
                     </header>
                     <div class="tablet-study-picker-sectors">
                         {(data?.rankRoute ?? RANK_ROUTE).map((sector) => (

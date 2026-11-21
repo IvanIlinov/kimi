@@ -626,7 +626,7 @@
     border-radius: 17px 10px 17px 10px;
     background: linear-gradient(155deg, #1b3757, #122640 75%);
     color: var(--hq-ink);
-    box-shadow: 0 12px 42px #060e21a8;
+    box-shadow: 0 5px 14px #060e2178;
 }
 .tablet-rank-guide::backdrop { background: #061123b8; }
 .tablet-rank-guide-content { padding: clamp(9px, 3vw, 16px); }
@@ -759,9 +759,8 @@
 :is(.tablet-rank-watermark, .tablet-rank-guide-name) .rank-emblem svg {
     color: var(--rank-glow);
     stroke-width: 1.15;
-    filter: drop-shadow(0 0 1px var(--rank-glow));
+    filter: none;
 }
-.tablet-rank-watermark .rank-emblem svg { filter: none; }
 .rank-engraving-cut {
     stroke: #091a31;
     stroke-width: 4.2;
@@ -813,12 +812,12 @@ body[data-tablet-keyboard] .tablet-home dialog[open] {
 @media (pointer: coarse) {
     [data-student-layout="hq-modern"] .tablet-home dialog input { font-size: 16px; }
 }
-[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) :is(
+[data-student-layout="hq-modern"] .tablet-home[data-dialog-settled] :is(
     .tablet-plate-glint, .tablet-crystal-art
 ),
-[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-crystal-art::after,
-[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-current-assignment::after,
-[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-portal-visual::before {
+[data-student-layout="hq-modern"] .tablet-home[data-dialog-settled] .tablet-crystal-art::after,
+[data-student-layout="hq-modern"] .tablet-home[data-dialog-settled] .tablet-current-assignment::after,
+[data-student-layout="hq-modern"] .tablet-home[data-dialog-settled] .tablet-portal-visual::before {
     animation-play-state: paused;
 }
 
@@ -831,6 +830,8 @@ body[data-tablet-keyboard] .tablet-home dialog[open] {
     [data-student-layout="hq-modern"] .tablet-assignment-action .mission-action:hover .challenge-study-play {
         filter: none;
     }
+    [data-student-layout="hq-modern"] .tablet-profile-standing:active { background: #9cddff; }
+    [data-student-layout="hq-modern"] .tablet-assignment-number:active { border-color: #d2efff; }
     [data-student-layout="hq-modern"] .tablet-review-tile:active::before { border-color: #d2efff; }
     [data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall:active { border-color: #d2efff; }
 }
