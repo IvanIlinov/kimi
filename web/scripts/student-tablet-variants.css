@@ -771,3 +771,45 @@
     border-color: #6296c3;
     box-shadow: inset 0 1px #a5d8ff40, 0 0 8px #6cbaff28, 0 5px 14px #08182d45;
 }
+
+.tablet-recall-dialog header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.tablet-recall-dialog header form { display: block; }
+.tablet-recall-close {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #6f96c2;
+    border-radius: 50%;
+    color: #e5f5ff;
+    font-size: 22px;
+    line-height: 1;
+}
+body[data-tablet-typing] .tablet-home {
+    height: var(--tablet-stable-height, 100dvh);
+}
+body[data-tablet-typing] .tabbar { visibility: hidden; }
+body[data-tablet-keyboard] .tablet-home dialog[open] {
+    position: fixed;
+    inset: var(--tablet-keyboard-top, 8px) 0 auto;
+    max-height: var(--tablet-keyboard-height, calc(100dvh - 16px));
+    margin: 0 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+@media (pointer: coarse) {
+    [data-student-layout="hq-modern"] .tablet-home dialog input { font-size: 16px; }
+}
+[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) :is(
+    .tablet-player, .tablet-profile-standing, .tablet-rank-watermark, .tablet-crystal-art
+),
+[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-crystal-art::after,
+[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-current-assignment::after,
+[data-student-layout="hq-modern"] .tablet-home:has(dialog[open]) .tablet-portal-visual::before {
+    animation-play-state: paused;
+}

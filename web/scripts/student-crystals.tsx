@@ -139,7 +139,7 @@ function DemoExam({ dialog }: { dialog: { current: HTMLDialogElement | null } })
                 <header>
                     <span class="student-brand">Портал месяца</span>
                     <h2 id="tablet-exam-title">Демо-пробник</h2>
-                    <form method="dialog"><button class="challenge-close" aria-label="Закрыть">×</button></form>
+                    <form method="dialog"><button class="challenge-close" aria-label="Закрыть" autofocus>×</button></form>
                 </header>
                 {task ? <form class="tablet-exam-form" onSubmit={(event) => {
                     event.preventDefault();

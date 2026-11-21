@@ -9,6 +9,7 @@ import { Card, Empty, Loading, Screen } from '../src/components/ui';
 import { cap } from '../src/lib/format';
 import { MissionChallenge } from '../src/pages/MissionChallenge';
 import { StudentCrystals } from './student-crystals';
+import { useStudentDialogViewport } from './student-dialog-viewport';
 import { reviewQuestions } from './student-review-questions';
 import './student-tablet-home.css';
 import './student-tablet-variants.css';
@@ -25,6 +26,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
     const modernLayout = layout === 'hq-modern';
     const gameLayout = layout === 'hq-game' || modernLayout;
     const coreYear = data?.core?.year;
+    useStudentDialogViewport(modernLayout);
 
     useEffect(() => {
         if (staging && autoOpenWeeklyRecap && coreYear !== undefined) onRecapsReady?.();
@@ -206,7 +208,10 @@ function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolea
                     </> : 'Вспомнить'}</button>
             </div>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-recall-title">
-                <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>
+                <header>
+                    <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>
+                    <form method="dialog"><button type="submit" class="tablet-recall-close" aria-label="Закрыть" autofocus>×</button></form>
+                </header>
                 <p class="tablet-recall-topic">{topic}</p>
                 <p>{question}</p>
                 <form onSubmit={(event) => {
@@ -215,6 +220,7 @@ function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolea
                         setLapses((previous) => previous.map((value, index) => index === selected ? 0 : value));
                         setSolved(true);
                         setFeedback('Верно! Задание снова в памяти.');
+                        event.currentTarget.querySelector('input')?.blur();
                     } else {
                         setFeedback(hint);
                     }
@@ -225,7 +231,6 @@ function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolea
                     <button type="submit" class="tablet-recall" disabled={solved}>Проверить</button>
                 </form>
                 <p role="status">{feedback}</p>
-                <button type="button" class="tablet-recall" onClick={() => dialog.current?.close()}>Закрыть</button>
             </dialog>
         </Card>
     );
@@ -327,7 +332,10 @@ function PreviewAssignment({ mission }: { mission: number }) {
                 </div>
             </div>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-study-preview-title">
-                <h2 id="tablet-study-preview-title">{topic}</h2>
+                <header>
+                    <h2 id="tablet-study-preview-title">{topic}</h2>
+                    <form method="dialog"><button type="submit" class="tablet-recall-close" aria-label="Закрыть" autofocus>×</button></form>
+                </header>
                 <p class="tablet-recall-topic">Демо · задание {mission}</p>
                 <p>{question}</p>
                 <form onSubmit={(event) => {
@@ -335,6 +343,7 @@ function PreviewAssignment({ mission }: { mission: number }) {
                     if (value.trim() && Number(value) === answer) {
                         setSolved(true);
                         setFeedback('Верно!');
+                        event.currentTarget.querySelector('input')?.blur();
                     } else {
                         setFeedback(hint);
                     }
@@ -345,7 +354,6 @@ function PreviewAssignment({ mission }: { mission: number }) {
                     <button type="submit" class="tablet-recall">Проверить</button>
                 </form>
                 <p role="status">{feedback}</p>
-                <form method="dialog"><button type="submit" class="tablet-recall">Закрыть</button></form>
             </dialog>
         </>
     );
