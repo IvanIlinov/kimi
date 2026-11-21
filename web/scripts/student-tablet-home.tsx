@@ -191,14 +191,16 @@ function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolea
                 <span data-tone="blue">Скоро</span>
                 <span data-tone="amber">Пора повторить</span>
             </div>
-            <button type="button" class="tablet-recall" aria-haspopup="dialog"
-                aria-label={iconOnly ? 'Вспомнить' : undefined} title={iconOnly ? 'Вспомнить' : undefined}
-                data-tone={reviewStatus(selectedLapse).tone} style={{ '--review-lapse': `${selectedLapse}%` }} onClick={() => {
-                setAnswer('');
-                setFeedback('');
-                setSolved(false);
-                dialog.current?.showModal();
-            }}>{iconOnly ? <NavIcon name="repeat-play" /> : 'Вспомнить'}</button>
+            <div class="tablet-recall-row">
+                <button type="button" class="tablet-recall" aria-haspopup="dialog"
+                    aria-label={iconOnly ? 'Вспомнить' : undefined} title={iconOnly ? 'Вспомнить' : undefined}
+                    data-tone={reviewStatus(selectedLapse).tone} style={{ '--review-lapse': `${selectedLapse}%` }} onClick={() => {
+                        setAnswer('');
+                        setFeedback('');
+                        setSolved(false);
+                        dialog.current?.showModal();
+                    }}>{iconOnly ? <NavIcon name="repeat-play" /> : 'Вспомнить'}</button>
+            </div>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-recall-title">
                 <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>
                 <p class="tablet-recall-topic">{topic}</p>

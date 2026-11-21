@@ -126,7 +126,7 @@
     outline: 2px solid #f4f9ff;
     outline-offset: -1px;
 }
-:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-reviews > .tablet-recall {
+:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-recall-row > .tablet-recall {
     min-width: 174px;
     min-height: 44px;
     padding-inline: 21px 40px;
@@ -139,7 +139,7 @@
     font-size: 13px;
     cursor: pointer;
 }
-:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-reviews > .tablet-recall::before {
+:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-recall-row > .tablet-recall::before {
     position: absolute;
     inset: 2px;
     padding: 1px;
@@ -149,7 +149,7 @@
     pointer-events: none;
     content: '';
 }
-:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-reviews > .tablet-recall::after {
+:is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-recall-row > .tablet-recall::after {
     border-color: var(--review-color, #8cbfff);
     filter: drop-shadow(0 0 3px var(--review-color, #8cbfff));
 }
@@ -157,7 +157,7 @@
 @media (max-height: 620px) {
     :is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-home > .card.tablet-reviews { padding-block: 8px; }
     :is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-review-tile { min-height: 32px; }
-    :is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-reviews > .tablet-recall { margin-top: 7px; }
+    :is([data-student-layout="hq-game"], [data-student-layout="hq-modern"]) .tablet-recall-row > .tablet-recall { margin-top: 7px; }
 }
 
 [data-student-layout="hq-modern"] {
@@ -522,7 +522,26 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--review-color) 42%, transparent),
         0 0 9px color-mix(in srgb, var(--review-color) 32%, transparent);
 }
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall {
+[data-student-layout="hq-modern"] .tablet-recall-row {
+    display: grid;
+    grid-template-columns: minmax(0, 64px) auto minmax(0, 64px);
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 3vw, 14px);
+    margin: 10px 0 1px;
+}
+[data-student-layout="hq-modern"] .tablet-recall-row::before,
+[data-student-layout="hq-modern"] .tablet-recall-row::after {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #85b6df9c);
+    content: '';
+}
+[data-student-layout="hq-modern"] .tablet-recall-row::after { transform: scaleX(-1); }
+@media (max-height: 620px) {
+    [data-student-layout="hq-modern"] .tablet-recall-row { margin-top: 7px; }
+}
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall {
+    margin: 0;
     --recall-accent: var(--review-color, #8cbfff);
     display: grid;
     place-items: center;
@@ -538,8 +557,8 @@
         0 0 9px color-mix(in srgb, var(--recall-accent) 29%, transparent);
     color: var(--recall-accent);
 }
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall::before,
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall::after {
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::before,
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::after {
     position: absolute;
     inset: auto;
     top: 50%;
@@ -557,9 +576,9 @@
     transform: translateY(-50%);
     content: '';
 }
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall::before { left: 13px; }
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall::after { right: 13px; transform: translateY(-50%) scaleX(-1); }
-[data-student-layout="hq-modern"] .tablet-reviews > .tablet-recall svg { width: 21px; height: 21px; }
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::before { left: 13px; }
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall::after { right: 13px; transform: translateY(-50%) scaleX(-1); }
+[data-student-layout="hq-modern"] .tablet-recall-row > .tablet-recall svg { width: 21px; height: 21px; }
 [data-student-layout="hq-modern"] :is(.tablet-review-tile, .tablet-recall, .mission-action):focus-visible {
     outline: 2px solid #a3d8ff;
     outline-offset: 2px;
