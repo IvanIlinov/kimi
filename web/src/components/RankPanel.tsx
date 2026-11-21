@@ -20,7 +20,7 @@ export function rankName(rank: StudyRank['current']) {
 
 export function RankEmblem({ rank }: { rank: StudyRank['current'] }) {
     return <span class="rank-emblem" data-level={rank.level}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55"
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             {EMBLEMS[rank.level] ?? EMBLEMS[1]}
         </svg>

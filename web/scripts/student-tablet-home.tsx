@@ -65,7 +65,7 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                     <CurrentAssignment onProgress={reload} onTasksSaved={onRecapsReady}
                         preview={staging && !autoOpenWeeklyRecap} />
                     {!gameLayout && <StudentCrystals week={data.week} />}
-                    <ReviewQueue staging={staging} />
+                    <ReviewQueue staging={staging} iconOnly={modernLayout} />
                     {showMiniPath && <MiniPath />}
                 </>
             )}
@@ -156,7 +156,7 @@ function reviewStatus(lapse: number) {
     return { tone: 'mint', label: 'В памяти' };
 }
 
-function ReviewQueue({ staging }: { staging: boolean }) {
+function ReviewQueue({ staging, iconOnly }: { staging: boolean; iconOnly: boolean }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const [selected, setSelected] = useState(4);
     const [lapses, setLapses] = useState(initialLapses);
@@ -192,12 +192,13 @@ function ReviewQueue({ staging }: { staging: boolean }) {
                 <span data-tone="amber">Пора повторить</span>
             </div>
             <button type="button" class="tablet-recall" aria-haspopup="dialog"
+                aria-label={iconOnly ? 'Вспомнить' : undefined} title={iconOnly ? 'Вспомнить' : undefined}
                 data-tone={reviewStatus(selectedLapse).tone} style={{ '--review-lapse': `${selectedLapse}%` }} onClick={() => {
                 setAnswer('');
                 setFeedback('');
                 setSolved(false);
                 dialog.current?.showModal();
-            }}>Вспомнить</button>
+            }}>{iconOnly ? <NavIcon name="repeat-play" /> : 'Вспомнить'}</button>
             <dialog ref={dialog} class="tablet-recall-dialog" aria-labelledby="tablet-recall-title">
                 <h2 id="tablet-recall-title">Вспомнить задание {selected + 1}</h2>
                 <p class="tablet-recall-topic">{topic}</p>
