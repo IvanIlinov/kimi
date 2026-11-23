@@ -100,7 +100,7 @@ export function profileDto(r: Ranked, week: WeekStat | undefined, now: Date, can
 }
 
 export interface WeekDto {
-    leader: { name: string; pct: number; tasks: number; topics: number; goalPct: number } | null;
+    leader: { name: string; exam: number | null; pct: number; tasks: number; topics: number; goalPct: number } | null;
     rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
 }
 
@@ -120,6 +120,7 @@ export function weekDto(ranked: Ranked[], viewerTgId: number, week: Map<number, 
         leader: first
             ? {
                   name: first.person.name,
+                  exam: first.person.exam,
                   pct: Math.round(weekPct(first.stat)),
                   tasks: first.stat.tasks,
                   topics: first.stat.topics,

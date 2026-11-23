@@ -39,7 +39,7 @@ test('global and monthly standings choose their own leaders before selecting the
 });
 
 test('weekly standings sort by tasks then reinforced delta before selecting the top ten', () => {
-    const people = Array.from({ length: 13 }, (_, i) => person(i + 1, { tasksTotal: 1000 - i }));
+    const people = Array.from({ length: 13 }, (_, i) => person(i + 1, { tasksTotal: 1000 - i, exam: 90 - i }));
     const stats = new Map<number, WeekStat>([
         [1, { userId: 1, tasks: 8, topics: 5, active: true }],
         [12, { userId: 12, tasks: 10, topics: 1, active: true }],
@@ -50,6 +50,9 @@ test('weekly standings sort by tasks then reinforced delta before selecting the 
 
     assert.deepEqual(week.rows.slice(0, 3).map((row) => row.id), [13, 12, 1]);
     assert.equal(week.leader?.name, people[12].name);
+    assert.equal(week.leader?.exam, 78);
+    assert.equal(week.leader?.topics, 2);
+    assert.equal(week.leader?.tasks, 10);
     assert.equal(week.rows.length, 11);
     assert.equal(week.rows.at(-1)?.id, 11);
 });

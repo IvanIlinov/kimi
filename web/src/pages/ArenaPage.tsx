@@ -5,6 +5,7 @@ import { useApi } from '../api/useApi';
 import type { Arena, ArenaMode } from '../api/types';
 import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
+import { ArenaLeader } from '../components/ArenaLeader';
 import { NavIcon } from '../components/NavIcon';
 import { WeekResults } from './WeekPage';
 
@@ -140,22 +141,15 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
     return (
         <>
             {(l || addAction) && (
-                <Card class="leader">
-                    <div class="between leader-heading">
-                        <Label>{!l ? 'Лидер пока не определён' : mode === 'global' ? 'Лидер по общему прогрессу' : 'Лидер месяца'}</Label>
-                        {addAction}
-                    </div>
-                    {l && <>
-                        <strong class="leader-name">{cap(l.name)}</strong>
-                        <div class="kpis">
-                            <Kpi label="Прогресс" value={`${l.pct}%`} />
-                            <Kpi label="Программа" value={`${l.monthPct}%`} />
-                            <Kpi label="Пробник" value={l.exam ?? 0} />
-                            <Kpi label={plural(l.topics, ['задание', 'задания', 'заданий'])} value={l.topics} />
-                            <Kpi label={plural(l.tasks, ['задача', 'задачи', 'задач'])} value={l.tasks} />
-                        </div>
-                    </>}
-                </Card>
+                <ArenaLeader title={!l ? 'Лидер пока не определён' : mode === 'global' ? 'Лидер по общему прогрессу' : 'Лидер месяца'}
+                    name={l?.name} action={addAction} metrics={l ? [
+                        { label: 'Прогресс', value: `${l.pct}%` },
+                        { label: 'Программа', value: `${l.monthPct}%` },
+                        { label: 'Пробник', value: l.exam ?? 0 },
+                        { label: plural(l.topics, ['задание', 'задания', 'заданий']), value: l.topics },
+                        { label: plural(l.tasks, ['задача', 'задачи', 'задач']), value: l.tasks },
+                    ] : undefined}
+                />
             )}
 
             <Card class="list">
@@ -179,14 +173,5 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                 ))}
             </Card>
         </>
-    );
-}
-
-function Kpi({ label, value }: { label: string; value: string | number }) {
-    return (
-        <div class="kpi">
-            <b>{value}</b>
-            <span>{label}</span>
-        </div>
     );
 }

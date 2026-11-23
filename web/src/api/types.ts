@@ -59,7 +59,7 @@ export interface Profile {
 }
 
 export interface Week {
-    leader: { name: string; pct: number; tasks: number; topics: number; goalPct?: number } | null;
+    leader: { name: string; exam: number | null; pct: number; tasks: number; topics: number; goalPct?: number } | null;
     rows: { id: number; name: string; tasks: number; topics: number; goalPct: number }[];
 }
 

@@ -13,6 +13,13 @@ const STATUS_LABEL = {
     reinforced: 'Закреплено',
 };
 
+const TOPIC_LEGEND = [
+    ['todo', 'Не изучено'],
+    ['learning', 'В изучении'],
+    ['done', 'Изучен'],
+    ['reinforced', 'Закреплён'],
+] as const;
+
 const AMOUNTS = [-1, 1, 3, 5, 10];
 
 // Порядок заданий внутри рангов и между рангами из роадмапа v5.
@@ -102,6 +109,11 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                         <span>По плану</span>
                     </button>
                 </div>
+                <ul class="topic-legend" aria-label="Статусы заданий">
+                    {TOPIC_LEGEND.map(([status, label]) => (
+                        <li key={status}><span class={`topic-legend-dot ${status}`} aria-hidden="true" />{label}</li>
+                    ))}
+                </ul>
             </Card>
 
             <ExamCard exam={data.exam} max={data.limits.exam} busy={busy} readOnly={readOnly} onSave={(v) => run('/api/self/exam', { value: v })} />

@@ -32,7 +32,7 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
         <Screen hideTitle title={title} className="student-home">
             <Card class="student-summary">
                 <div class="between">
-                    <strong>{cap(name)}</strong>
+                    <strong class="student-name">{cap(name)}</strong>
                     <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
                 </div>
                 <div class="student-progress">

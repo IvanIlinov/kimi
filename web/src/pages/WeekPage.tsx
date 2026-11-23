@@ -1,8 +1,9 @@
 import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
-import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
-import { cap, plural, sgn } from '../lib/format';
+import { ArenaLeader } from '../components/ArenaLeader';
+import { Card, Empty, Loading, Row, SegmentBar } from '../components/ui';
+import { plural, sgn } from '../lib/format';
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
     onOpen: (id: number) => void;
@@ -14,23 +15,17 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
     if (error) return <Empty text={error} />;
     if (!data) return <Loading />;
 
+    const leader = data.leader;
     return (
         <>
-            {(data.leader || addAction) && (
-                <Card class="leader">
-                    <div class="between leader-heading">
-                        <Label>{data.leader ? '👑 Лидер недели' : 'Лидер недели пока не определён'}</Label>
-                        {addAction}
-                    </div>
-                    {data.leader && <>
-                        <strong class="leader-name">{cap(data.leader.name)}</strong>
-                        <span class="stats week-leader-stats">
-                            <b>{sgn(data.leader.pct)}%</b>
-                            <b>{sgn(data.leader.tasks)} {plural(data.leader.tasks, ['задача', 'задачи', 'задач'])}</b>
-                            <b>{sgn(data.leader.topics)} {plural(data.leader.topics, ['задание', 'задания', 'заданий'])}</b>
-                        </span>
-                    </>}
-                </Card>
+            {(leader || addAction) && (
+                <ArenaLeader title={leader ? 'Лидер недели' : 'Лидер недели пока не определён'}
+                    name={leader?.name} action={addAction} metrics={leader ? [
+                        { label: 'Пробник', value: leader.exam ?? 0 },
+                        { label: plural(leader.topics, ['задание', 'задания', 'заданий']), value: leader.topics },
+                        { label: plural(leader.tasks, ['задача', 'задачи', 'задач']), value: leader.tasks },
+                    ] : undefined}
+                />
             )}
 
             <Card class="list">
