@@ -30,7 +30,7 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
 
     return (
         <Screen hideTitle title={title} className="student-home">
-            <div class="student-overview">
+            <div class="student-frame">
                 <Card class="student-identity">
                     <strong class="student-name">{cap(name)}</strong>
                     <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
@@ -49,33 +49,33 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
                         <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
                     </div>
                 </Card>
+                <SwipeCard
+                    label={recaps ? "Ближайшие цели, прогресс и итоги" : "Прогресс и ближайшие цели"}
+                    leading={recaps}
+                    first={
+                        <>
+                            <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} action={monthAction} />
+                            <Goal label="Прогресс недели" value={week.goalPct} />
+                            {daysLeft != null && (
+                                <div class="student-countdown">
+                                    <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
+                                    <small>до начала экзаменов</small>
+                                </div>
+                            )}
+                        </>
+                    }
+                    second={
+                        <>
+                            <Goal icon="target" label="Изучено" value={month.topics.value} max={month.topics.goal}
+                                note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
+                            <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
+                                note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
+                            <Goal icon="clipboard-list" label="Пробник" value={exam} max={month.exam.goal}
+                                note={remaining(examLeft, ['балл', 'балла', 'баллов'])} />
+                        </>
+                    }
+                />
             </div>
-            <SwipeCard
-                label={recaps ? "Ближайшие цели, прогресс и итоги" : "Прогресс и ближайшие цели"}
-                leading={recaps}
-                first={
-                    <>
-                        <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} action={monthAction} />
-                        <Goal label="Прогресс недели" value={week.goalPct} />
-                        {daysLeft != null && (
-                            <div class="student-countdown">
-                                <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
-                                <small>до начала экзаменов</small>
-                            </div>
-                        )}
-                    </>
-                }
-                second={
-                    <>
-                        <Goal icon="target" label="Изучено" value={month.topics.value} max={month.topics.goal}
-                            note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
-                        <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
-                            note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
-                        <Goal icon="clipboard-list" label="Пробник" value={exam} max={month.exam.goal}
-                            note={remaining(examLeft, ['балл', 'балла', 'баллов'])} />
-                    </>
-                }
-            />
         </Screen>
     );
 }
