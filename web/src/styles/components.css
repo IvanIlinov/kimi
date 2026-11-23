@@ -966,10 +966,26 @@
 .arena-icon.arena-add { width: 36px; height: 36px; min-height: 0; padding: 0; }
 .arena-add svg { width: 21px; height: 21px; }
 
-.layout-topics .cell:is(.done, .learning, .reinforced) {
-    background: color-mix(in srgb, var(--tile-accent) 38%, var(--surface-strong));
-    border-color: color-mix(in srgb, var(--tile-accent) 55%, var(--border));
-    color: var(--text);
+.layout-topics .cell {
+    background: #343a47;
+    color: #dbe1ee;
+    border-color: rgb(255 255 255 / 14%);
+    box-shadow: inset 0 1px rgb(255 255 255 / 12%), 0 2px 3px rgb(0 0 0 / 24%);
+}
+
+.layout-topics .cell.learning {
+    background: #edbb6d;
+    color: #2b1e12;
+}
+
+.layout-topics .cell.done {
+    background: #7dcbb0;
+    color: #122b23;
+}
+
+.layout-topics .cell.reinforced {
+    background: #8aadf0;
+    color: #17263f;
 }
 .history-row b[data-accent],
 .pill[data-accent] {
