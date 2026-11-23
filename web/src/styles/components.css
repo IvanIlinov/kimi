@@ -54,24 +54,33 @@
 .seg {
     display: flex;
     flex: 1;
-    gap: clamp(2px, 0.8vw, 5px);
+    gap: clamp(3px, 1vw, 5px);
     align-items: stretch;
-    min-width: 0;
     height: 22px;
     min-height: 22px;
 }
 
 .seg i {
-    display: block;
     flex: 1;
+    display: block;
+    min-width: 2px;
     max-width: 8px;
-    border-radius: 2px;
+    height: 100%;
+    margin: 0;
+    align-self: stretch;
+    border-radius: 1px;
+    transform: skewX(-16deg);
     background: var(--surface-strong);
 }
 
-.seg i.on.good { background: var(--good); }
-.seg i.on.warn { background: var(--warn); }
-.seg i.on.bad { background: var(--bad); }
+.seg i.on {
+    background: var(--segment-color);
+    box-shadow: 0 0 3px color-mix(in srgb, var(--segment-color) 22%, transparent);
+}
+
+.seg i.on.good { --segment-color: var(--good); }
+.seg i.on.warn { --segment-color: var(--warn); }
+.seg i.on.bad { --segment-color: var(--bad); }
 
 .metric {
     display: flex;
@@ -735,6 +744,13 @@
 .student-goal strong { white-space: nowrap; }
 .student-home .student-goal .seg,
 .tasks-week .seg { height: 12px; min-height: 12px; }
+.student-home .student-goal .seg i.on,
+.tasks-week .seg i.on {
+    box-shadow:
+        0 2px 2px rgb(0 0 0 / var(--segment-shadow-opacity, 0.45)),
+        0 3px 5px color-mix(in srgb, var(--segment-color) 32%, transparent);
+}
+.student-home .student-goal .seg { --segment-shadow-opacity: 0.34; }
 .student-goal-progress {
     display: flex;
     align-items: center;
@@ -949,15 +965,10 @@
 .arena-icon.arena-add { width: 36px; height: 36px; min-height: 0; padding: 0; }
 .arena-add svg { width: 21px; height: 21px; }
 
-.cell:is(.done, .learning, .reinforced) {
+.layout-topics .cell:is(.done, .learning, .reinforced) {
     background: color-mix(in srgb, var(--tile-accent) 38%, var(--surface-strong));
     border-color: color-mix(in srgb, var(--tile-accent) 55%, var(--border));
     color: var(--text);
-}
-
-.layout-topics .amounts .chip {
-    background: color-mix(in srgb, var(--blue) 24%, var(--surface-strong));
-    border-color: color-mix(in srgb, var(--blue) 40%, var(--border));
 }
 .history-row b[data-accent],
 .pill[data-accent] {
