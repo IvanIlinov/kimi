@@ -91,7 +91,11 @@ npm run build --prefix web
 
 - `main` — Production.
 
-Локальная работа с проектом ведётся в `development`.
+- `game-development` — игровой прототип v6 и шесть мобильных демо.
+
+Следующую сессию начинай с `git switch development` и `git pull --ff-only`. Эта ветка продолжает версию v5 из Production. Проверяй изменения на Staging через [тестового бота](https://t.me/rin_progress_bot).
+
+Для отдельной работы над игровым интерфейсом используй `git switch game-development`. Собери демо командой `npm run demo --prefix web -- --student-tablet`, запусти `python3 -m http.server 18763 --bind 127.0.0.1 --directory web/demos` и открой [мобильный предпросмотр](http://127.0.0.1:18763/student-home-preview.html?demo=arena).
 
 ## Выкладка
 
