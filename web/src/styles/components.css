@@ -46,7 +46,8 @@
     height: 100dvh;
     margin: 0 auto;
     padding-top: env(safe-area-inset-top, 0px);
-    background: var(--surface);
+    background: linear-gradient(155deg, #343d46, transparent 43%),
+        linear-gradient(320deg, #303942, transparent 42%), #23292f;
     --screen-gutter: clamp(19px, 5.5vw, 27px);
     --cap-drop: clamp(12px, 2.5dvh, 22px);
     --cap-finish:
@@ -670,14 +671,16 @@
 .layout-topics > .topic-board {
     z-index: 2;
     display: flex;
-    flex: 1.7 0 auto;
+    flex: 1.05 0 auto;
     flex-direction: column;
+    justify-content: center;
     margin-inline: 4px 0;
 }
 
 .topic-board > .grid {
-    flex: 1 0 auto;
-    grid-auto-rows: minmax(min-content, 1fr);
+    flex: 0 0 auto;
+    grid-template-columns: repeat(6, minmax(0, 44px));
+    justify-content: center;
 }
 
 .topic-board .cell {
@@ -938,6 +941,7 @@
 .student-home { overflow-y: auto; }
 
 .student-frame {
+    position: relative;
     display: flex;
     flex: 1 0 auto;
     flex-direction: column;
@@ -945,9 +949,25 @@
     padding: 0 2px 10px;
 }
 
+.student-frame::before {
+    position: absolute;
+    z-index: 5;
+    inset: 0 calc(0px - var(--screen-gutter));
+    content: '';
+    pointer-events: none;
+    --profile-joint: clamp(49px, 9.5dvh, 88px);
+    background:
+        linear-gradient(140deg, #ffe779 38%, #e8b816 59%, transparent 60%)
+            left top var(--profile-joint) / 17px 74px no-repeat,
+        linear-gradient(225deg, #fff090 38%, #e3ae00 58%, transparent 59%)
+            right top calc(var(--profile-joint) + var(--cap-drop)) / 17px 84px no-repeat,
+        linear-gradient(45deg, #fff090 34%, #e8b816 57%, transparent 58%) left bottom / 17px 66px no-repeat,
+        linear-gradient(318deg, #ffe779 36%, #dba600 59%, transparent 60%) right bottom / 17px 78px no-repeat;
+}
+
 .student-frame > .swipe-card {
     z-index: 1;
-    flex: 1.6 0 auto;
+    flex: 0.55 0 auto;
     min-height: clamp(192px, 28dvh, 236px);
     grid-template-rows: minmax(min-content, 1fr) auto;
     margin: -18px -4px 0 5px;
@@ -958,11 +978,11 @@
 
 .student-identity {
     display: flex;
-    flex: 0 0 auto;
+    flex: 0.35 0 auto;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 14px var(--screen-gutter);
+    padding: 16px var(--screen-gutter);
     color: var(--on-accent);
     --plate-face: var(--accent);
     --plate-texture: var(--cap-finish);
@@ -972,7 +992,7 @@
 
 .student-name {
     min-width: 0;
-    font: 800 clamp(24px, 7vw, 32px)/1.05 var(--font-display);
+    font: 800 clamp(25px, 7.9vw, 36px)/1.05 var(--font-display);
     overflow-wrap: anywhere;
 }
 
@@ -989,7 +1009,7 @@
 .student-progress {
     z-index: 3;
     display: grid;
-    flex: 1 0 auto;
+    flex: 1.45 0 auto;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
@@ -1003,7 +1023,7 @@
 
 .student-progress > strong {
     max-width: 9ch;
-    font: 800 clamp(23px, 6.3vw, 34px)/1 var(--font-display);
+    font: 800 clamp(24px, 6.8vw, 36px)/1 var(--font-display);
 }
 
 .student-totals {
@@ -1015,7 +1035,7 @@
     padding: 25px 10px 16px;
     --plate-shape: polygon(0 0, 100% 0, 100% calc(100% - 13px),
         calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px));
-    --plate-face: var(--surface-strong);
+    --plate-face: linear-gradient(125deg, #383d42, var(--surface-strong) 60%, #1d242b);
 }
 
 .student-totals .metric-tiles { gap: 0; }
@@ -1035,7 +1055,7 @@
     isolation: isolate;
     display: grid;
     place-items: center;
-    width: clamp(70px, 13dvh, 108px);
+    width: clamp(76px, 14.5dvh, 124px);
     aspect-ratio: 1;
     border-radius: 50%;
     --ring-fill: conic-gradient(var(--accent) var(--progress), transparent 0);
@@ -1118,7 +1138,7 @@
     .student-progress { padding-block: calc(24px + var(--cap-drop)) 8px; }
     .student-totals { padding-block: 22px 6px; }
     .student-frame > .swipe-card { padding-block: 20px 8px; gap: 3px; }
-    .student-ring { width: clamp(54px, 10.3dvh, 63px); }
+    .student-ring { width: clamp(55px, 10.5dvh, 66px); }
     .student-ring strong { font-size: 24px; }
     .student-totals .metric-tile { padding: 4px; }
     .student-totals .metric-tile span { font-size: 10px; line-height: 1.2; }
