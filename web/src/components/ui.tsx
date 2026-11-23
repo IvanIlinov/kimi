@@ -30,15 +30,17 @@ export function Card({ children, class: cls = '' }: { children: ComponentChildre
 // Подпись над блоком: мелкая, приглушённая
 export const Label = ({ children }: { children: ComponentChildren }) => <div class="label">{children}</div>;
 
-export function MetricTile({ icon, label, value }: {
+export function MetricTile({ icon, label, value, inlineValue = false }: {
     icon: string;
     label: string;
     value: number | string;
+    inlineValue?: boolean;
 }) {
+    const amount = <><NavIcon name={icon} /><strong>{value}</strong></>;
+
     return (
         <div class="metric-tile">
-            <NavIcon name={icon} />
-            <strong>{value}</strong>
+            {inlineValue ? <div class="metric-tile-value">{amount}</div> : amount}
             <span>{label}</span>
         </div>
     );

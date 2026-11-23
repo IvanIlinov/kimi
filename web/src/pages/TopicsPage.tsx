@@ -85,7 +85,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                 {note && <p class="warn">⚠️ {note}</p>}
             </Card>
 
-            <Card>
+            <Card class="topic-board">
                 <Label>Задания: нажмите, чтобы сменить статус</Label>
                 <div class="grid">
                     {topicNumbers.map((number) => {

@@ -44,9 +44,9 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
                 </Card>
                 <Card class="student-totals">
                     <div class="metric-tiles">
-                        <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
-                        <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
-                        <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
+                        <MetricTile inlineValue icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
+                        <MetricTile inlineValue icon="calendar-days" label="Решено задач" value={totals.tasks} />
+                        <MetricTile inlineValue icon="target" label="Изучено заданий" value={totals.topics} />
                     </div>
                 </Card>
                 <SwipeCard
