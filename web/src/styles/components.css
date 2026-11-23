@@ -974,17 +974,17 @@
 }
 
 .layout-topics .cell.learning {
-    background: #edbb6d;
+    background: #ffb020;
     color: #2b1e12;
 }
 
 .layout-topics .cell.done {
-    background: #7dcbb0;
+    background: #21e89a;
     color: #122b23;
 }
 
 .layout-topics .cell.reinforced {
-    background: #8aadf0;
+    background: #508bff;
     color: #17263f;
 }
 .history-row b[data-accent],
