@@ -13,6 +13,7 @@ import { useStudentDialogViewport } from './student-dialog-viewport';
 import { reviewQuestions } from './student-review-questions';
 import './student-tablet-home.css';
 import './student-tablet-variants.css';
+import './student-tablet-clean.css';
 
 const showMiniPath = false;
 
@@ -23,7 +24,8 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
 } = {}) {
     const { data, error, reload } = useApi<Profile>('/api/profile/me');
     const layout = document.body.dataset.studentLayout;
-    const modernLayout = layout === 'hq-modern';
+    const focusedLayout = layout === 'hq-clean-arena';
+    const modernLayout = layout === 'hq-modern' || layout?.startsWith('hq-clean') === true;
     const gameLayout = layout === 'hq-game' || modernLayout;
     const coreYear = data?.core?.year;
     useStudentDialogViewport(modernLayout);
@@ -55,20 +57,21 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
                                 </dl>}
                             </div>
                         </div>
-                        {modernLayout ? data.rank && <RankGuide rank={data.rank} place={data.rankPlace} />
+                        {modernLayout ? data.rank && <RankGuide rank={data.rank} place={data.rankPlace} compact={focusedLayout} />
                             : data.core && <CitadelCore key={data.core.year} core={data.core} previous={data.previousCore} label="Скрижаль" />}
                     </Card>
-                    {gameLayout && <StudentCrystals week={data.week} />}
-                    <Card class="tablet-metrics">
+                    {focusedLayout && <ProgressOverview profile={data} />}
+                    {gameLayout && !focusedLayout && <StudentCrystals week={data.week} />}
+                    {!focusedLayout && <Card class="tablet-metrics">
                         <MetricRing tone="cyan" label="Готовность" value={data.pct} max={100} unit="%" />
                         <MetricRing tone="violet" label="Пробник" value={data.totals.exam ?? 0} max={100} />
                         <MetricRing tone="blue" label="Решено задач" value={data.totals.tasks} max={900} />
                         <MetricRing tone="mint" label="Закреплено" value={data.totals.topics} max={27} />
-                    </Card>
-                    <CurrentAssignment onProgress={reload} onTasksSaved={onRecapsReady}
+                    </Card>}
+                    <CurrentAssignment onProgress={reload} onTasksSaved={onRecapsReady} focused={focusedLayout}
                         preview={staging && !autoOpenWeeklyRecap} />
                     {!gameLayout && <StudentCrystals week={data.week} />}
-                    <ReviewQueue staging={staging} />
+                    {!focusedLayout && <ReviewQueue staging={staging} />}
                     {showMiniPath && <MiniPath />}
                 </>
             )}
@@ -76,7 +79,27 @@ export function StudentTabletHome({ staging = false, autoOpenWeeklyRecap = false
     );
 }
 
-function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
+function ProgressOverview({ profile }: { profile: Profile }) {
+    const next = profile.rank?.next;
+    return (
+        <>
+            <div class="tablet-ege-progress">
+                <div><span>Готовность к ЕГЭ</span><strong>{profile.pct}%</strong></div>
+                <progress value={profile.pct} max={100} aria-label="Готовность к ЕГЭ" />
+            </div>
+            {next && <Card class="tablet-next-rank">
+                <h2>До ранга {next.name}</h2>
+                <div class="tablet-next-rank-metrics">
+                    <MetricRing tone="cyan" label="Задания" value={next.topics.value} max={next.topics.goal} />
+                    <MetricRing tone="cyan" label="Задачи" value={next.tasks.value} max={next.tasks.goal} />
+                    <MetricRing tone="cyan" label="Пробник" value={next.exam.value} max={next.exam.goal} />
+                </div>
+            </Card>}
+        </>
+    );
+}
+
+function RankGuide({ rank, place, compact }: { rank: StudyRank; place?: number; compact: boolean }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const requirements = rank.next ? [
         { label: 'Задания', ...rank.next.topics },
@@ -104,8 +127,8 @@ function RankGuide({ rank, place }: { rank: StudyRank; place?: number }) {
                         {place}-е место <NavIcon name="trophy" />
                     </span>}
                 </span>
-                <span class="tablet-standing-progress" aria-hidden="true" data-done={!rank.next}
-                    style={{ '--rank-fill': `${rankFill * 100}%` }} />
+                {!compact && <span class="tablet-standing-progress" aria-hidden="true" data-done={!rank.next}
+                    style={{ '--rank-fill': `${rankFill * 100}%` }} />}
             </button>
             {rank.next && <span hidden id="tablet-profile-rank-progress">
                 До ранга «{rank.next.name}». {requirements.map(({ label, value, goal }) => `${label}: ${value} из ${goal}`).join('. ')}
@@ -249,21 +272,44 @@ function MiniPath() {
     );
 }
 
-function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
+function CurrentAssignment({ onProgress, onTasksSaved, preview, focused }: {
     onProgress: () => void;
     onTasksSaved?: () => void;
     preview: boolean;
+    focused: boolean;
 }) {
     const [mission, setMission] = useState(11);
+    const [practice, setPractice] = useState(false);
     const picker = useRef<HTMLDialogElement>(null);
     const { data, error, reload, setData } = useApi<SelfData>('/api/self');
-    const official = !preview && (data?.challengeTopics ?? [11]).includes(mission);
+    const official = !practice && !preview && (data?.challengeTopics ?? [11]).includes(mission);
 
     return (
         <Card class="tablet-current-assignment">
-            <button type="button" class="tablet-ring tablet-assignment-number" aria-haspopup="dialog"
+            {focused ? (
+                <>
+                    <h2 class="tablet-study-heading">Задания</h2>
+                    <div class="tablet-study-choices" role="group" aria-label="Выбрать задание">
+                        {reviewQuestions.map((question, index) => {
+                            const status = data?.topics[index];
+                            const learned = status === 'done' || status === 'reinforced';
+                            const number = index + 1;
+                            return <button key={number} type="button"
+                                aria-label={`Задание ${number}: ${question[0]}${learned ? ', изучено' : ''}`}
+                                aria-pressed={mission === number} onClick={() => setMission(number)}>
+                                {number}{learned && <NavIcon name="check" />}
+                            </button>;
+                        })}
+                    </div>
+                    <div class="tablet-study-title"><span>Задание {mission}</span><h3>{reviewQuestions[mission - 1][0]}</h3></div>
+                    <div class="tablet-study-modes" role="group" aria-label="Режим занятия">
+                        <button type="button" aria-pressed={!practice} onClick={() => setPractice(false)}>Изучение</button>
+                        <button type="button" aria-pressed={practice} onClick={() => setPractice(true)}>Практика</button>
+                    </div>
+                </>
+            ) : <button type="button" class="tablet-ring tablet-assignment-number" aria-haspopup="dialog"
                 aria-label={`Выбрать задание. Сейчас задание ${mission}`}
-                onClick={() => picker.current?.showModal()}>{mission}</button>
+                onClick={() => picker.current?.showModal()}>{mission}</button>}
             {official ? (
                 <div class="tablet-assignment-action">
                     {error ? <button type="button" class="chip" onClick={reload}>Повторить загрузку</button> : data ? (
@@ -275,8 +321,8 @@ function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
                             }} />
                     ) : <span class="muted" role="status">Загружаем…</span>}
                 </div>
-            ) : <PreviewAssignment key={mission} mission={mission} />}
-            <dialog ref={picker} class="tablet-rank-guide tablet-study-picker" aria-labelledby="tablet-study-picker-title"
+            ) : <PreviewAssignment key={`${mission}:${practice}`} mission={mission} practice={practice} />}
+            {!focused && <dialog ref={picker} class="tablet-rank-guide tablet-study-picker" aria-labelledby="tablet-study-picker-title"
                 onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
                 <div class="tablet-rank-guide-content">
                     <header>
@@ -301,12 +347,12 @@ function CurrentAssignment({ onProgress, onTasksSaved, preview }: {
                         ))}
                     </div>
                 </div>
-            </dialog>
+            </dialog>}
         </Card>
     );
 }
 
-function PreviewAssignment({ mission }: { mission: number }) {
+function PreviewAssignment({ mission, practice }: { mission: number; practice: boolean }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const [value, setValue] = useState('');
     const [feedback, setFeedback] = useState('');
@@ -315,7 +361,7 @@ function PreviewAssignment({ mission }: { mission: number }) {
 
     return (
         <>
-            <div class="tablet-assignment-progress" role="progressbar" aria-label="Демо-прогресс изучения"
+            <div class="tablet-assignment-progress" role="progressbar" aria-label={practice ? 'Демо-прогресс практики' : 'Демо-прогресс изучения'}
                 aria-valuemin={0} aria-valuemax={1} aria-valuenow={solved ? 1 : 0}>
                 <span data-lit={solved} />
             </div>
@@ -327,7 +373,7 @@ function PreviewAssignment({ mission }: { mission: number }) {
                         dialog.current?.showModal();
                     }}>
                         <span class="tablet-ring challenge-study-play" aria-hidden="true" />
-                        <span>Начать изучение</span>
+                        <span>{practice ? 'Начать практику' : 'Начать изучение'}</span>
                     </button>
                 </div>
             </div>
@@ -336,7 +382,7 @@ function PreviewAssignment({ mission }: { mission: number }) {
                     <h2 id="tablet-study-preview-title">{topic}</h2>
                     <form method="dialog"><button type="submit" class="tablet-recall-close" aria-label="Закрыть" autofocus>×</button></form>
                 </header>
-                <p class="tablet-recall-topic">Демо · задание {mission}</p>
+                <p class="tablet-recall-topic">{practice ? 'Демо-практика' : 'Демо'} · задание {mission}</p>
                 <p>{question}</p>
                 <form onSubmit={(event) => {
                     event.preventDefault();

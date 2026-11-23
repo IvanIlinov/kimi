@@ -1,0 +1,160 @@
+/* Styles are embedded only in the three comparison demos. */
+[data-student-layout="minimal"] {
+    color-scheme: light;
+    --bg: #f5f7fb;
+    --surface: #fff;
+    --surface-strong: #e6edf6;
+    --border: #dce4ef;
+    --text: #19283d;
+    --muted: #50647e;
+    --blue: #1758ad;
+    --good: #087c70;
+    --warn: #9b580f;
+    --bad: #ae3439;
+    --radius-lg: 15px;
+    background: var(--bg);
+}
+[data-student-layout="minimal"] :is(.card, .leader, .student-summary, .rank-panel, .mission-brief, .mission-current, .swipe-card) {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: none;
+}
+[data-student-layout="minimal"] .student-home { gap: 8px; }
+[data-student-layout="minimal"] .student-heading { order: -5; }
+[data-student-layout="minimal"] .mission-brief { order: -4; gap: 8px; }
+[data-student-layout="minimal"] .student-readiness { order: -3; }
+[data-student-layout="minimal"] .student-metrics { order: -2; }
+[data-student-layout="minimal"] .student-summary { min-height: 74px; padding-block: 8px; }
+[data-student-layout="minimal"] .student-hero-rank { display: flex; align-items: center; }
+[data-student-layout="minimal"] .student-hero-rank h2 { font-size: 17px; }
+[data-student-layout="minimal"] :is(.student-brand, .student-hero-rank h2) { color: var(--text); text-shadow: none; }
+[data-student-layout="minimal"] .student-brand { letter-spacing: 0.08em; }
+[data-student-layout="minimal"] .citadel-preview { width: auto; }
+[data-student-layout="minimal"] .citadel-trigger { display: flex; gap: 5px; padding: 0; background: none; }
+[data-student-layout="minimal"] .citadel-trigger .citadel-pattern { display: none; }
+[data-student-layout="minimal"] .citadel-preview-text { background: #edf4fc; border-color: var(--border); }
+[data-student-layout="minimal"] .citadel-preview-text small { color: var(--muted); }
+[data-student-layout="minimal"] :is(.rank-emblem, .mission-emblem) {
+    width: 30px;
+    height: 30px;
+    color: var(--blue);
+    border-color: var(--border);
+    background: #edf4fc;
+    box-shadow: none;
+}
+[data-student-layout="minimal"] :is(.rank-emblem, .mission-emblem) svg { width: 16px; height: 16px; filter: none; }
+[data-student-layout="minimal"] .student-rank { color: #795515; background: #fff5dc; border-color: #eadcb8; }
+[data-student-layout="minimal"] .mission-action { color: #fff; background: #1d56a3; border-color: #1d56a3; }
+[data-student-layout="minimal"] .mission-action:not(:disabled):hover { background: #154581; }
+[data-student-layout="minimal"] .metric-tile { padding: 8px; background: #fff; border-color: var(--border); border-radius: 12px; }
+[data-student-layout="minimal"] .student-metrics svg { width: 23px; height: 23px; padding: 3px; color: var(--blue); background: #e9f1fb; }
+[data-student-layout="minimal"] .student-metrics strong { font-size: 21px; }
+[data-student-layout="minimal"] :is(.rank-metric, .student-countdown, .rank-badge, .challenge-review, .challenge-exercise, .mission-practice, .citadel-month, .citadel-crystals li) {
+    background: #f1f5fa;
+    border-color: var(--border);
+    color: var(--text);
+}
+[data-student-layout="minimal"] :is(.rank-next, .mission-status, .label, .mission-sector-rank, .challenge-summary, .challenge-hint, .challenge-exercise h3, .citadel-rule, .citadel-figure, .citadel-month p) { color: var(--muted); }
+[data-student-layout="minimal"] :is(.tabbar, .challenge-dialog, .citadel-dialog, .weekly-recap) {
+    color-scheme: light;
+    color: var(--text);
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: 0 8px 26px #253d641c;
+}
+[data-student-layout="minimal"] :is(.tab.active, .segmented button.on, .citadel-seasons button[aria-pressed="true"], .citadel-months button[aria-pressed="true"], .citadel-years button[aria-pressed="true"]) {
+    background: #e8f0fc;
+    color: var(--blue);
+    box-shadow: none;
+}
+[data-student-layout="minimal"] :is(.tab svg, .citadel-trigger svg) { filter: none; }
+[data-student-layout="minimal"] :is(.layout-topics .cell, .layout-topics .cell:is(.done, .learning, .reinforced)) {
+    background: color-mix(in srgb, var(--tile-accent, #fff) 10%, white);
+    border-color: var(--border);
+    color: var(--text);
+}
+[data-student-layout="minimal"] .mission-sector .cell[aria-pressed="true"] { outline-color: var(--blue); }
+[data-student-layout="minimal"] :is(.citadel-seasons button, .citadel-months button, .citadel-years button, .citadel-figure strong) { color: var(--text); }
+[data-student-layout="minimal"] .citadel-crystals li[data-state="lit"] { background: #dbf6f0; color: #165d51; border-color: #addbd1; }
+[data-student-layout="minimal"] .citadel-pattern { background: radial-gradient(circle, #1c5f9973, #142b4d 70%); border-radius: 50%; }
+[data-student-layout="minimal"] .challenge-timer { color: var(--blue); background: #edf4fc; }
+[data-student-layout="minimal"] .challenge-timer[data-urgent="true"] { color: #934b04; background: #fff3d8; }
+[data-student-layout="minimal"] .student-readiness progress,
+[data-student-layout="minimal"] .student-readiness progress::-webkit-progress-bar { background: #e4ecf7; }
+
+[data-student-layout="balanced"] {
+    --bg: #111722;
+    --surface: #192332;
+    --surface-strong: #243247;
+    --border: #364962;
+    --text: #edf3fb;
+    --muted: #aabbd0;
+    --good: #79d8cc;
+    background: var(--bg);
+}
+[data-student-layout="balanced"] .student-summary {
+    min-height: clamp(122px, 20dvh, 174px);
+    background-color: #172638;
+    background-position: center, center 48%;
+    background-blend-mode: normal, luminosity;
+    border-color: #4c6581;
+    box-shadow: none;
+}
+[data-student-layout="balanced"] .citadel-trigger .citadel-pattern { width: min(100%, 104px); }
+[data-student-layout="balanced"] .student-heading { order: -4; }
+[data-student-layout="balanced"] .student-summary { order: -3; }
+[data-student-layout="balanced"] .student-readiness { order: -2; }
+[data-student-layout="balanced"] .mission-brief { order: -1; }
+[data-student-layout="balanced"] :is(.rank-panel, .student-home > .swipe-card) {
+    background: var(--surface);
+    border-color: var(--border);
+}
+[data-student-layout="balanced"] .mission-brief {
+    border-color: #4a777e;
+    background: linear-gradient(135deg, #1a343e, #1c2b3d);
+}
+[data-student-layout="balanced"] .tabbar { background: #192433f5; }
+
+[data-student-layout="full"] {
+    background: radial-gradient(ellipse at top, #1d477c 0, #0c1731 48%, #060d1c 86%);
+}
+[data-student-layout="full"] .student-summary {
+    min-height: clamp(225px, 35dvh, 318px);
+    background-position: center 46%;
+    border-color: #75d8ff9e;
+    box-shadow: inset 0 1px #bcf4ff60, 0 0 28px #237dce38;
+}
+[data-student-layout="full"] .student-hero-rank h2 { font-size: clamp(22px, 6vw, 34px); }
+[data-student-layout="full"] .student-hero-rank .rank-emblem { width: 54px; }
+[data-student-layout="full"] .student-hero-rank .rank-emblem svg { width: 30px; height: 30px; }
+[data-student-layout="full"] .citadel-preview-text { box-shadow: 0 0 12px #3aaff73d; }
+[data-student-layout="full"] .mission-brief { box-shadow: inset 0 1px #60cdf53b, 0 0 20px #2986c32b; }
+@media (max-width: 889px) {
+    [data-student-layout="full"] .student-heading { order: -4; }
+    [data-student-layout="full"] .student-summary { order: -3; }
+    [data-student-layout="full"] .student-readiness { order: -2; }
+    [data-student-layout="full"] .mission-brief { order: -1; }
+}
+@media (min-width: 890px) {
+    [data-student-layout="full"] .student-home:has(.mission-brief) {
+        display: grid;
+        max-width: 1000px;
+        align-content: start;
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+        grid-template-areas:
+            "heading heading"
+            "hero mission"
+            "hero rank"
+            "readiness metrics"
+            "periods periods";
+    }
+    [data-student-layout="full"] .student-heading { grid-area: heading; }
+    [data-student-layout="full"] .student-summary { grid-area: hero; }
+    [data-student-layout="full"] .student-readiness { grid-area: readiness; align-content: center; }
+    [data-student-layout="full"] .student-metrics { grid-area: metrics; }
+    [data-student-layout="full"] .rank-panel { grid-area: rank; }
+    [data-student-layout="full"] .mission-brief { grid-area: mission; }
+    [data-student-layout="full"] .student-home > .swipe-card { grid-area: periods; }
+    [data-student-layout="full"] .student-summary .citadel-preview { width: min(250px, 24vw); }
+    [data-student-layout="full"] .citadel-trigger .citadel-pattern { width: min(100%, 205px); --gem-size: 4px; }
+}

@@ -11,11 +11,12 @@ import { rankProgress } from '../../src/ranks.ts';
 
 const now = new Date();
 const goals = monthGoal(now);
+const studentTablet = process.argv.includes('--student-tablet');
 // У Леры до первого ранга остаётся закрепить задание №11.
 const demoRouteStart = [1, 4, 7, ...Array.from({ length: 27 }, (_, i) => i + 1)
     .filter((number) => ![1, 4, 7, 11].includes(number))];
 const ranked = rank([
-    { name: 'Лера', tasksTotal: Math.max(104, Math.round(goals.tasks * 0.6)), tasksWeek: 17, exam: 40, topics: goals.topics },
+    { name: 'Лера', tasksTotal: Math.max(104, Math.round(goals.tasks * 0.6)), tasksWeek: 17, exam: studentTablet ? 31 : 40, topics: goals.topics },
     { name: 'Саша', tasksTotal: 341, tasksWeek: 22, exam: 70, topics: 16 },
     { name: 'Миша', tasksTotal: 276, tasksWeek: 27, exam: 59, topics: 13 },
 ].map(({ topics, ...person }, i) => ({
@@ -33,6 +34,13 @@ const role = adminDemo ? 'admin' : guestDemo ? 'guest' : 'student';
 const recapPlacement = process.argv.includes('--recap-button') ? 'button'
     : process.argv.includes('--recap-swipe') ? 'swipe' : null;
 const swipeNavigation = process.argv.includes('--swipe-navigation');
+const studentLayouts = process.argv.includes('--student-layouts');
+if (studentTablet && (role !== 'student' || recapPlacement || swipeNavigation || studentLayouts)) {
+    throw new Error('Демо со скрижалью собирается отдельно для ученика');
+}
+if (studentLayouts && (role !== 'student' || recapPlacement || swipeNavigation)) {
+    throw new Error('Сравнение интерфейсов собирается отдельно для ученика');
+}
 if (recapPlacement && role !== 'student') throw new Error('Демо итогов доступно на главной ученика');
 if (swipeNavigation && (role !== 'student' || recapPlacement)) {
     throw new Error('Демо навигации собирается отдельно для главной ученика');
@@ -178,6 +186,8 @@ const bundle = await build({
             if (id.endsWith('/src/main.tsx')) {
                 const demoHelpers = "import { challengeSession } from '../../src/challenge-catalog.ts';\nwindow.demoChallengeSession = challengeSession;\n" +
                     "import { rankProgress } from '../../src/ranks.ts';\nwindow.demoRankProgress = rankProgress;\n";
+                if (studentTablet) return demoHelpers + "import { StudentTabletHome } from '../scripts/student-tablet-home';\n" +
+                    code.replace('<App />', '<App StudentHome={StudentTabletHome} />');
                 if (!recapPlacement) return demoHelpers + code;
                 return demoHelpers + `import { RecapHome } from '../scripts/recap-home';\n` +
                     code.replace('<App />', `<App StudentHome={() => <RecapHome placement="${recapPlacement}" />} />`);
@@ -255,6 +265,7 @@ window.fetch = async (path, options) => {
     if (!preview && options?.method === 'POST' && path === '/api/self/recaps/open') {
         if (${swipeNavigation}) return Response.json({ open: null });
         const requested = new URLSearchParams(window.location.search).get('recap');
+        if (${studentLayouts} && !requested) return Response.json({ open: null });
         const kind = requested === 'season' || requested === 'year' ? requested : 'week';
         const profile = routes.default['/api/profile/me'];
         const recap = kind === 'week' ? profile?.weeklyRecap : profile?.studyRecaps?.[kind];
@@ -465,7 +476,25 @@ if (!html.includes('window.fetch =') || !html.includes('<script type="module">')
 
 const dir = fileURLToPath(new URL('../demos/', import.meta.url));
 await mkdir(dir, { recursive: true });
-const previews = swipeNavigation ? [
+const layoutStyle = studentLayouts ? await readFile(new URL('./student-layouts.css', import.meta.url), 'utf8') : '';
+const previews = studentTablet ? [
+    { name: 'student-tablet.html', title: 'Арена — штаб со Скрижалью' },
+    { name: 'student-tablet-missions.html', title: 'Арена — штаб в стиле Миссий', layout: 'hq-missions' },
+    { name: 'student-tablet-modern.html', title: 'Арена — современный игровой штаб', layout: 'hq-modern' },
+    { name: 'student-tablet-clean.html', title: 'Арена — чистый штаб', layout: 'hq-clean' },
+    { name: 'student-home-public.html', title: 'Арена — Production', layout: 'hq-clean-public' },
+    { name: 'student-home-graphite.html', title: 'Арена — Графит+', layout: 'hq-clean-graphite' },
+    { name: 'student-home-spectrum.html', title: 'Арена — Спектр', layout: 'hq-clean-spectrum' },
+    { name: 'student-home-paper.html', title: 'Арена — Бумага', layout: 'hq-clean-paper' },
+    { name: 'student-home-tide.html', title: 'Арена — Прилив', layout: 'hq-clean-tide' },
+    { name: 'student-home-arena.html', title: 'Арена — стиль Миссий', layout: 'hq-clean-arena' },
+    { name: 'student-tablet-game.html', title: 'Арена — игровой штаб', layout: 'hq-game' },
+    { name: 'student-crystal-timeline.html', title: 'Арена — раскрытие портала по дням', layout: 'crystal-timeline' },
+] : studentLayouts ? [
+    { name: 'student-minimal.html', title: 'Арена — лаконичный интерфейс', layout: 'minimal', style: layoutStyle },
+    { name: 'student-balanced.html', title: 'Арена — сбалансированный интерфейс', layout: 'balanced', style: layoutStyle },
+    { name: 'student-full.html', title: 'Арена — полномасштабный интерфейс', layout: 'full', style: layoutStyle },
+] : swipeNavigation ? [
     {
         name: 'student-swipe-mobile.html',
         title: 'Арена — свайп на телефоне',
@@ -476,9 +505,10 @@ const previews = swipeNavigation ? [
         title: 'Арена — стрелки на компьютере',
     },
 ] : [{ name: recapPlacement ? `student-recap-${recapPlacement}.html` : `${role}-home.html` }];
-for (const { name, title, style } of previews) {
+for (const { name, title, style, layout } of previews) {
     const preview = join(dir, name);
-    const page = title ? html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`) : html;
+    let page = title ? html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`) : html;
+    if (layout) page = page.replace('<body>', `<body data-student-layout="${layout}">`);
     await writeFile(preview, style ? page.replace('</head>', `<style>${style}</style></head>`) : page);
     console.log(preview);
 }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Арена · Шесть мобильных демо</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #121418; color: #f2f4f8; font: 14px system-ui, sans-serif; }
+main { display: grid; justify-items: center; gap: 8px; padding: 8px; }
+nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+a { padding: 7px 10px; border: 1px solid #363e4a; border-radius: 8px; color: inherit; text-decoration: none; }
+a:hover, a:focus-visible, a[aria-current="true"] { border-color: #79caff; background: #253342; }
+iframe {
+    display: block;
+    width: min(392px, 100%);
+    height: min(846px, calc(100dvh - 57px));
+    min-height: 320px;
+    border: 1px solid #363e4a;
+    border-radius: 15px;
+    background: #101114;
+}
+@media (max-width: 420px) { iframe { height: calc(100dvh - 90px); } }
+</style>
+</head>
+<body>
+<main>
+<nav aria-label="Варианты Главной">
+<a href="student-home-public.html" target="mobile-demo" aria-current="true">Production</a>
+<a href="student-home-graphite.html" target="mobile-demo">Графит+</a>
+<a href="student-home-spectrum.html" target="mobile-demo">Спектр</a>
+<a href="student-home-paper.html" target="mobile-demo">Бумага</a>
+<a href="student-home-tide.html" target="mobile-demo">Прилив</a>
+<a href="student-home-arena.html" target="mobile-demo">Арена и Миссии</a>
+</nav>
+<iframe name="mobile-demo" title="Мобильное демо Главной" src="student-home-public.html"></iframe>
+</main>
+<script>
+const links = document.querySelectorAll('nav a');
+const frame = document.querySelector('iframe');
+const requested = new URLSearchParams(location.search).get('demo');
+const initial = Array.from(links).find((link) => link.getAttribute('href') === `student-home-${requested}.html`);
+
+function select(link) {
+    for (const item of links) item.removeAttribute('aria-current');
+    link.setAttribute('aria-current', 'true');
+}
+
+if (initial) {
+    frame.src = initial.href;
+    select(initial);
+}
+for (const link of links) {
+    link.addEventListener('click', (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        select(link);
+    });
+}
+</script>
+</body>
+</html>
