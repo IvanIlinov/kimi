@@ -152,7 +152,11 @@ if (recapPlacement) {
 const bundle = await build({
     envFile: false,
     define: { 'import.meta.env.VITE_API_URL': '""' },
-    build: { write: false, modulePreload: { polyfill: false } },
+    build: {
+        write: false,
+        assetsInlineLimit: (file) => file.endsWith('.woff2') ? true : undefined,
+        modulePreload: { polyfill: false },
+    },
     plugins: [{
         name: 'arena-browser-demo',
         enforce: 'pre',
@@ -332,8 +336,11 @@ window.fetch = async (path, options) => {
     }), { status: found ? 200 : read ? 404 : 405 });
 };
 </script>`;
+const fontLicenses = await Promise.all(['golos-text', 'roboto-condensed'].map((name) =>
+    readFile(new URL(`../public/fonts/${name}-OFL.txt`, import.meta.url), 'utf8')));
 const html = files.get('index.html')
-    .replace('</body>', () => recapMarkup + '</body>')
+    .replace('</body>', () => recapMarkup +
+        '<script type="text/plain" id="font-licenses">' + fontLicenses.join('\n\n') + '</script></body>')
     .replace(/<script src="https:\/\/telegram\.org\/js\/telegram-web-app\.js"><\/script>/, () => demo)
     .replace(/<script type="module" crossorigin src="\/([^"]+)"><\/script>/, (_, file) =>
         '<script type="module">' + files.get(file).replaceAll('</script', '<\\/script') + '</script>')

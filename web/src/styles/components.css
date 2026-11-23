@@ -10,7 +10,8 @@
 .label {
     margin-bottom: 11px;
     color: var(--muted);
-    font-size: 12px;
+    font-family: var(--font-display);
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.055em;
     text-transform: uppercase;
@@ -169,7 +170,8 @@
 .leader .chip:focus-visible { outline-color: var(--on-accent); }
 
 .leader strong {
-    font-size: 26px;
+    font-family: var(--font-display);
+    font-size: 28px;
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.045em;
@@ -195,7 +197,7 @@
 
 .kpi b,
 .week-leader-stats {
-    font-family: var(--font-number);
+    font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
 }
 
@@ -612,7 +614,8 @@
 .history-day + .history-day { margin-top: 15px; }
 .history-day h2 {
     margin: 0 0 5px;
-    font-size: 13px;
+    font-family: var(--font-display);
+    font-size: 15px;
     color: var(--accent);
 }
 .history-row {
@@ -632,6 +635,8 @@
 }
 .history-row .stats b,
 .admin-attendance b {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     padding: 3px 4px;
     border-radius: 6px;
     text-align: center;
@@ -735,7 +740,7 @@
 }
 .student-ring strong {
     color: var(--accent);
-    font: 800 clamp(28px, 6dvh, 48px)/1 var(--font-number);
+    font: 800 clamp(28px, 6dvh, 48px)/1 var(--font-display);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.06em;
 }
@@ -751,7 +756,7 @@
     background: var(--surface-strong);
 }
 .metric-tile svg { width: 16px; height: 16px; color: var(--accent); }
-.metric-tile strong { font: 750 23px/1.1 var(--font-number); font-variant-numeric: tabular-nums; }
+.metric-tile strong { font: 750 23px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
 .metric-tile span { font-size: 12px; }
 .student-goal small { font-size: 12px; color: var(--muted); }
 .student-progress > span {
@@ -759,7 +764,6 @@
     font-weight: 650;
 }
 .metric-tile > span {
-    font-family: var(--font-display);
     font-weight: 500;
     color: var(--muted);
 }
@@ -768,7 +772,11 @@
 .student-home .swipe-card-with-leading .swipe-card-page:nth-child(2) > .student-goal + .student-goal {
     margin-top: clamp(4px, 1dvh, 8px);
 }
-.student-goal strong { white-space: nowrap; }
+.student-goal strong {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
 .student-home .student-goal .seg,
 .tasks-week .seg { height: 12px; min-height: 12px; }
 .student-home .student-goal .seg i.on,
@@ -809,7 +817,7 @@
 }
 .student-countdown strong {
     color: var(--accent);
-    font: 750 clamp(22px, 5dvh, 32px)/1.15 var(--font-number);
+    font: 750 clamp(22px, 5dvh, 32px)/1.15 var(--font-display);
 }
 .student-countdown small { color: var(--muted); font-size: 12px; }
 
@@ -876,8 +884,9 @@
 .admin-lesson-month {
     margin: 0;
     text-align: center;
-    font-size: 14px;
-    font-weight: 650;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
 }
 .admin-lesson-metrics {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1002,7 +1011,7 @@
 }
 
 .layout-topics .cell b {
-    font-family: var(--font-number);
+    font-family: var(--font-display);
     font-size: 16px;
 }
 

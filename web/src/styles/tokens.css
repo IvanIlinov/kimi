@@ -27,7 +27,6 @@
     --gap: 11px;
     --pad: 15px;
 
-    --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
-    --font-number: 'Roboto Condensed', 'Arial Narrow', 'DIN Alternate', var(--font-ui);
-    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+    --font-ui: 'Golos Text', system-ui, sans-serif;
+    --font-display: 'Roboto Condensed', 'Arial Narrow', var(--font-ui);
 }

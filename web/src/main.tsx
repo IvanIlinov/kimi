@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { App } from './App';
 import { initTelegram } from './lib/telegram';
+import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
