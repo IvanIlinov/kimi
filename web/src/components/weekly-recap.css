@@ -17,9 +17,12 @@
     max-height: calc(100dvh - 24px);
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 18px 5px 18px 5px;
+    border-color: #897341;
     color: var(--text);
-    background: var(--surface);
+    background:
+        repeating-linear-gradient(105deg, #ffffff04 0 1px, transparent 1px 4px),
+        linear-gradient(145deg, #2a281e, var(--surface) 55%);
     box-shadow: 0 24px 80px #000a;
 }
 
@@ -50,7 +53,7 @@
 .weekly-recap-goal {
     margin-top: 20px;
     padding: 17px;
-    border-radius: var(--radius-md);
+    border-radius: 14px 4px 14px 4px;
     background: var(--recap-accent);
     color: var(--on-accent);
 }

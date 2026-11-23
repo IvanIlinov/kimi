@@ -61,16 +61,17 @@ export function App({ StudentHome = StudentHomePage } = {}) {
 
     useBackButton(openId !== null ? () => setOpenId(null) : preview ? stopPreview : null);
 
-    if (!insideTelegram) return <Screen title="Арена"><Empty text="Откройте Арену через Telegram-бота" /></Screen>;
-    if (me.error) {
+    if (!insideTelegram || me.error || !me.data) {
+        const message = insideTelegram ? me.error : 'Откройте Арену через Telegram-бота';
         return (
-            <Screen title="Арена">
-                <Empty text={me.error} />
-                {preview && <button class="chip" onClick={stopPreview}>Выйти из предпросмотра</button>}
-            </Screen>
+            <div class="arena-shell">
+                <Screen title="Арена">
+                    {message ? <Empty text={message} /> : <Loading />}
+                    {message && preview && <button class="chip" onClick={stopPreview}>Выйти из предпросмотра</button>}
+                </Screen>
+            </div>
         );
     }
-    if (!me.data) return <Screen title="Арена"><Loading /></Screen>;
 
     const tabs = preview?.mode === 'guest'
         ? GUEST_TABS
@@ -103,13 +104,13 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     }
 
     return (
-        <>
+        <div class="arena-shell">
             {page}
             <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go}
                 exit={preview ? {
                     label: editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра',
                     onClick: stopPreview,
                 } : undefined} />
-        </>
+        </div>
     );
 }

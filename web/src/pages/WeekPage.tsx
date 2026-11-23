@@ -29,22 +29,24 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
             )}
 
             <Card class="list">
-                {data.rows.length === 0 && <Empty text="Пока никого нет" />}
-                {data.rows.map((r) => (
-                    <Row
-                        key={r.id}
-                        name={r.name}
-                        bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
-                        right={
-                            <span class="stats">
-                                <span>{sgn(r.tasks)}</span>
-                                <span>{sgn(r.topics)}</span>
-                            </span>
-                        }
-                        onClick={() => onOpen(r.id)}
-                        actions={rowActions?.(r.id, r.name)}
-                    />
-                ))}
+                <div class="ranking-scroll">
+                    {data.rows.length === 0 && <Empty text="Пока никого нет" />}
+                    {data.rows.map((r) => (
+                        <Row
+                            key={r.id}
+                            name={r.name}
+                            bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
+                            right={
+                                <span class="stats">
+                                    <span>{sgn(r.tasks)}</span>
+                                    <span>{sgn(r.topics)}</span>
+                                </span>
+                            }
+                            onClick={() => onOpen(r.id)}
+                            actions={rowActions?.(r.id, r.name)}
+                        />
+                    ))}
+                </div>
             </Card>
         </>
     );

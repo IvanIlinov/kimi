@@ -42,38 +42,40 @@ export function HistoryPage() {
 
     return (
         <Screen hideTitle title="История" className="layout-history">
-            <Card class="history-days">
-                {error && <p class="warn" role="alert">{error}</p>}
-                {days.length === 0 && !loading && !error && <Empty text="Изменений пока нет" />}
-                {days.map(({ day, rows }) => (
-                    <section key={day} class="history-day">
-                        <h2>{dayLabel(day, today)}</h2>
-                        {rows.map((row) => {
-                            const examBefore = row.examBefore ?? 0;
-                            const exam = row.examAfter ?? 0;
-                            const change = exam - examBefore;
-                            const examAccent = change > 0 ? 'green' : change < 0 ? 'red' : undefined;
-                            const examStatus = change > 0 ? 'балл вырос' : change < 0 ? 'балл снизился' : 'балл без изменений';
-                            return (
-                                <div class="history-row between" key={row.id}>
-                                    <strong>{cap(row.name)}</strong>
-                                    <span class="stats">
-                                        <b aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
-                                        <b aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
-                                        <b aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
-                                        <b data-accent={examAccent} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </section>
-                ))}
-                {loading && <Loading />}
-                {!loading && (hasMore || error) && (
-                    <button class="chip" onClick={() => void load(days.length)}>
-                        {error ? 'Повторить' : 'Загрузить ещё'}
-                    </button>
-                )}
+            <Card class="history-panel">
+                <div class="history-days">
+                    {error && <p class="warn" role="alert">{error}</p>}
+                    {days.length === 0 && !loading && !error && <Empty text="Изменений пока нет" />}
+                    {days.map(({ day, rows }) => (
+                        <section key={day} class="history-day">
+                            <h2>{dayLabel(day, today)}</h2>
+                            {rows.map((row) => {
+                                const examBefore = row.examBefore ?? 0;
+                                const exam = row.examAfter ?? 0;
+                                const change = exam - examBefore;
+                                const examAccent = change > 0 ? 'green' : change < 0 ? 'red' : undefined;
+                                const examStatus = change > 0 ? 'балл вырос' : change < 0 ? 'балл снизился' : 'балл без изменений';
+                                return (
+                                    <div class="history-row between" key={row.id}>
+                                        <strong>{cap(row.name)}</strong>
+                                        <span class="stats">
+                                            <b aria-label={`Прогресс: ${sgn(row.pct)}%`}>{sgn(row.pct)}%</b>
+                                            <b aria-label={`Задачи: ${sgn(row.tasks)}`}>{sgn(row.tasks)}</b>
+                                            <b aria-label={`Закреплённые задания: ${sgn(row.topics)}`}>{sgn(row.topics)}</b>
+                                            <b data-accent={examAccent} aria-label={`Пробник: ${exam}, ${examStatus}`}>{exam}</b>
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </section>
+                    ))}
+                    {loading && <Loading />}
+                    {!loading && (hasMore || error) && (
+                        <button class="chip" onClick={() => void load(days.length)}>
+                            {error ? 'Повторить' : 'Загрузить ещё'}
+                        </button>
+                    )}
+                </div>
             </Card>
         </Screen>
     );

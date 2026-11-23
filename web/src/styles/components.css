@@ -1,10 +1,88 @@
 /* ---- Карточки и общие элементы ---- */
 .card {
     padding: var(--pad);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    box-shadow: var(--panel-shadow);
+}
+
+.card,
+.segmented,
+.tabbar {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid transparent;
+    --plate-shape: polygon(0 14px, 14px 0, calc(100% - 20px) 0, 100% 20px,
+        100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+:is(.card, .segmented, .tabbar)::before,
+:is(.card, .segmented, .tabbar)::after {
+    position: absolute;
+    content: '';
+    clip-path: var(--plate-shape);
+    pointer-events: none;
+}
+
+:is(.card, .segmented, .tabbar)::before {
+    z-index: -2;
+    inset: -1px;
+    background: var(--plate-edge, linear-gradient(150deg, #675e38, #3e3c30 48%, #766335));
+}
+
+:is(.card, .segmented, .tabbar)::after {
+    z-index: -1;
+    inset: 0;
+    background: var(--plate-texture, repeating-linear-gradient(105deg, #ffffff04 0 1px, transparent 1px 4px)),
+        var(--plate-face, var(--surface));
+}
+
+.arena-shell {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 16px);
+    max-width: 520px;
+    height: 100dvh;
+    margin: 0 auto;
+    padding-block: var(--frame-top) var(--frame-bottom);
+    --frame-top: calc(env(safe-area-inset-top, 0px) + 6px);
+    --frame-bottom: calc(env(safe-area-inset-bottom, 0px) + 5px);
+    --frame-shape: polygon(0 25px, 25px 0, calc(100% - 35px) 0, 100% 35px,
+        100% calc(100% - 32px), calc(100% - 32px) 100%, 29px 100%, 0 calc(100% - 29px));
+}
+
+.arena-shell::before,
+.arena-shell::after {
+    position: absolute;
+    inset: var(--frame-top) 0 var(--frame-bottom);
+    content: '';
+    clip-path: var(--frame-shape);
+    pointer-events: none;
+}
+
+.arena-shell::before {
+    z-index: -1;
+    background:
+        repeating-linear-gradient(105deg, #ffffff06 0 1px, transparent 1px 4px),
+        linear-gradient(90deg, #4b4733, #21201b 12%, #191916 87%, #5e542d);
+}
+
+.arena-shell::after {
+    z-index: 5;
+    background:
+        linear-gradient(var(--accent), var(--accent)) left 5px top 39% / 2px 16% no-repeat,
+        linear-gradient(var(--accent), var(--accent)) right 5px bottom 15% / 2px 17% no-repeat,
+        linear-gradient(140deg, transparent 15%, #59533a 16%, #343025 77%, transparent 78%)
+            left top 42% / 21px 112px no-repeat,
+        linear-gradient(40deg, transparent 13%, #4d462d 14%, #2f2b20 80%, transparent 81%)
+            right bottom 17% / 21px 112px no-repeat,
+        linear-gradient(135deg, transparent 16%, var(--accent) 17% 78%, transparent 79%)
+            right 26px bottom 9px / 48px 7px no-repeat;
+}
+
+.arena-shell > .page {
+    flex: 1 1 auto;
+    height: auto;
+    padding: 12px clamp(13px, 4vw, 19px) 23px;
 }
 
 .label {
@@ -153,9 +231,12 @@
 .leader {
     position: relative;
     overflow: hidden;
-    border-color: transparent;
-    background: var(--accent);
     color: var(--on-accent);
+    --plate-face: var(--accent);
+    --plate-texture: none;
+    --plate-edge: #ffe45a;
+    --plate-shape: polygon(0 12px, 12px 0, calc(100% - 19px) 0, 100% 19px,
+        100% 100%, 17px 100%, 0 calc(100% - 17px));
 }
 
 .leader .label,
@@ -258,11 +339,9 @@
 .segmented {
     display: inline-flex;
     align-self: stretch;
-    padding: 4px;
+    padding: 5px 9px 10px;
     gap: 4px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--surface);
+    --plate-face: var(--surface-strong);
 }
 
 .segmented button {
@@ -270,7 +349,7 @@
     min-width: 0;
     min-height: 40px;
     padding: 8px 4px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
 }
 
@@ -364,20 +443,19 @@
 
 /* ---- Нижняя навигация ---- */
 .tabbar {
-    position: fixed;
-    left: 50%;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
     z-index: 10;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    max-width: calc(100vw - 24px);
-    padding: 6px;
-    transform: translateX(-50%);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--surface);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    width: calc(100% - 6px);
+    margin: -12px auto 0;
+    padding: 10px 8px 8px;
+    --plate-shape: polygon(0 17px, 17px 0, calc(100% - 27px) 0, 100% 27px,
+        100% calc(100% - 19px), calc(100% - 19px) 100%, 20px 100%, 0 calc(100% - 20px));
+    --plate-face: linear-gradient(165deg, #343125, #181814 55%);
+    --plate-edge: linear-gradient(110deg, #665830, #b19742 47%, #52472a);
 }
 
 .tab {
@@ -389,7 +467,7 @@
     flex: 0 0 auto;
     width: clamp(64px, 19vw, 72px);
     height: 50px;
-    border-radius: 999px;
+    border-radius: 10px 5px 10px 5px;
     color: var(--muted);
     transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
@@ -411,7 +489,7 @@
 
 .tab.tabbar-exit {
     position: absolute;
-    inset-inline-end: calc(100% + 4px);
+    inset-inline-start: 6px;
     top: 50%;
     translate: 0 -50%;
     width: 42px;
@@ -512,12 +590,12 @@
     max-height: calc(100dvh - 36px);
     overflow-y: auto;
     overscroll-behavior: contain;
-    border-radius: var(--radius-lg);
     scrollbar-width: thin;
 }
 
 .modal-dialog .card {
-    background: var(--surface);
+    --plate-face: #22221d;
+    --plate-edge: #84713b;
 }
 
 .modal-close {
@@ -529,7 +607,7 @@
 /* ---- Компоновка экранов в пределах высоты окна ---- */
 .page > .card { min-height: 0; }
 
-.layout-topics { gap: 9px; overflow-y: auto; }
+.layout-topics { gap: 0; overflow-y: auto; }
 .topics-preview button:disabled { opacity: 1; }
 .layout-topics .display,
 .layout-ranking .display,
@@ -538,8 +616,19 @@
     margin-top: 0;
     margin-bottom: 1px;
 }
-.layout-topics > .card { padding: 11px; }
-.layout-topics > .card:last-child { flex: 1 0 auto; }
+.layout-topics > .card { flex: 0 0 auto; padding: 12px; }
+.layout-topics > .card:first-child {
+    z-index: 3;
+    margin-inline: 0 6px;
+    --plate-face: var(--surface-strong);
+}
+.layout-topics > .card:nth-child(2) { z-index: 2; margin-inline: 4px 0; }
+.layout-topics > .card:last-child {
+    z-index: 1;
+    margin-inline: 0 7px;
+    --plate-face: var(--surface-strong);
+}
+.layout-topics > .card + .card { margin-top: -10px; padding-top: 22px; }
 .layout-topics .label { margin-bottom: 7px; }
 .layout-topics .grid { gap: 6px; }
 .topic-legend {
@@ -582,22 +671,39 @@
 .layout-topics .exam input { padding: 8px 11px; }
 .layout-topics .exam .chip { min-height: 36px; padding: 7px 13px; }
 
-.layout-ranking { gap: 10px; }
+.layout-ranking { gap: 0; }
+.layout-ranking > .segmented { z-index: 3; margin-inline-end: 6px; }
+.layout-ranking > .segmented + .leader { margin-top: -9px; }
 .layout-ranking .segmented button {
     font-size: inherit;
     font-weight: 650;
 }
 .layout-ranking > .list {
+    z-index: 1;
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
     min-height: 0;
+    margin-inline: 4px 0;
+    padding: 10px 7px 7px;
+}
+.layout-ranking > .leader + .list { margin-top: -10px; padding-top: 19px; }
+.ranking-scroll {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
 }
 .layout-ranking .row { flex: 0 0 auto; padding: 9px 8px; }
-.layout-ranking .leader { flex: 0 0 auto; padding: 12px; }
+.layout-ranking .leader {
+    z-index: 2;
+    flex: 0 0 auto;
+    margin-inline: 4px 0;
+    padding: 16px 13px 12px;
+}
 .layout-ranking .leader-name { margin-bottom: 8px; }
 .layout-ranking .kpis { gap: 6px; }
 .layout-ranking .kpi b { font-size: clamp(15px, 4vw, 20px); }
@@ -633,6 +739,10 @@
 .layout-admin .chip { min-height: 34px; padding: 6px 13px; }
 .layout-admin .label { margin-bottom: 7px; }
 
+.history-panel {
+    display: flex;
+    flex: 1 1 0;
+}
 .history-days {
     flex: 1 1 0;
     min-height: 0;
@@ -674,7 +784,7 @@
 .history-days > .chip { margin-top: 12px; }
 
 @media (max-height: 700px) {
-    .page { gap: 8px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
+    .page { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
     .display { font-size: 25px; }
     .layout-topics .cell { min-height: 40px; }
     .layout-ranking .row { padding-top: 7px; padding-bottom: 7px; }
@@ -721,72 +831,10 @@
 .student-home { overflow-y: auto; }
 
 .student-frame {
-    position: relative;
-    isolation: isolate;
     display: grid;
     flex: 0 0 auto;
     min-width: 0;
-    padding: 10px clamp(10px, 4vw, 17px) 29px;
-    --frame-shape: polygon(0 25px, 25px 0, calc(100% - 35px) 0, 100% 35px,
-        100% calc(100% - 32px), calc(100% - 32px) 100%, 29px 100%, 0 calc(100% - 29px));
-}
-
-.student-frame::before,
-.student-frame::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-    clip-path: var(--frame-shape);
-    pointer-events: none;
-}
-
-.student-frame::before {
-    z-index: -1;
-    background:
-        repeating-linear-gradient(105deg, #ffffff06 0 1px, transparent 1px 4px),
-        linear-gradient(90deg, #4b4733, #21201b 12%, #191916 87%, #5e542d);
-}
-
-.student-frame::after {
-    z-index: 5;
-    background:
-        linear-gradient(var(--accent), var(--accent)) left 5px top 39% / 2px 16% no-repeat,
-        linear-gradient(var(--accent), var(--accent)) right 5px bottom 15% / 2px 17% no-repeat,
-        linear-gradient(140deg, transparent 15%, #59533a 16%, #343025 77%, transparent 78%)
-            left top 42% / 21px 112px no-repeat,
-        linear-gradient(40deg, transparent 13%, #4d462d 14%, #2f2b20 80%, transparent 81%)
-            right bottom 17% / 21px 112px no-repeat,
-        linear-gradient(135deg, transparent 16%, var(--accent) 17% 78%, transparent 79%)
-            right 26px bottom 9px / 48px 7px no-repeat;
-}
-
-.student-frame > .card {
-    position: relative;
-    isolation: isolate;
-    border-color: transparent;
-    background: none;
-    box-shadow: none;
-}
-
-.student-frame > .card::before,
-.student-frame > .card::after {
-    position: absolute;
-    content: '';
-    clip-path: var(--plate-shape);
-    pointer-events: none;
-}
-
-.student-frame > .card::before {
-    z-index: -2;
-    inset: -1px;
-    background: var(--plate-edge, linear-gradient(150deg, #5f5531, #38382e 48%, #766335));
-}
-
-.student-frame > .card::after {
-    z-index: -1;
-    inset: 0;
-    background: var(--plate-texture, repeating-linear-gradient(105deg, #ffffff04 0 1px, transparent 1px 4px)),
-        var(--plate-face, var(--surface));
+    padding: 5px 2px 10px;
 }
 
 .student-frame > .swipe-card {
@@ -947,7 +995,8 @@
 .student-goal-progress strong { transform: translateY(-2px); }
 
 @media (max-height: 620px) {
-    .student-frame { padding-block: 8px 22px; }
+    .arena-shell > .student-home { padding-top: 7px; }
+    .student-frame { padding-block: 0 6px; }
     .student-identity { padding-block: 8px; }
     .student-progress { padding-block: 25px 13px; }
     .student-totals { padding-block: 22px 9px; }
@@ -1039,7 +1088,22 @@
     .tasks-week { margin-top: 8px; }
 }
 
+.layout-admin-home { gap: 0; }
 .layout-admin-home > .card { padding: 12px; }
+.layout-admin-home > .admin-preview-actions {
+    z-index: 3;
+    flex: 0 0 auto;
+    margin-inline-end: 6px;
+    --plate-face: var(--surface-strong);
+}
+.layout-admin-home > .admin-preview-actions + .swipe-card {
+    margin-top: -10px;
+    padding-top: 21px;
+}
+.layout-admin-home > .swipe-card + .admin-schedule {
+    margin-top: -10px;
+    padding-top: 22px;
+}
 .admin-preview-actions {
     display: flex;
     flex-wrap: wrap;
@@ -1049,7 +1113,12 @@
 }
 .admin-preview-actions .label,
 .admin-schedule > .between .label { margin: 0; }
-.layout-admin-home > .swipe-card { flex: 0 0 auto; }
+.layout-admin-home > .swipe-card {
+    z-index: 2;
+    flex: 0 0 auto;
+    margin-inline-start: 5px;
+    --plate-face: linear-gradient(135deg, #2a281e, var(--surface) 70%);
+}
 .admin-lesson-month {
     margin: 0;
     text-align: center;
@@ -1075,6 +1144,7 @@
 .admin-attendance .label { margin-bottom: 2px; }
 .admin-attendance .seg { height: 13px; min-height: 13px; }
 .admin-schedule {
+    z-index: 1;
     display: flex;
     flex: 1 1 0;
     flex-direction: column;

@@ -153,24 +153,26 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
             )}
 
             <Card class="list">
-                {data.rows.length === 0 && <Empty text="Пока никого нет" />}
-                {data.rows.map((r) => (
-                    <Row
-                        key={r.id}
-                        name={r.name}
-                        bar={<SegmentBar value={r.pct} segments={12} />}
-                        right={
-                            <span class="stats">
-                                {isMonth
-                                    ? <span aria-label={`Решено задач за месяц: ${r.tasks}`}>{r.tasks}</span>
-                                    : <span>{r.pct}%</span>}
-                                <Pill standing={r.standing} />
-                            </span>
-                        }
-                        onClick={() => onOpen(r.id)}
-                        actions={rowActions?.(r.id, r.name)}
-                    />
-                ))}
+                <div class="ranking-scroll">
+                    {data.rows.length === 0 && <Empty text="Пока никого нет" />}
+                    {data.rows.map((r) => (
+                        <Row
+                            key={r.id}
+                            name={r.name}
+                            bar={<SegmentBar value={r.pct} segments={12} />}
+                            right={
+                                <span class="stats">
+                                    {isMonth
+                                        ? <span aria-label={`Решено задач за месяц: ${r.tasks}`}>{r.tasks}</span>
+                                        : <span>{r.pct}%</span>}
+                                    <Pill standing={r.standing} />
+                                </span>
+                            }
+                            onClick={() => onOpen(r.id)}
+                            actions={rowActions?.(r.id, r.name)}
+                        />
+                    ))}
+                </div>
             </Card>
         </>
     );
