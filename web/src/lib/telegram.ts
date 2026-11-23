@@ -22,8 +22,11 @@ export const insideTelegram = initData !== '';
 export function initTelegram(): void {
     tg?.ready();
     tg?.expand();
-    tg?.setHeaderColor?.('#0a0b0d');
-    tg?.setBackgroundColor?.('#0a0b0d');
+    const background = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (background) {
+        tg?.setHeaderColor?.(background);
+        tg?.setBackgroundColor?.(background);
+    }
 }
 
 export const haptic = {

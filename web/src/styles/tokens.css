@@ -1,34 +1,33 @@
-/* Матовая графитовая палитра Арены */
 :root {
     color-scheme: dark;
 
-    --bg: #101114;
-    --bg-glow: #101114;
-    --surface: #191b20;
-    --surface-strong: #22252c;
-    --border: rgba(220, 226, 240, 0.10);
+    --bg: #0a0a09;
+    --surface: #141413;
+    --surface-strong: #222220;
+    --border: #ffffff21;
+    --panel-shadow: 0 5px 16px #0007;
 
-    --text: #f0f1f4;
-    --muted: #969ba7;
+    --text: #f8f7ef;
+    --muted: #acaba1;
+    --accent: #ffd400;
+    --accent-soft: #ffd40022;
+    --on-accent: #141106;
 
-    /* Основные акценты шкал, плиток и состояний интерфейса. */
-    --good: #35df91;
-    --warn: #ffd04a;
-    --bad: #ff6575;
-    --blue: #42a5ff;
+    --good: #21e89a;
+    --warn: #ffb020;
+    --bad: #ff4e70;
+    --blue: #669cff;
 
-    --good-soft: color-mix(in srgb, var(--good) 12%, transparent);
-    --warn-soft: color-mix(in srgb, var(--warn) 12%, transparent);
-    --bad-soft: color-mix(in srgb, var(--bad) 12%, transparent);
-    --blue-soft: color-mix(in srgb, var(--blue) 14%, transparent);
+    --bad-soft: #ff4e7026;
 
-    --radius-lg: 21px;
-    --radius-md: 15px;
-    --radius-sm: 10px;
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
 
     --gap: 11px;
     --pad: 15px;
 
     --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+    --font-number: 'Roboto Condensed', 'Arial Narrow', 'DIN Alternate', var(--font-ui);
     --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
 }

@@ -3,7 +3,7 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html, body, #app {
+html, body, #root {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -34,7 +34,7 @@ button:disabled {
 }
 
 button:focus-visible, input:focus-visible {
-    outline: 2px solid var(--blue);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
 
@@ -73,6 +73,6 @@ p {
 }
 
 ::selection {
-    color: #07111d;
-    background: var(--blue);
+    color: var(--on-accent);
+    background: var(--accent);
 }
