@@ -62,7 +62,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
 
     return (
         <Screen hideTitle title="Задания" className={readOnly ? "layout-topics topics-preview" : "layout-topics"}>
-            <Card>
+            <Card class="task-entry">
                 <Label>Задачи</Label>
                 <div class="amounts">
                     {AMOUNTS.map((n) => (

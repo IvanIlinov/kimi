@@ -6,7 +6,7 @@
     text-align: left;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    clip-path: var(--control-shape);
 }
 
 .weekly-recap-entry strong { color: var(--recap-accent); }
@@ -17,7 +17,7 @@
     max-height: calc(100dvh - 24px);
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 18px 5px 18px 5px;
+    clip-path: polygon(0 16px, 16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
     border-color: #897341;
     color: var(--text);
     background:
@@ -35,8 +35,8 @@
 
 .weekly-recap h2:focus { outline: none; }
 .weekly-recap .weekly-recap-close:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--recap-accent);
+    outline: 2px solid var(--recap-accent);
+    outline-offset: -3px;
 }
 
 .weekly-recap-close {
@@ -46,14 +46,14 @@
     width: 44px;
     height: 44px;
     border: 1px solid var(--border);
-    border-radius: 50%;
+    clip-path: var(--control-shape);
     font-size: 24px;
 }
 
 .weekly-recap-goal {
     margin-top: 20px;
     padding: 17px;
-    border-radius: 14px 4px 14px 4px;
+    clip-path: var(--control-shape);
     background: var(--recap-accent);
     color: var(--on-accent);
 }
@@ -69,7 +69,21 @@
     letter-spacing: -.065em;
 }
 
-.weekly-recap progress { display: block; width: 100%; height: 8px; margin-bottom: 8px; accent-color: var(--on-accent); }
+.weekly-recap progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin-bottom: 8px;
+    appearance: none;
+    border: 0;
+    background: #14110635;
+}
+.weekly-recap progress::-webkit-progress-bar { background: transparent; }
+.weekly-recap progress::-webkit-progress-value { background: var(--on-accent); }
+.weekly-recap progress::-moz-progress-bar { background: var(--on-accent); }
+
+:is(.weekly-recap-entry, .weekly-recap-done):focus-visible { outline-offset: -3px; }
+.weekly-recap-done:focus-visible { outline-color: var(--on-accent); }
 .weekly-recap dl { margin: 12px 0 18px; }
 .weekly-recap dl div {
     display: flex;
@@ -93,7 +107,7 @@
 .weekly-recap-done {
     width: 100%;
     min-height: 44px;
-    border-radius: 12px;
+    clip-path: var(--control-shape);
     background: var(--recap-accent);
     color: var(--bg);
     font-weight: 750;

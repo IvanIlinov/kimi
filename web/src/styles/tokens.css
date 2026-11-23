@@ -19,9 +19,8 @@
 
     --bad-soft: #ff30301a;
 
-    --radius-lg: 18px;
-    --radius-md: 12px;
-    --radius-sm: 8px;
+    --control-shape: polygon(0 7px, 7px 0, 100% 0, 100% calc(100% - 7px),
+        calc(100% - 7px) 100%, 0 100%);
 
     --gap: 11px;
     --pad: 15px;

@@ -17,7 +17,7 @@
     min-height: 44px;
     padding: 4px 10px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    clip-path: var(--control-shape);
     background: var(--bg);
 }
 .recap-entries button:hover { border-color: var(--accent); }
@@ -33,7 +33,7 @@
     background: var(--surface);
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 0;
 }
 .recap-picker::backdrop { background: #08090de0; }

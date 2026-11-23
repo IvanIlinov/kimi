@@ -49,7 +49,9 @@
         linear-gradient(155deg, #ffe454, #e2a922 28%, #ae7917 55%, #ffd33b 78%, #ffe878);
     --frame-top: calc(env(safe-area-inset-top, 0px) + 6px);
     --frame-bottom: calc(env(safe-area-inset-bottom, 0px) + 5px);
-    --frame-shape: polygon(0 25px, 25px 0, calc(100% - 35px) 0, 100% 35px,
+    --frame-shape: polygon(0 38px, 25px 13px, 19% 13px, calc(19% + 13px) 0,
+        47% 0, calc(47% + 10px) 10px, 69% 10px, calc(69% + 10px) 0,
+        calc(100% - 42px) 0, calc(100% - 21px) 21px, calc(100% - 21px) 30px, 100% 51px,
         100% calc(100% - 32px), calc(100% - 32px) 100%, 29px 100%, 0 calc(100% - 29px));
 }
 
@@ -125,7 +127,6 @@
 
 .skeleton {
     height: 160px;
-    border-radius: var(--radius-lg);
     background: var(--surface-strong);
 }
 
@@ -151,7 +152,6 @@
     height: 100%;
     margin: 0;
     align-self: stretch;
-    border-radius: 1px;
     transform: skewX(-16deg);
     background: var(--surface-strong);
 }
@@ -191,7 +191,7 @@
     align-items: center;
     padding: 4px 10px;
     border: 1px solid transparent;
-    border-radius: 999px;
+    clip-path: var(--control-shape);
     font-size: 11px;
     font-weight: 700;
     white-space: nowrap;
@@ -206,7 +206,6 @@
     gap: 10px;
     width: 100%;
     padding: 13px 10px;
-    border-radius: var(--radius-md);
     text-align: left;
     transition: background 0.16s ease;
 }
@@ -305,10 +304,14 @@
     min-height: 40px;
     padding: 9px 16px;
     border: 1px solid var(--border);
-    border-radius: 999px;
+    clip-path: var(--control-shape);
     background: var(--surface-strong);
     font-weight: 650;
     transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+}
+
+:is(.chip, .segmented button, .tab, .swipe-card-arrow, .arena-icon):focus-visible {
+    outline-offset: -3px;
 }
 
 .chip:not(:disabled):active {
@@ -352,7 +355,7 @@
     min-width: 0;
     min-height: 40px;
     padding: 8px 4px;
-    border-radius: var(--radius-sm);
+    clip-path: var(--control-shape);
     font-size: 14px;
 }
 
@@ -377,7 +380,6 @@
     min-height: 59px;
     padding: 8px 0;
     border: 1px solid var(--border);
-    border-radius: 14px;
     background: var(--surface-strong);
     color: var(--tile-accent, var(--muted));
     font-size: 12px;
@@ -404,7 +406,6 @@
     width: 9px;
     height: 9px;
     border: 1px solid var(--tile-accent, var(--muted));
-    border-radius: 50%;
     background: var(--tile-accent, transparent);
 }
 
@@ -416,7 +417,6 @@
     min-width: 0;
     padding: 11px 14px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.18);
     color: var(--text);
     outline: none;
@@ -458,7 +458,7 @@
     flex: 0 0 auto;
     width: clamp(64px, 19vw, 72px);
     height: 50px;
-    border-radius: 10px 5px 10px 5px;
+    clip-path: var(--control-shape);
     color: var(--muted);
     transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
@@ -506,7 +506,6 @@
     width: 100%;
     padding: 12px;
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
     text-align: left;
     transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -608,10 +607,30 @@
     margin-bottom: 1px;
 }
 .layout-topics > .card { flex: 0 0 auto; padding: 12px; }
-.layout-topics > .card:first-child {
+.layout-topics > .task-entry {
     z-index: 3;
     margin-inline: 0 6px;
-    --plate-face: var(--surface-strong);
+    color: var(--on-accent);
+    --plate-face: var(--accent);
+    --plate-edge: #ffe45a;
+    --plate-texture: none;
+}
+
+.task-entry .label,
+.task-entry .warn { color: var(--on-accent); }
+
+.task-entry .amounts .chip {
+    background: var(--on-accent);
+    border-color: transparent;
+    color: var(--accent);
+}
+
+.task-entry .amounts .chip:focus-visible { outline-color: var(--text); }
+
+.task-entry .tasks-week {
+    padding: 5px 9px;
+    clip-path: var(--control-shape);
+    background: var(--on-accent);
 }
 .layout-topics > .card:nth-child(2) { z-index: 2; margin-inline: 4px 0; }
 .layout-topics > .card:last-child {
@@ -641,10 +660,10 @@
 
 .topic-legend-dot {
     flex: 0 0 auto;
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border: 1px solid var(--tile-accent, var(--muted));
-    border-radius: 50%;
+    transform: rotate(45deg);
     background: var(--tile-accent, transparent);
 }
 
@@ -652,7 +671,6 @@
     min-height: 45px;
     padding: 5px 0;
     gap: 3px;
-    border-radius: 0;
     clip-path: polygon(0 9px, 9px 0, calc(100% - 6px) 0, 100% 6px,
         100% calc(100% - 9px), calc(100% - 9px) 100%, 6px 100%, 0 calc(100% - 6px));
 }
@@ -771,7 +789,6 @@
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
     padding: 3px 4px;
-    border-radius: 6px;
     text-align: center;
 }
 .admin-attendance b { padding-inline: 7px; }
@@ -908,7 +925,7 @@
 }
 
 .student-totals .metric-tiles { gap: 0; }
-.student-totals .metric-tile { background: transparent; border-radius: 0; }
+.student-totals .metric-tile { background: transparent; }
 .student-totals .metric-tile + .metric-tile { border-inline-start: 1px solid var(--border); }
 
 .student-ring {
@@ -957,7 +974,6 @@
     gap: 4px;
     padding: 8px 3px;
     text-align: center;
-    border-radius: var(--radius-sm);
     background: var(--surface-strong);
 }
 .metric-tile svg { width: 16px; height: 16px; color: var(--accent); }
@@ -1068,7 +1084,6 @@
     min-height: 32px;
     padding: 3px 8px;
     border: 1px solid transparent;
-    border-radius: 8px;
     color: var(--muted);
     font-size: 12px;
     line-height: 1.25;
@@ -1134,7 +1149,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;
     padding: 5px 2px;
-    border-radius: 9px;
     line-height: 1.2;
 }
 .admin-lesson-metrics .metric-tile svg { width: 13px; height: 13px; }
@@ -1187,7 +1201,6 @@
     gap: 2px;
     min-width: 0;
     border-inline-start: 2px solid var(--tile-accent);
-    border-radius: 6px;
     background: var(--surface-strong);
     padding: 4px 1px 4px 2px;
     text-align: start;
@@ -1213,7 +1226,6 @@
     width: 100%;
     min-width: 0;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
     padding: 6px 9px;
     background: var(--surface-strong);
     color: var(--text);
@@ -1234,7 +1246,7 @@
     flex: 0 0 auto;
     width: 32px;
     height: 36px;
-    border-radius: 50%;
+    clip-path: var(--control-shape);
     color: var(--muted);
 }
 .arena-icon svg { width: 17px; height: 17px; }
@@ -1279,7 +1291,6 @@
 }
 .swipe-card-recaps > div > button {
     align-content: center;
-    border-radius: 999px;
     text-align: center;
 }
 .swipe-card-with-leading .swipe-card-dots { gap: 0; }
@@ -1288,7 +1299,6 @@
     place-items: center;
     width: 34px;
     min-height: 28px;
-    border-radius: 8px;
     background: transparent;
 }
 .swipe-card-with-leading .swipe-card-dots button::after { content: ''; }
@@ -1306,7 +1316,7 @@
     width: 40px;
     height: 40px;
     border: 1px solid var(--border);
-    border-radius: 50%;
+    clip-path: var(--control-shape);
     background: var(--surface);
 }
 .swipe-card-arrow:hover:not(:disabled) {
