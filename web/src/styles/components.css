@@ -45,36 +45,19 @@
     max-width: 520px;
     height: 100dvh;
     margin: 0 auto;
-    padding-block: var(--frame-top) var(--frame-bottom);
-    background:
-        repeating-linear-gradient(105deg, #fff3 0 1px, transparent 1px 5px),
-        linear-gradient(155deg, #ffe454, #e2a922 28%, #ae7917 55%, #ffd33b 78%, #ffe878);
-    --frame-top: calc(env(safe-area-inset-top, 0px) + 6px);
-    --frame-bottom: calc(env(safe-area-inset-bottom, 0px) + 5px);
-    --cap-drop: clamp(12px, 2.5dvh, 22px);
-    --frame-shape: polygon(0 38px, 25px 13px, 19% 13px, calc(19% + 13px) 0,
-        47% 0, calc(47% + 10px) 10px, 69% 10px, calc(69% + 10px) 0,
-        calc(100% - 42px) 0, calc(100% - 21px) 21px, calc(100% - 21px) 30px, 100% 51px,
-        100% calc(100% - 32px), calc(100% - 32px) 100%, 29px 100%, 0 calc(100% - 29px));
-}
-
-.arena-shell::before,
-.arena-shell::after {
-    position: absolute;
-    inset: var(--frame-top) 6px var(--frame-bottom);
-    content: '';
-    clip-path: var(--frame-shape);
-    pointer-events: none;
-}
-
-.arena-shell::before {
-    z-index: -1;
+    padding-top: env(safe-area-inset-top, 0px);
     background:
         repeating-linear-gradient(105deg, #ffffff06 0 1px, transparent 1px 4px),
-        linear-gradient(90deg, #4b4733, #21201b 12%, #191916 87%, #5e542d);
+        linear-gradient(90deg, #3b3627, #21201b 10%, #191916 89%, #514529);
+    --screen-gutter: clamp(19px, 5.5vw, 27px);
+    --cap-drop: clamp(12px, 2.5dvh, 22px);
 }
 
 .arena-shell::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    pointer-events: none;
     z-index: 5;
     background:
         linear-gradient(var(--accent), var(--accent)) left 5px top 39% / 2px 16% no-repeat,
@@ -90,7 +73,7 @@
 .arena-shell > .page {
     flex: 1 1 auto;
     height: auto;
-    padding: 12px clamp(19px, 5.5vw, 27px) 23px;
+    padding: 12px var(--screen-gutter) 23px;
 }
 
 .label {
@@ -443,14 +426,19 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    width: calc(100% - 16px);
-    margin: -12px auto 0;
-    padding: 16px 8px 5px;
-    --plate-shape: polygon(0 17px, 17px 0, 69% 0, calc(69% + 17px) 16px,
-        calc(100% - 9px) 16px, 100% 25px, 100% calc(100% - 15px),
-        calc(100% - 15px) 100%, 20px 100%, 0 calc(100% - 20px));
+    width: 100%;
+    margin-top: -12px;
+    padding: 16px 8px calc(env(safe-area-inset-bottom, 0px) + 5px);
+    --plate-shape: polygon(0 15px, 15px 0, 69% 0, calc(69% + 17px) 16px,
+        calc(100% - 9px) 16px, 100% 25px, 100% 100%, 0 100%);
     --plate-face: linear-gradient(165deg, #3c3626, #181814 55%);
     --plate-edge: linear-gradient(110deg, #806737, #ddbd62 68%, #806737);
+}
+
+.tabbar::before,
+.tabbar::after {
+    inset-inline: -1px;
+    bottom: -1px;
 }
 
 .tab {
@@ -462,9 +450,23 @@
     flex: 0 0 auto;
     width: clamp(64px, 19vw, 72px);
     height: 50px;
-    clip-path: var(--control-shape);
+    clip-path: var(--tab-shape, var(--control-shape));
     color: var(--muted);
     transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.tab[data-edge="start"] {
+    --tab-shape: polygon(0 10px, 10px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+.tab[data-edge="both"] {
+    --tab-shape: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px,
+        100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+.tab[data-edge="end"] {
+    --tab-shape: polygon(0 0, calc(100% - 10px) 0, 100% 10px,
+        100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
 }
 
 .tab svg { width: 19px; height: 19px; }
@@ -612,7 +614,6 @@
 }
 .layout-topics > .card { flex: 0 0 auto; padding: 12px; }
 .layout-topics > .task-entry {
-    margin-inline: 0 6px;
     color: var(--on-accent);
     --plate-face: var(--accent);
     --plate-edge: #ffe45a;
@@ -688,7 +689,6 @@
 .layout-topics .exam .chip { min-height: 36px; padding: 7px 13px; }
 
 .layout-ranking { gap: 0; }
-.layout-ranking > .segmented { margin-inline-end: 6px; }
 .layout-ranking > .segmented + .leader {
     margin-top: -9px;
     padding-top: calc(13px + var(--cap-drop));
@@ -710,6 +710,7 @@
 .ranking-scroll {
     display: flex;
     flex-direction: column;
+    gap: 4px;
     min-height: 0;
     flex: 1;
     overflow-y: auto;
@@ -727,9 +728,37 @@
 .layout-ranking .kpis { gap: 6px; }
 .layout-ranking .kpi b { font-size: clamp(15px, 4vw, 20px); }
 .layout-ranking .seg { align-self: center; height: 12px; min-height: 12px; }
-.layout-ranking .row + .row,
-.layout-ranking .row-with-actions + .row-with-actions {
-    border-top: 1px solid var(--border);
+.ranking-scroll > :is(.row, .row-with-actions) {
+    position: relative;
+    isolation: isolate;
+    --row-shape: polygon(0 7px, 7px 0, calc(100% - 8px) 0, 100% 8px,
+        100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+
+.ranking-scroll > :is(.row, .row-with-actions)::before,
+.ranking-scroll > :is(.row, .row-with-actions)::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+    clip-path: var(--row-shape);
+}
+
+.ranking-scroll > :is(.row, .row-with-actions)::before {
+    z-index: -2;
+    inset: 0;
+    background: #635737;
+}
+
+.ranking-scroll > :is(.row, .row-with-actions)::after {
+    z-index: -1;
+    inset: 1px;
+    background: var(--row-face, linear-gradient(120deg, #29271e, var(--surface) 75%));
+}
+
+.ranking-scroll .row:not(:disabled):active { background: transparent; }
+.ranking-scroll > .row:active,
+.ranking-scroll > .row-with-actions:has(.row:active) {
+    --row-face: var(--surface-strong);
 }
 
 .layout-admin { gap: 9px; }
@@ -858,7 +887,7 @@
     display: grid;
     flex: 0 0 auto;
     min-width: 0;
-    padding: 5px 2px 10px;
+    padding: 0 2px 10px;
 }
 
 .student-frame > .swipe-card {
@@ -876,12 +905,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-inline: -6px 3px;
-    padding: 14px clamp(16px, 5vw, 24px);
+    padding: 14px var(--screen-gutter);
     color: var(--on-accent);
     --plate-face: var(--accent);
     --plate-texture: none;
     --plate-edge: #ffe45a;
+    --cap-inline-extra: 2px;
 }
 
 .student-name {
@@ -1015,7 +1044,6 @@
 .student-goal-progress strong { transform: translateY(-2px); }
 
 @media (max-height: 620px) {
-    .arena-shell > .student-home { padding-top: 4px; }
     .student-frame { padding-block: 0 6px; }
     .student-identity { padding-block: 8px; }
     .student-progress { padding-block: calc(24px + var(--cap-drop)) 8px; }
@@ -1111,7 +1139,6 @@
 .layout-admin-home > .card { padding: 12px; }
 .layout-admin-home > .admin-preview-actions {
     flex: 0 0 auto;
-    margin-inline-end: 6px;
     --plate-face: var(--surface-strong);
 }
 .layout-admin-home > .admin-preview-actions + .swipe-card {
@@ -1342,12 +1369,24 @@
     .swipe-card-arrow { display: none; }
 }
 
-/* The upper plates sit over the frame rails and extend down on the right. */
+/* The upper plates leave the frame flush and extend down on the right. */
+.arena-shell > :is(.student-home, .layout-topics, .layout-ranking, .layout-admin-home) {
+    padding-top: 0;
+}
+
 :is(.student-identity, .layout-topics > .task-entry, .layout-ranking > .segmented,
     .layout-admin-home > .admin-preview-actions, .layout-admin-home > .swipe-card:first-child) {
     z-index: 6;
+    margin-inline: calc(0px - var(--screen-gutter) - var(--cap-inline-extra, 0px));
+    padding-inline: var(--screen-gutter);
     --plate-extension: var(--cap-drop);
-    --plate-shape: polygon(0 13px, 13px 0, calc(100% - 24px) 0, 100% 24px, 100% 100%,
-        77% 100%, calc(77% - var(--cap-drop)) calc(100% - var(--cap-drop)),
+    --plate-shape: polygon(0 0, 100% 0, 100% 100%, 77% 100%,
+        calc(77% - var(--cap-drop)) calc(100% - var(--cap-drop)),
         10px calc(100% - var(--cap-drop)), 0 calc(100% - var(--cap-drop) - 10px));
+}
+
+:is(.student-identity, .layout-topics > .task-entry, .layout-ranking > .segmented,
+    .layout-admin-home > .admin-preview-actions, .layout-admin-home > .swipe-card:first-child)::after {
+    inset-inline: -1px;
+    top: -1px;
 }

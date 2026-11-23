@@ -24,10 +24,11 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
                     <NavIcon name="arrow-left" />
                 </button>
             )}
-            {tabs.map((t) => (
+            {tabs.map((t, index) => (
                 <button
                     key={t.id}
                     class={t.id === active ? 'tab active' : 'tab'}
+                    data-edge={tabs.length === 1 ? 'both' : index === 0 ? 'start' : index === tabs.length - 1 ? 'end' : 'both'}
                     aria-label={t.label}
                     aria-current={t.id === active ? 'page' : undefined}
                     onClick={() => {
