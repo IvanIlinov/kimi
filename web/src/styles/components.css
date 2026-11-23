@@ -727,7 +727,9 @@
     flex: 0 0 auto;
     min-height: clamp(200px, 34dvh, 290px);
     grid-template-rows: minmax(min-content, 1fr) auto;
-    padding: clamp(8px, 2dvh, 14px);
+    padding: clamp(12px, 2dvh, 16px);
+    --plate-shape: polygon(0 16px, 16px 0, calc(100% - 24px) 0, 100% 24px,
+        100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px));
 }
 
 .student-overview {
@@ -736,16 +738,53 @@
     isolation: isolate;
 }
 
+.student-overview > .card,
+.student-home > .swipe-card {
+    position: relative;
+    isolation: isolate;
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+}
+
+.student-overview > .card::before,
+.student-overview > .card::after,
+.student-home > .swipe-card::before,
+.student-home > .swipe-card::after {
+    position: absolute;
+    content: '';
+    clip-path: var(--plate-shape);
+    pointer-events: none;
+}
+
+.student-overview > .card::before,
+.student-home > .swipe-card::before {
+    z-index: -2;
+    inset: -1px;
+    background: var(--plate-edge, linear-gradient(150deg, #615834, #3b3b31 48%, #5b5432));
+}
+
+.student-overview > .card::after,
+.student-home > .swipe-card::after {
+    z-index: -1;
+    inset: 0;
+    background: var(--plate-texture, repeating-linear-gradient(105deg, #ffffff04 0 1px, transparent 1px 4px)),
+        var(--plate-face, var(--surface));
+}
+
 .student-identity {
     z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 12px clamp(12px, 4vw, 18px);
-    border-color: transparent;
-    background: var(--accent);
+    padding: 12px clamp(16px, 5vw, 24px);
     color: var(--on-accent);
+    --plate-shape: polygon(0 13px, 13px 0, calc(100% - 21px) 0, 100% 21px, 100% 100%,
+        17px 100%, 0 calc(100% - 17px));
+    --plate-face: var(--accent);
+    --plate-texture: none;
+    --plate-edge: #ffe45a;
 }
 
 .student-name {
@@ -770,8 +809,12 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
-    margin: -8px 5px 0;
-    padding: 20px clamp(12px, 4vw, 18px) 12px;
+    margin: -10px 5px 0;
+    padding: 22px clamp(16px, 5vw, 24px) 16px;
+    --plate-shape: polygon(0 15px, 15px 0, 100% 0, 100% calc(100% - 17px),
+        calc(100% - 17px) 100%, 56% 100%, calc(56% - 8px) calc(100% - 8px),
+        13px calc(100% - 8px), 0 calc(100% - 21px));
+    --plate-face: linear-gradient(135deg, #23231d, var(--surface) 72%);
 }
 
 .student-progress > strong {
@@ -780,9 +823,11 @@
 }
 
 .student-totals {
-    margin: -6px 10px 0;
-    padding: 13px 3px 5px;
-    background: var(--surface-strong);
+    margin: -8px 10px 0;
+    padding: 15px 8px 8px;
+    --plate-shape: polygon(0 0, 100% 0, 100% calc(100% - 13px),
+        calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px));
+    --plate-face: var(--surface-strong);
 }
 
 .student-totals .metric-tiles { gap: 0; }
@@ -874,7 +919,7 @@
 
 @media (max-height: 620px) {
     .student-identity { padding-block: 9px; }
-    .student-progress { padding-block: 15px 9px; }
+    .student-progress { padding-block: 17px 13px; }
     .student-ring { width: clamp(56px, 12dvh, 72px); }
     .student-ring strong { font-size: 24px; }
     .student-totals .metric-tile {
