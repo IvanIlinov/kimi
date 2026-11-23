@@ -425,20 +425,27 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     width: 100%;
     margin-top: -12px;
+    --tab-gap: 4px;
     padding: 16px 8px calc(env(safe-area-inset-bottom, 0px) + 5px);
     --plate-shape: polygon(0 15px, 15px 0, 69% 0, calc(69% + 17px) 16px,
         calc(100% - 9px) 16px, 100% 25px, 100% 100%, 0 100%);
-    --plate-face: linear-gradient(165deg, #3c3626, #181814 55%);
-    --plate-edge: linear-gradient(110deg, #806737, #ddbd62 68%, #806737);
+    --plate-face: var(--accent);
+    --plate-edge: #ffe45a;
+    --plate-texture: none;
 }
 
 .tabbar::before,
 .tabbar::after {
     inset-inline: -1px;
     bottom: -1px;
+}
+
+.tabbar-tabs {
+    position: relative;
+    display: flex;
+    gap: var(--tab-gap);
 }
 
 .tab {
@@ -451,7 +458,8 @@
     width: clamp(64px, 19vw, 72px);
     height: 50px;
     clip-path: var(--tab-shape, var(--control-shape));
-    color: var(--muted);
+    color: var(--accent);
+    background: var(--on-accent);
     transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
 
@@ -483,19 +491,16 @@
     color: var(--on-accent);
     background: var(--accent);
 }
+.tab:focus-visible { outline-color: var(--text); }
+.tab.active:focus-visible { outline-color: var(--on-accent); }
 
 .tab.tabbar-exit {
     position: absolute;
-    inset-inline-start: 6px;
-    top: 50%;
-    translate: 0 -50%;
-    width: 42px;
-    height: 42px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    inset-inline-end: calc(100% + var(--tab-gap));
+    top: 0;
+    width: clamp(42px, 13vw, 60px);
 }
 .tabbar-exit svg { width: 21px; height: 21px; }
-.tabbar-exit:hover { color: var(--text); }
 
 /* ---- Администрирование ---- */
 .admin-list {
@@ -564,7 +569,7 @@
 
 @media (max-width: 370px) {
     .kpis { grid-template-columns: repeat(3, 1fr); }
-    .tabbar { gap: 2px; }
+    .tabbar { --tab-gap: 2px; }
 }
 
 
@@ -710,7 +715,6 @@
 .ranking-scroll {
     display: flex;
     flex-direction: column;
-    gap: 4px;
     min-height: 0;
     flex: 1;
     overflow-y: auto;
@@ -731,9 +735,17 @@
 .ranking-scroll > :is(.row, .row-with-actions) {
     position: relative;
     isolation: isolate;
+    width: auto;
     --row-shape: polygon(0 7px, 7px 0, calc(100% - 8px) 0, 100% 8px,
         100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
 }
+
+.ranking-scroll > :is(.row, .row-with-actions):nth-child(odd) { margin-inline-end: 4px; }
+.ranking-scroll > :is(.row, .row-with-actions):nth-child(even) { margin-inline-start: 4px; }
+.ranking-scroll > :is(.row, .row-with-actions) + :is(.row, .row-with-actions) {
+    margin-top: -4px;
+}
+.ranking-scroll > :is(.row, .row-with-actions):focus-within { z-index: 1; }
 
 .ranking-scroll > :is(.row, .row-with-actions)::before,
 .ranking-scroll > :is(.row, .row-with-actions)::after {
@@ -1043,7 +1055,7 @@
 }
 .student-goal-progress strong { transform: translateY(-2px); }
 
-@media (max-height: 620px) {
+@media (max-height: 700px) {
     .student-frame { padding-block: 0 6px; }
     .student-identity { padding-block: 8px; }
     .student-progress { padding-block: calc(24px + var(--cap-drop)) 8px; }
@@ -1389,4 +1401,17 @@
     .layout-admin-home > .admin-preview-actions, .layout-admin-home > .swipe-card:first-child)::after {
     inset-inline: -1px;
     top: -1px;
+}
+
+@media (max-height: 700px) {
+    .arena-shell > :is(.layout-topics, .student-home) { padding-bottom: 14px; }
+    .layout-topics > .card { padding-block: 9px; }
+    .layout-topics > .card + .card { padding-top: 18px; }
+    .layout-topics > .task-entry + .card { padding-top: calc(12px + var(--cap-drop)); }
+    .layout-topics .label { margin-bottom: 5px; }
+    .layout-topics .grid { gap: 4px; }
+    .layout-topics .cell { min-height: 36px; padding-block: 3px; }
+    .layout-topics .topic-legend { margin-top: 6px; gap: 3px 7px; }
+    .task-entry .tasks-week { margin-top: 7px; padding-block: 4px; }
+    .task-entry .tasks-week .seg { height: 10px; min-height: 10px; }
 }
