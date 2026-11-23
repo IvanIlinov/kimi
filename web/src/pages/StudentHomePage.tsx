@@ -4,7 +4,7 @@ import type { Profile } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
 import { SwipeCard } from '../components/SwipeCard';
 import { PeriodRecaps } from '../components/PeriodRecaps';
-import { Card, Empty, Loading, MetricTile, Screen, ProgressBar } from '../components/ui';
+import { Card, Empty, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
 
 export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenWeeklyRecap = false }: {
@@ -97,14 +97,14 @@ function Goal({ icon, label, value, max, note, action }: {
             {icon ? (
                 <div class="student-goal-with-icon">
                     <NavIcon name={icon} />
-                    <ProgressBar value={value} max={max} />
+                    <SegmentBar value={value} max={max} />
                     <strong>{shown}</strong>
                 </div>
             ) : (
                 <>
                     {action ? <div class="between"><span>{label}</span>{action}</div> : <span>{label}</span>}
                     <div class="student-goal-progress">
-                        <ProgressBar value={value} max={max} />
+                        <SegmentBar value={value} max={max} />
                         <strong>{shown}</strong>
                     </div>
                 </>

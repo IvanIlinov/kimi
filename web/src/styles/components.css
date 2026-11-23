@@ -52,24 +52,26 @@
 
 /* ---- Прогресс ---- */
 .seg {
+    display: flex;
     flex: 1;
+    gap: clamp(2px, 0.8vw, 5px);
+    align-items: stretch;
+    min-width: 0;
     height: 22px;
     min-height: 22px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: var(--surface-strong);
 }
 
 .seg i {
     display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--progress-color);
+    flex: 1;
+    max-width: 8px;
+    border-radius: 2px;
+    background: var(--surface-strong);
 }
 
-.seg i.good { --progress-color: var(--good); }
-.seg i.warn { --progress-color: var(--warn); }
-.seg i.bad { --progress-color: var(--bad); }
+.seg i.on.good { background: var(--good); }
+.seg i.on.warn { background: var(--warn); }
+.seg i.on.bad { background: var(--bad); }
 
 .metric {
     display: flex;
@@ -810,6 +812,7 @@
 }
 
 .tasks-week { margin-top: 12px; }
+.tasks-week .seg i { max-width: none; }
 @media (max-height: 460px) {
     .tasks-week { margin-top: 8px; }
 }

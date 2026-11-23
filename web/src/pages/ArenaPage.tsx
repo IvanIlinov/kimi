@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { Arena, ArenaMode } from '../api/types';
-import { Card, Empty, Label, Loading, Pill, Row, Screen, ProgressBar } from '../components/ui';
+import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
 import { NavIcon } from '../components/NavIcon';
 import { WeekResults } from './WeekPage';
@@ -152,7 +152,7 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                             <Kpi label="Программа" value={`${l.monthPct}%`} />
                             <Kpi label="Пробник" value={l.exam ?? 0} />
                             <Kpi label={plural(l.topics, ['задание', 'задания', 'заданий'])} value={l.topics} />
-                            <Kpi label={`${plural(l.tasks, ['задача', 'задачи', 'задач'])}${isMonth ? ' за месяц' : ''}`} value={l.tasks} />
+                            <Kpi label={plural(l.tasks, ['задача', 'задачи', 'задач'])} value={l.tasks} />
                         </div>
                     </>}
                 </Card>
@@ -164,7 +164,7 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
                     <Row
                         key={r.id}
                         name={r.name}
-                        bar={<ProgressBar value={r.pct} />}
+                        bar={<SegmentBar value={r.pct} segments={12} />}
                         right={
                             <span class="stats">
                                 {isMonth

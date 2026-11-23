@@ -4,7 +4,7 @@ import type { AdminHome, Arena, Lesson, LessonStatus } from '../api/types';
 import { useApi } from '../api/useApi';
 import { cap } from '../lib/format';
 import { SwipeCard } from '../components/SwipeCard';
-import { Card, Empty, Label, Loading, MetricTile, Screen, ProgressBar } from '../components/ui';
+import { Card, Empty, Label, Loading, MetricTile, Screen, SegmentBar } from '../components/ui';
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const STATUS_LABELS: Record<LessonStatus, string> = {
@@ -102,12 +102,12 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                             <div class="admin-attendance">
                                 <Label>Посещаемость за неделю</Label>
                                 <div class="between"><span>Запусков бота</span><b>{data.attendance.visits}</b></div>
-                                <ProgressBar value={data.attendance.visits} max={data.attendance.participants} tone="good" />
+                                <SegmentBar value={data.attendance.visits} max={data.attendance.participants} tone="good" />
                                 <div class="between"><span>Ученики, которые заходили</span>
                                     <b>
                                         {data.attendance.visitors} / {data.attendance.participants}</b>
                                 </div>
-                                <ProgressBar value={data.attendance.visitors} max={data.attendance.participants} />
+                                <SegmentBar value={data.attendance.visitors} max={data.attendance.participants} />
                             </div>
                         }
                     />

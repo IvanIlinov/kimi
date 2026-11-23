@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
-import { Card, Empty, Label, Loading, Row, ProgressBar } from '../components/ui';
+import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
 import { cap, plural, sgn } from '../lib/format';
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
@@ -39,7 +39,7 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                     <Row
                         key={r.id}
                         name={r.name}
-                        bar={<ProgressBar value={Math.min(r.goalPct, 100)} />}
+                        bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
                         right={
                             <span class="stats">
                                 <span>{sgn(r.tasks)}</span>
