@@ -54,7 +54,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
     const topicNumbers = studyOrder ? STUDY_ORDER : data.topics.map((_, index) => index + 1);
 
     return (
-        <Screen hideTitle title="Задания" className="layout-topics">
+        <Screen hideTitle title="Задания" className={readOnly ? "layout-topics topics-preview" : "layout-topics"}>
             <Card>
                 <Label>Задачи</Label>
                 <div class="amounts">
@@ -125,7 +125,7 @@ function ExamCard({ exam, max, busy, readOnly, onSave }: {
             <div class="exam">
                 <input
                     type="number"
-                    disabled={readOnly}
+                    readOnly={readOnly}
                     inputMode="numeric"
                     min={0}
                     max={max}

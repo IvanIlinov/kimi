@@ -509,6 +509,7 @@
 .page > .card { min-height: 0; }
 
 .layout-topics { gap: 9px; }
+.topics-preview button:disabled { opacity: 1; }
 .layout-topics .display,
 .layout-ranking .display,
 .layout-admin .display {
