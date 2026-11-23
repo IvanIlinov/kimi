@@ -49,6 +49,11 @@
     background: var(--surface);
     --screen-gutter: clamp(19px, 5.5vw, 27px);
     --cap-drop: clamp(12px, 2.5dvh, 22px);
+    --cap-finish:
+        linear-gradient(135deg, transparent 42%, #14110624 42% 54%, transparent 54% 63%,
+            #14110624 63% 65%, transparent 65%) right top / clamp(54px, 17vw, 90px) 100% no-repeat,
+        linear-gradient(#fff5, transparent) left top / 100% 4px no-repeat,
+        repeating-linear-gradient(105deg, #fff1 0 1px, transparent 1px 4px);
 }
 
 .arena-shell::after {
@@ -58,12 +63,12 @@
     pointer-events: none;
     z-index: 5;
     background:
-        linear-gradient(var(--accent), var(--accent)) left top / 7px 100% no-repeat,
-        linear-gradient(var(--accent), var(--accent)) right top / 7px 100% no-repeat,
-        linear-gradient(142deg, transparent 13%, #ffe260 14%, var(--accent) 79%, transparent 80%)
-            left top 42% / 17px 124px no-repeat,
-        linear-gradient(40deg, transparent 14%, #ffe260 15%, var(--accent) 81%, transparent 82%)
-            right bottom 17% / 17px 128px no-repeat;
+        linear-gradient(90deg, var(--accent) 65%, #e3b700 65%) left top / 7px 100% no-repeat,
+        linear-gradient(270deg, var(--accent) 65%, #e3b700 65%) right top / 7px 100% no-repeat,
+        linear-gradient(142deg, transparent 12%, #fff089 12% 14%, #ffe260 14%, var(--accent) 76%,
+            #dca900 76% 79%, transparent 79%) left top 42% / 18px 124px no-repeat,
+        linear-gradient(40deg, transparent 13%, #dca900 13% 16%, var(--accent) 16%, #ffe260 78%,
+            #fff089 78% 81%, transparent 81%) right bottom 17% / 18px 128px no-repeat;
 }
 
 .arena-shell > .page {
@@ -430,7 +435,7 @@
         calc(100% - 9px) 16px, 100% 25px, 100% 100%, 0 100%);
     --plate-face: var(--accent);
     --plate-edge: #ffe45a;
-    --plate-texture: none;
+    --plate-texture: var(--cap-finish);
 }
 
 .tabbar::before,
@@ -643,7 +648,7 @@
     color: var(--on-accent);
     --plate-face: var(--accent);
     --plate-edge: #ffe45a;
-    --plate-texture: none;
+    --plate-texture: var(--cap-finish);
 }
 
 .task-entry .label,
@@ -676,10 +681,9 @@
 }
 
 .topic-board .cell {
-    align-self: center;
-    width: 100%;
-    height: 100%;
-    max-height: 66px;
+    place-self: center;
+    width: min(100%, 44px);
+    height: clamp(34px, 5.8dvh, 44px);
 }
 .layout-topics > .card:last-child {
     z-index: 1;
@@ -718,7 +722,8 @@
 }
 
 .layout-topics .cell {
-    min-height: 45px;
+    min-height: 0;
+    justify-content: center;
     padding: 5px 0;
     gap: 3px;
     clip-path: polygon(0 9px, 9px 0, calc(100% - 6px) 0, 100% 6px,
@@ -883,7 +888,6 @@
 @media (max-height: 700px) {
     .page { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
     .display { font-size: 25px; }
-    .layout-topics .cell { min-height: 40px; }
     .layout-ranking .row { padding-top: 7px; padding-bottom: 7px; }
 }
 
@@ -961,7 +965,7 @@
     padding: 14px var(--screen-gutter);
     color: var(--on-accent);
     --plate-face: var(--accent);
-    --plate-texture: none;
+    --plate-texture: var(--cap-finish);
     --plate-edge: #ffe45a;
     --cap-inline-extra: 2px;
 }
@@ -1157,10 +1161,6 @@
 .student-goal-with-icon svg { width: 18px; height: 18px; color: var(--accent); }
 .student-goal-with-icon strong { text-align: right; font-variant-numeric: tabular-nums; }
 
-.layout-topics .cell {
-    min-height: clamp(29px, 7.1dvh, 45px);
-    justify-content: center;
-}
 .layout-topics .topic-order-toggle {
     grid-column: 4 / -1;
     grid-row: 5;
@@ -1455,7 +1455,7 @@
     .layout-topics > .task-entry + .card { padding-top: calc(12px + var(--cap-drop)); }
     .layout-topics .label { margin-bottom: 5px; }
     .layout-topics .grid { gap: 4px; }
-    .layout-topics .cell { min-height: 36px; padding-block: 3px; }
+    .layout-topics .cell { padding-block: 3px; }
     .layout-topics .topic-legend { margin-top: 6px; gap: 3px 7px; }
     .task-entry .tasks-week { margin-top: 7px; padding-block: 4px; }
     .task-entry .tasks-week .seg { height: 10px; min-height: 10px; }
