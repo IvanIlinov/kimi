@@ -5,20 +5,16 @@ import { NavIcon } from './NavIcon';
 import type { Standing } from '../api/types';
 
 // Сегментная шкала: вертикальные штрихи вместо сплошной полосы
-export function SegmentBar({ value, max = 100, segments = 18, tone }: {
+export function ProgressBar({ value, max = 100, tone }: {
     value: number;
     max?: number;
-    segments?: number;
     tone?: Tone;
 }) {
     const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
-    const filled = Math.round(ratio * segments);
     const color = tone ?? toneFor(ratio * 100);
     return (
         <div class="seg" role="img" aria-label={`${Math.round(ratio * 100)}%`}>
-            {Array.from({ length: segments }, (_, i) => (
-                <i key={i} class={i < filled ? `on ${color}` : ''} />
-            ))}
+            <i class={color} style={{ width: `${ratio * 100}%` }} />
         </div>
     );
 }

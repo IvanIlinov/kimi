@@ -51,12 +51,13 @@ export function registerRead(router: Router): void {
     });
 
     router.get('/api/week', ({ viewer }) => {
-        const week = new Map(getWeekStats().map((s) => [s.userId, s]));
-        return weekDto(loadRanked(), viewer.tgId, week, viewer.role !== 'student');
+        const options = { ownTasksOnly: true };
+        const week = new Map(getWeekStats(undefined, null, options).map((s) => [s.userId, s]));
+        return weekDto(loadRanked(options), viewer.tgId, week, viewer.role !== 'student');
     });
 
     router.get('/api/arena', ({ viewer, query }) => {
         const mode: ArenaMode = query.get('mode') === 'global' ? 'global' : 'month';
-        return arenaDto(loadRanked(), viewer.tgId, mode, new Date(), viewer.role !== 'student');
+        return arenaDto(loadRanked({ ownTasksOnly: true }), viewer.tgId, mode, new Date(), viewer.role !== 'student');
     });
 }

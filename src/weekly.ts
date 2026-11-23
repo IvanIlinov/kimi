@@ -21,16 +21,18 @@ const setMeta = (key: string, value: string) =>
 
 // Итоги недели, которая закончилась в момент endMs (понедельник 00:00 по Москве)
 function buildRows(endMs: number): SummaryRow[] {
-    const names = new Map(getPersons().map((p) => [p.id, p.name]));
-    return getWeekStats(endMs - 1)
-        .filter((s) => s.tasks > 0)
-        .sort((a, b) => b.tasks - a.tasks || b.topics - a.topics)
-        .map((s) => ({ name: names.get(s.userId) ?? '—', tasks: s.tasks, topics: s.topics }));
+    const stats = new Map(getWeekStats(endMs - 1, endMs).map((s) => [s.userId, s]));
+    return getPersons()
+        .map(({ id, name }) => {
+            const stat = stats.get(id);
+            return { name, tasks: stat?.tasks ?? 0, topics: stat?.topics ?? 0 };
+        })
+        .sort((a, b) => b.tasks - a.tasks || b.topics - a.topics);
 }
 
 // Текстовый вариант, если Rich-сообщение не ушло
 function buildText(rows: SummaryRow[]): string {
-    const lines = rows.map((x, i) => `${i + 1}. ${cap(x.name)} ${sgn(x.tasks)} задач`);
+    const lines = rows.map((x, i) => `${i + 1}. ${cap(x.name)} ${sgn(x.tasks)} задач, ${sgn(x.topics)} заданий`);
     return ['Итоги недели', '', ...(lines.length ? lines : ['На этой неделе задач не было.'])].join('\n');
 }
 

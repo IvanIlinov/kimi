@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { useApi } from '../api/useApi';
 import type { SelfData } from '../api/types';
 import { NavIcon } from '../components/NavIcon';
-import { Card, Empty, Label, Loading, Screen, SegmentBar } from '../components/ui';
+import { Card, Empty, Label, Loading, Screen, ProgressBar } from '../components/ui';
 import { haptic } from '../lib/telegram';
 
 const STATUS_LABEL = {
@@ -72,7 +72,7 @@ export function TopicsPage({ readOnly = false }: { readOnly?: boolean }) {
                 {data.limits.week > 0 && (
                     <div class="tasks-week" role="group"
                         aria-label={`Решено за неделю: ${data.tasksWeek} из ${data.limits.week}`}>
-                        <SegmentBar value={data.tasksWeek} max={data.limits.week} />
+                        <ProgressBar value={data.tasksWeek} max={data.limits.week} />
                     </div>
                 )}
                 {note && <p class="warn">⚠️ {note}</p>}

@@ -1,8 +1,8 @@
 import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
 import type { Week } from '../api/types';
-import { Card, Empty, Label, Loading, Row, SegmentBar } from '../components/ui';
-import { cap, sgn } from '../lib/format';
+import { Card, Empty, Label, Loading, Row, ProgressBar } from '../components/ui';
+import { cap, plural, sgn } from '../lib/format';
 
 export function WeekResults({ onOpen, addAction, rowActions }: {
     onOpen: (id: number) => void;
@@ -22,14 +22,14 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                         <Label>{data.leader ? '👑 Лидер недели' : 'Лидер недели пока не определён'}</Label>
                         {addAction}
                     </div>
-                    {data.leader && <div class="between">
-                        <strong>{cap(data.leader.name)}</strong>
-                        <span class="stats">
+                    {data.leader && <>
+                        <strong class="leader-name">{cap(data.leader.name)}</strong>
+                        <span class="stats week-leader-stats">
                             <b>{sgn(data.leader.pct)}%</b>
-                            <b>{sgn(data.leader.tasks)}</b>
-                            <b>{sgn(data.leader.topics)}</b>
+                            <b>{sgn(data.leader.tasks)} {plural(data.leader.tasks, ['задача', 'задачи', 'задач'])}</b>
+                            <b>{sgn(data.leader.topics)} {plural(data.leader.topics, ['задание', 'задания', 'заданий'])}</b>
                         </span>
-                    </div>}
+                    </>}
                 </Card>
             )}
 
@@ -39,7 +39,7 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
                     <Row
                         key={r.id}
                         name={r.name}
-                        bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
+                        bar={<ProgressBar value={Math.min(r.goalPct, 100)} />}
                         right={
                             <span class="stats">
                                 <span>{sgn(r.tasks)}</span>

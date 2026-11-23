@@ -15,7 +15,7 @@ export interface Viewer {
     personId: number | null; // id участника в базе, если он в рейтинге
 }
 
-export const loadRanked = (): Ranked[] => rank(getPersons());
+export const loadRanked = (options?: Parameters<typeof getPersons>[0]): Ranked[] => rank(getPersons(options));
 
 // Роль определяет только сервер, по Telegram id из проверенной подписи
 export function resolveViewer(user: TgUser, ranked: Ranked[] = loadRanked()): Viewer {

@@ -1,7 +1,7 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Viewer } from './context.ts';
-import type { ArenaDto, ProfileDto } from './dto.ts';
+import type { ArenaDto, ProfileDto, WeekDto } from './dto.ts';
 
 process.env.DB_PATH = ':memory:';
 process.env.BOT_TOKEN = 'test-token';
@@ -96,7 +96,7 @@ test('сезонные и годовые итоги закрываются по 
     const winterEnd = Date.parse('2027-02-28T21:00:00Z');
     const yearEnd = Date.parse('2027-05-31T21:00:00Z');
     const fallStart = Date.parse('2026-08-31T21:00:00Z');
-    const task = db.prepare('INSERT INTO task_log (user_id, amount, created_at) VALUES (3, ?, ?)');
+    const task = db.prepare('INSERT INTO task_log (user_id, amount, created_at, actor_tg_id) VALUES (3, ?, ?, 700003)');
     task.run(50, fallStart - 1);
     task.run(50, fallStart);
     task.run(50, fallStart);
@@ -152,4 +152,39 @@ test('сезонные и годовые итоги закрываются по 
     assert.deepEqual(open(), { open: null });
     t.mock.timers.tick(7 * 86400_000);
     assert.deepEqual(open(), { open: 'week' });
+});
+
+test('рейтинг считает задачи только по подтверждённым записям ученика', (t) => {
+    const router = new Router();
+    registerRead(router);
+    const now = Date.parse('2026-11-24T12:00:00Z');
+    t.mock.timers.enable({ apis: ['Date'], now });
+    db.exec("INSERT INTO users (id, tg_id, name) VALUES (4, 700004, 'Андрей')");
+    const task = db.prepare(`
+        INSERT INTO task_log (user_id, amount, created_at, source, actor_tg_id, cancelled)
+        VALUES (4, ?, ?, ?, ?, ?)
+    `);
+    task.run(180, now, 'bot', null, 0);
+    task.run(9, now, 'bot', null, 0);
+    task.run(5, now, 'admin', 700004, 0);
+    task.run(4, now, 'bot', 900001, 0);
+    task.run(1, now, 'group', 700004, 1);
+    task.run(3, now, 'group', 700004, 0);
+    task.run(2, now, 'bot', 700004, 0);
+    task.run(-1, now, 'bot', 700004, 0);
+
+    const viewer: Viewer = { tgId: 700004, personId: 4, firstName: 'Андрей', role: 'student' };
+    function get(pathname: string, query = '') {
+        const route = router.match('GET', pathname);
+        assert.ok(route);
+        return route.handler({ viewer, params: route.params, query: new URLSearchParams(query), body: {} });
+    }
+
+    for (const mode of ['global', 'month']) {
+        const result = get('/api/arena', `mode=${mode}`) as ArenaDto;
+        assert.equal(result.rows.find((row) => row.id === 4)?.tasks, 4);
+    }
+    const week = get('/api/week') as WeekDto;
+    assert.equal(week.rows.find((row) => row.id === 4)?.tasks, 4);
+    assert.equal((get('/api/profile/me') as ProfileDto).totals.tasks, 202);
 });

@@ -12,7 +12,7 @@ interface UserRow {
     month_exam: number | null;
 }
 
-export function getPersons(): Person[] {
+export function getPersons({ ownTasksOnly = false } = {}): Person[] {
     const users = db
         .prepare(`
             SELECT id, tg_id, name, exam, comment,
@@ -31,7 +31,7 @@ export function getPersons(): Person[] {
         .prepare('SELECT user_id, topic_no, status FROM topic_status')
         .all() as unknown as { user_id: number; topic_no: number; status: string }[];
 
-    // Стартовые суммы в старых данных превышают лимит записи и входят только в накопительные показатели.
+    // В рейтинге учитываются только записи, у которых автор совпадает с участником.
     // Текущая неделя начинается в понедельник в 00:00 по Москве.
     const now = Date.now();
     const totals = db
@@ -59,9 +59,15 @@ export function getPersons(): Person[] {
                    END) AS week
             FROM task_log
             WHERE cancelled = 0
+              AND (NOT ? OR (
+                  source IN ('bot', 'group')
+                  AND ABS(amount) <= ?
+                  AND actor_tg_id = (SELECT tg_id FROM users WHERE id = task_log.user_id)
+              ))
             GROUP BY user_id
         `)
-        .all(monthStartMs(now), now, MAX_TASKS_PER_ENTRY, weekStartMs(now), MAX_TASKS_PER_ENTRY) as unknown as {
+        .all(monthStartMs(now), now, MAX_TASKS_PER_ENTRY, weekStartMs(now), MAX_TASKS_PER_ENTRY,
+            Number(ownTasksOnly), MAX_TASKS_PER_ENTRY) as unknown as {
             user_id: number; total: number; week: number; month_total: number; tasks_this_month: number;
         }[];
 
@@ -82,7 +88,7 @@ export function getPersons(): Person[] {
             done: pick('done'),
             reinforced,
             learning: pick('learning'),
-            tasksTotal: Number(t?.total ?? 0),
+            tasksTotal: ownTasksOnly ? Math.max(0, Number(t?.total ?? 0)) : Number(t?.total ?? 0),
             tasksWeek: Number(t?.week ?? 0),
             tasksThisMonth: Math.max(0, Number(t?.tasks_this_month ?? 0)),
             monthResults: {
@@ -115,7 +121,7 @@ const creditedTopicFromStatus = `CASE WHEN EXISTS (
     LIMIT 1
 ) ELSE t.from_status END`;
 
-export function getWeekStats(now: number = Date.now(), until: number | null = null): WeekStat[] {
+export function getWeekStats(now: number = Date.now(), until: number | null = null, { ownTasksOnly = false } = {}): WeekStat[] {
     const from = weekStartMs(now);
     const stats = new Map<number, WeekStat>();
 
@@ -138,10 +144,10 @@ export function getWeekStats(now: number = Date.now(), until: number | null = nu
               AND (? IS NULL OR t.created_at < ?)
               AND t.source <> 'admin'
               AND ABS(t.amount) <= ?
-              AND (t.actor_tg_id IS NULL OR t.actor_tg_id = u.tg_id)
+              AND (t.actor_tg_id = u.tg_id OR (NOT ? AND t.actor_tg_id IS NULL))
             GROUP BY t.user_id
         `)
-        .all(from, until, until, MAX_TASKS_PER_ENTRY) as unknown as { user_id: number; total: number; n: number }[];
+        .all(from, until, until, MAX_TASKS_PER_ENTRY, Number(ownTasksOnly)) as unknown as { user_id: number; total: number; n: number }[];
 
     for (const r of taskRows) {
         const s = get(r.user_id);

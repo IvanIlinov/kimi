@@ -52,35 +52,24 @@
 
 /* ---- Прогресс ---- */
 .seg {
-    display: flex;
     flex: 1;
-    gap: clamp(3px, 1vw, 5px);
-    align-items: stretch;
     height: 22px;
     min-height: 22px;
-}
-
-.seg i {
-    flex: 1;
-    display: block;
-    min-width: 2px;
-    max-width: 8px;
-    height: 100%;
-    margin: 0;
-    align-self: stretch;
-    border-radius: 1px;
-    transform: skewX(-16deg);
+    overflow: hidden;
+    border-radius: 999px;
     background: var(--surface-strong);
 }
 
-.seg i.on {
-    background: var(--segment-color);
-    box-shadow: 0 0 3px color-mix(in srgb, var(--segment-color) 22%, transparent);
+.seg i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--progress-color);
 }
 
-.seg i.on.good { --segment-color: var(--good); }
-.seg i.on.warn { --segment-color: var(--warn); }
-.seg i.on.bad { --segment-color: var(--bad); }
+.seg i.good { --progress-color: var(--good); }
+.seg i.warn { --progress-color: var(--warn); }
+.seg i.bad { --progress-color: var(--bad); }
 
 .metric {
     display: flex;
@@ -551,6 +540,8 @@
 .layout-ranking .row { flex: 0 0 auto; padding: 9px 8px; }
 .layout-ranking .leader { flex: 0 0 auto; padding: 12px; }
 .layout-ranking .leader-name { margin-bottom: 8px; }
+.week-leader-stats { flex-wrap: wrap; }
+.week-leader-stats b { white-space: nowrap; }
 .layout-ranking .kpis { gap: 6px; }
 .layout-ranking .kpi b { font-size: 15px; }
 .layout-ranking .seg { align-self: center; height: 12px; min-height: 12px; }
@@ -742,13 +733,6 @@
 .student-goal strong { white-space: nowrap; }
 .student-home .student-goal .seg,
 .tasks-week .seg { height: 12px; min-height: 12px; }
-.student-home .student-goal .seg i.on,
-.tasks-week .seg i.on {
-    box-shadow:
-        0 2px 2px rgb(0 0 0 / var(--segment-shadow-opacity, 0.45)),
-        0 3px 5px color-mix(in srgb, var(--segment-color) 32%, transparent);
-}
-.student-home .student-goal .seg { --segment-shadow-opacity: 0.34; }
 .student-goal-progress {
     display: flex;
     align-items: center;
@@ -826,7 +810,6 @@
 }
 
 .tasks-week { margin-top: 12px; }
-.tasks-week .seg i { max-width: none; }
 @media (max-height: 460px) {
     .tasks-week { margin-top: 8px; }
 }
@@ -964,10 +947,14 @@
 .arena-add svg { width: 21px; height: 21px; }
 
 .cell:is(.done, .learning, .reinforced) {
-    border-color: color-mix(in srgb, var(--tile-accent) 34%, var(--border));
-    box-shadow:
-        inset 0 -2px var(--tile-accent),
-        0 0 3px color-mix(in srgb, var(--tile-accent) 15%, transparent);
+    background: color-mix(in srgb, var(--tile-accent) 38%, var(--surface-strong));
+    border-color: color-mix(in srgb, var(--tile-accent) 55%, var(--border));
+    color: var(--text);
+}
+
+.layout-topics .amounts .chip {
+    background: color-mix(in srgb, var(--blue) 24%, var(--surface-strong));
+    border-color: color-mix(in srgb, var(--blue) 40%, var(--border));
 }
 .history-row b[data-accent],
 .pill[data-accent] {
@@ -978,7 +965,7 @@
 }
 
 .swipe-card-with-leading .swipe-card-track { position: relative; }
-.swipe-card-with-leading .swipe-card-page:first-child { align-content: stretch; }
+.swipe-card-with-leading .swipe-card-page:last-child { align-content: stretch; }
 .swipe-card-recaps { display: grid; }
 .swipe-card-recaps > div {
     display: grid;
