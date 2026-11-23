@@ -30,24 +30,26 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
 
     return (
         <Screen hideTitle title={title} className="student-home">
-            <Card class="student-summary">
-                <div class="between">
+            <div class="student-overview">
+                <Card class="student-identity">
                     <strong class="student-name">{cap(name)}</strong>
                     <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
-                </div>
-                <div class="student-progress">
-                    <div class="student-ring" role="progressbar" aria-label="Общий прогресс" aria-valuenow={pct}
+                </Card>
+                <Card class="student-progress">
+                    <strong id="student-progress-label">Общий прогресс</strong>
+                    <div class="student-ring" role="progressbar" aria-labelledby="student-progress-label" aria-valuenow={pct}
                         style={{ '--progress': `${pct}%` }}>
                         <strong>{pct}%</strong>
                     </div>
-                    <span>Общий прогресс</span>
-                </div>
-                <div class="metric-tiles">
-                    <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
-                    <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
-                    <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
-                </div>
-            </Card>
+                </Card>
+                <Card class="student-totals">
+                    <div class="metric-tiles">
+                        <MetricTile icon="clipboard-list" label="Балл пробника" value={totals.exam ?? 0} />
+                        <MetricTile icon="calendar-days" label="Решено задач" value={totals.tasks} />
+                        <MetricTile icon="target" label="Изучено заданий" value={totals.topics} />
+                    </div>
+                </Card>
+            </div>
             <SwipeCard
                 label={recaps ? "Ближайшие цели, прогресс и итоги" : "Прогресс и ближайшие цели"}
                 leading={recaps}

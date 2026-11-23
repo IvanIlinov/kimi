@@ -718,38 +718,83 @@
 }
 .swipe-card-dots .active { background: var(--accent); }
 
-.student-home { gap: clamp(6px, 1.6dvh, 12px); }
-.student-home > .card { padding: clamp(8px, 2dvh, 14px); }
-.student-home > .student-summary { flex: 0 0 auto; }
-.student-home > .swipe-card {
-    flex: 1 0 auto;
-    grid-template-rows: minmax(min-content, 1fr) auto;
+.student-home {
+    gap: clamp(8px, 1.5dvh, 12px);
+    overflow-y: auto;
 }
-.student-summary { display: grid; gap: clamp(6px, 1.7dvh, 14px); }
-.student-name {
-    min-width: 0;
-    padding: 4px 9px;
-    border-radius: var(--radius-sm);
+
+.student-home > .swipe-card {
+    flex: 0 0 auto;
+    min-height: clamp(200px, 34dvh, 290px);
+    grid-template-rows: minmax(min-content, 1fr) auto;
+    padding: clamp(8px, 2dvh, 14px);
+}
+
+.student-overview {
+    display: grid;
+    flex: 0 0 auto;
+    isolation: isolate;
+}
+
+.student-identity {
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px clamp(12px, 4vw, 18px);
+    border-color: transparent;
     background: var(--accent);
     color: var(--on-accent);
+}
+
+.student-name {
+    min-width: 0;
+    font: 800 clamp(24px, 7vw, 32px)/1.05 var(--font-display);
     overflow-wrap: anywhere;
 }
 
-.student-summary .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--accent);
-    background: var(--accent-soft);
+.student-identity .pill {
+    gap: 5px;
+    flex: none;
+    padding: 5px 8px;
+    border-color: #14110633;
+    background: #14110612;
 }
-.student-summary svg { width: 16px; height: 16px; }
-.student-progress { display: grid; justify-items: center; gap: 8px; }
+
+.student-identity .pill svg { width: 15px; height: 15px; }
+
+.student-progress {
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    margin: -8px 5px 0;
+    padding: 20px clamp(12px, 4vw, 18px) 12px;
+}
+
+.student-progress > strong {
+    max-width: 9ch;
+    font: 800 clamp(23px, 6.3vw, 34px)/1 var(--font-display);
+}
+
+.student-totals {
+    margin: -6px 10px 0;
+    padding: 13px 3px 5px;
+    background: var(--surface-strong);
+}
+
+.student-totals .metric-tiles { gap: 0; }
+.student-totals .metric-tile { background: transparent; border-radius: 0; }
+.student-totals .metric-tile + .metric-tile { border-inline-start: 1px solid var(--border); }
+
 .student-ring {
     position: relative;
     isolation: isolate;
     display: grid;
     place-items: center;
-    width: clamp(68px, 19dvh, 132px);
+    width: clamp(70px, 13dvh, 108px);
     aspect-ratio: 1;
     border-radius: 50%;
     --ring-fill: conic-gradient(var(--accent) var(--progress), transparent 0);
@@ -778,7 +823,7 @@
 }
 .student-ring strong {
     color: var(--accent);
-    font: 800 clamp(28px, 6dvh, 48px)/1 var(--font-display);
+    font: 800 clamp(26px, 5dvh, 40px)/1 var(--font-display);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.06em;
 }
@@ -797,10 +842,6 @@
 .metric-tile strong { font: 750 23px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
 .metric-tile span { font-size: 12px; }
 .student-goal small { font-size: 12px; color: var(--muted); }
-.student-progress > span {
-    font-family: var(--font-display);
-    font-weight: 650;
-}
 .metric-tile > span {
     font-weight: 500;
     color: var(--muted);
@@ -832,11 +873,16 @@
 .student-goal-progress strong { transform: translateY(-2px); }
 
 @media (max-height: 620px) {
-    .student-progress { grid-template-columns: auto 1fr; align-items: center; justify-items: start; }
-    .student-ring { width: clamp(56px, 14dvh, 84px); }
+    .student-identity { padding-block: 9px; }
+    .student-progress { padding-block: 15px 9px; }
+    .student-ring { width: clamp(56px, 12dvh, 72px); }
     .student-ring strong { font-size: 24px; }
-    .metric-tile { grid-template-columns: auto 1fr; align-items: center; padding: 3px; }
-    .metric-tile span { grid-column: 1 / -1; }
+    .student-totals .metric-tile {
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        padding: 4px;
+    }
+    .student-totals .metric-tile span { grid-column: 1 / -1; }
     .student-goal { gap: 2px; }
 }
 
