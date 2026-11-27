@@ -33,7 +33,6 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
             <div class="student-frame">
                 <Card class="student-identity">
                     <div class="student-identity-copy">
-                        <span>ЕГЭ · Информатика</span>
                         <strong class="student-name">{cap(name)}</strong>
                         <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
                     </div>

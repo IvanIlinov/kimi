@@ -657,13 +657,7 @@
     flex: 1.05 0 auto;
     flex-direction: column;
     justify-content: space-between;
-    margin-inline: 4px 0;
-    --topic-board-width: min(100%, 318px);
-}
-
-.topic-board > :is(.label, .grid, .topic-legend) {
-    width: var(--topic-board-width);
-    margin-inline: auto;
+    padding-inline: clamp(8px, 2.5vw, 12px);
 }
 
 .topic-board > .grid {
@@ -687,14 +681,14 @@
 .layout-topics .grid { gap: 6px; }
 .topic-legend {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 4px 9px;
+    gap: 4px;
+    white-space: nowrap;
     margin: 9px 0 0;
     padding: 0;
     list-style: none;
     color: var(--muted);
-    font-size: clamp(10px, 2.8vw, 11px);
+    font-size: clamp(9px, 2.65vw, 11px);
 }
 
 .topic-legend li {
@@ -705,8 +699,8 @@
 
 .topic-legend-dot {
     flex: 0 0 auto;
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border: 1px solid var(--tile-accent, var(--muted));
     transform: rotate(45deg);
     background: var(--tile-accent, transparent);
@@ -972,12 +966,6 @@
     min-width: 0;
 }
 
-.student-identity-copy > span:first-child {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
 .student-name {
     min-width: 0;
     font: 800 clamp(25px, 7.9vw, 36px)/1.05 var(--font-display);
@@ -1007,6 +995,9 @@
 
 .student-totals .metric-tiles { gap: 5px; }
 .student-totals .metric-tile {
+    justify-items: start;
+    text-align: start;
+    padding-inline: clamp(8px, 3vw, 15px);
     clip-path: var(--plate-shape);
     background: linear-gradient(145deg, #424d56, #20262b 55%, #15191c);
 }
@@ -1027,7 +1018,7 @@
     text-align: center;
     flex: none;
     color: var(--text);
-    width: clamp(76px, 14.5dvh, 124px);
+    width: clamp(89px, min(32vw, 18dvh), 146px);
     aspect-ratio: 1;
     border-radius: 50%;
     --ring-fill: conic-gradient(#72ff22 var(--progress), transparent 0);
@@ -1057,7 +1048,7 @@
 }
 .student-ring strong {
     color: var(--accent);
-    font: 800 clamp(26px, 5dvh, 40px)/1 var(--font-display);
+    font: 800 clamp(31px, min(11vw, 6dvh), 49px)/1 var(--font-display);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.06em;
 }
@@ -1109,9 +1100,7 @@
     .student-frame { padding-block: 0 6px; }
     .student-identity { padding-block: 8px; }
     .student-frame > .swipe-card { padding-block: 10px 8px; gap: 3px; }
-    .student-ring { width: clamp(55px, 10.5dvh, 66px); }
-    .student-ring strong { font-size: 24px; }
-    .student-totals .metric-tile { padding: 4px; }
+    .student-totals .metric-tile { padding-block: 6px; }
     .student-totals .metric-tile span { font-size: 10px; line-height: 1.2; }
     .student-frame .swipe-card-page { gap: 4px; }
     .student-frame .student-goal { gap: 2px; font-size: 12px; }
@@ -1445,10 +1434,12 @@
     .layout-topics > .card + .card { padding-top: 18px; }
     .layout-topics > .task-entry + .card { padding-top: calc(12px + var(--cap-drop)); }
     .layout-topics .label { margin-bottom: 5px; }
-    .layout-topics > .topic-board { --topic-board-width: min(100%, calc(6 * clamp(35px, 6.2dvh, 42px) + 20px)); }
     .layout-topics .grid { gap: 4px; }
-    .layout-topics .cell { padding-block: 3px; }
-    .layout-topics .topic-legend { margin-top: 6px; gap: 3px 7px; }
+    .layout-topics .cell {
+        max-height: clamp(32px, 6.3dvh, 48px);
+        padding-block: 3px;
+    }
+    .layout-topics .topic-legend { margin-top: 6px; }
     .task-entry .tasks-week { margin-top: 7px; padding-block: 4px; }
     .task-entry .tasks-week .seg { height: 10px; min-height: 10px; }
 }
