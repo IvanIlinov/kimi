@@ -32,14 +32,15 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
         <Screen hideTitle title={title} className="student-home">
             <div class="student-frame">
                 <Card class="student-identity">
-                    <strong class="student-name">{cap(name)}</strong>
-                    <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
-                </Card>
-                <Card class="student-progress">
-                    <strong id="student-progress-label">Общий прогресс</strong>
-                    <div class="student-ring" role="progressbar" aria-labelledby="student-progress-label" aria-valuenow={pct}
+                    <div class="student-identity-copy">
+                        <span>ЕГЭ · Информатика</span>
+                        <strong class="student-name">{cap(name)}</strong>
+                        <span class="pill"><NavIcon name="trophy" /> {place}-е место</span>
+                    </div>
+                    <div class="student-ring" role="progressbar" aria-label="Общий прогресс" aria-valuenow={pct}
                         style={{ '--progress': `${pct}%` }}>
                         <strong>{pct}%</strong>
+                        <small>Прогресс</small>
                     </div>
                 </Card>
                 <Card class="student-totals">

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121619">
+<title>Арена · Мобильные демо</title>
+<link rel="stylesheet" href="./arena.css">
+<script defer src="./arena.js"></script>
+</head>
+<body>
+<main class="demo">
+    <nav class="variants" aria-label="Вариант оформления">
+        <a href="#deck" aria-current="true">Плашки</a>
+        <a href="#rail">Корешок</a>
+    </nav>
+    <article class="arena" data-layout="deck">
+        <header class="masthead">
+            <strong>АРЕНА</strong>
+            <span>ЕГЭ · ИНФОРМАТИКА</span>
+        </header>
+        <div class="viewport">
+            <section id="home" class="screen" aria-label="Главная">
+                <div class="hero">
+                    <div>
+                        <p class="eyebrow">Профиль ученика</p>
+                        <h1>Мира<br>Волкова</h1>
+                        <p class="position">4-е место в рейтинге</p>
+                    </div>
+                    <div class="ring" role="img" aria-label="Общий прогресс 64 процента">
+                        <strong>64<small>%</small></strong>
+                        <span>Прогресс</span>
+                    </div>
+                </div>
+                <dl class="metrics">
+                    <div><dd>72</dd><dt>Пробник</dt></div>
+                    <div><dd>14<span>/27</span></dd><dt>Закреплено</dt></div>
+                    <div><dd>183</dd><dt>Решено</dt></div>
+                </dl>
+                <div class="panel goals">
+                    <div class="section-head">
+                        <h2>Цели</h2>
+                        <div class="segmented" aria-label="Период целей">
+                            <button data-period="week" aria-pressed="true">Неделя</button>
+                            <button data-period="month" aria-pressed="false">Месяц</button>
+                        </div>
+                    </div>
+                    <div class="goal-label"><span>Решено задач</span><strong id="goal-count">18 / 25</strong></div>
+                    <progress id="goal-meter" value="18" max="25" aria-label="Решено задач за неделю"></progress>
+                    <p id="goal-remaining">Ещё 7 задач до цели недели</p>
+                </div>
+            </section>
+            <section id="ranking" class="screen" aria-label="Рейтинг" hidden>
+                <div class="panel">
+                    <p class="eyebrow">За неделю</p>
+                    <h1>Рейтинг</h1>
+                    <ol class="ranking">
+                        <li><span>Алина Соколова</span><strong>32</strong></li>
+                        <li><span>Лев Орлов</span><strong>28</strong></li>
+                        <li><span>Соня Лебедева</span><strong>23</strong></li>
+                        <li aria-current="true"><span>Мира Волкова</span><strong>18</strong></li>
+                        <li><span>Макс Ким</span><strong>12</strong></li>
+                    </ol>
+                </div>
+            </section>
+            <section id="topics" class="screen" aria-label="Задания" hidden>
+                <div class="panel">
+                    <h1>Задания</h1>
+                    <div id="topic-grid" class="topic-grid"></div>
+                    <p class="topic-hint">Нажми на плитку, чтобы сменить статус.</p>
+                </div>
+            </section>
+        </div>
+        <nav class="dock" aria-label="Разделы Арены">
+            <button data-screen="ranking" aria-controls="ranking"><span aria-hidden="true">≡</span>Рейтинг</button>
+            <button data-screen="home" aria-controls="home" aria-current="page"><span aria-hidden="true">⌂</span>Главная</button>
+            <button data-screen="topics" aria-controls="topics"><span aria-hidden="true">⊞</span>Задания</button>
+        </nav>
+    </article>
+</main>
+</body>
+</html>
