@@ -13,7 +13,7 @@ const STATUS_LABELS: Record<LessonStatus, string> = {
     paid: 'Оплачено',
 };
 
-const STATUS_ACCENTS = { planned: 'red', held: 'green', paid: 'blue' } as const;
+const STATUS_ACCENTS = { planned: 'red', held: 'yellow', paid: 'green' } as const;
 
 const rubles = new Intl.NumberFormat('ru-RU', {
     style: 'currency',
