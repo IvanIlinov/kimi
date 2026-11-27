@@ -22,6 +22,10 @@ const rubles = new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: 2,
 });
 
+const lessonDate = new Intl.DateTimeFormat('ru-RU', {
+    day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Moscow',
+});
+
 const monthName = new Intl.DateTimeFormat('ru-RU', { month: 'long', timeZone: 'Europe/Moscow' });
 
 export function AdminHomePage({ onPreview, onGuestPreview }: {
@@ -59,6 +63,21 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
         try {
             const { status } = await api<{ status: LessonStatus }>(`/api/admin/lessons/${id}/cycle`, { method: 'POST' });
             setData({ ...data, lessons: data.lessons.map((item) => item.id === id ? { ...item, status } : item) });
+            reload();
+        } catch (e) {
+            setCycleError((e as Error).message);
+        } finally {
+            setCycling(false);
+        }
+    }
+
+    async function payDebt(item: Lesson) {
+        if (!data || cycling || !window.confirm(`Отметить занятие «${cap(item.name)}» как оплаченное?`)) return;
+        setCycling(true);
+        setCycleError('');
+        try {
+            await api(`/api/admin/lessons/${item.id}/pay-debt`, { method: 'POST' });
+            setData({ ...data, debts: data.debts?.filter(debt => debt.id !== item.id) });
             reload();
         } catch (e) {
             setCycleError((e as Error).message);
@@ -139,6 +158,26 @@ export function AdminHomePage({ onPreview, onGuestPreview }: {
                                     );
                                 })}
                             </div>
+                            {!!data.debts?.length && (
+                                <section class="admin-debts" aria-labelledby="admin-debts-title">
+                                    <h3 id="admin-debts-title">Долги за прошлые недели</h3>
+                                    <div class="admin-debt-list">
+                                        {data.debts.map(item => {
+                                            const date = new Date(item.weekStart + item.weekday * 86_400_000);
+                                            const summary = `${lessonDate.format(date)} · ${item.time} · ${rubles.format(item.priceKopecks / 100)}`;
+                                            return (
+                                                <button type="button" class="admin-lesson" data-accent="yellow" key={item.id}
+                                                    disabled={cycling} onClick={() => void payDebt(item)}
+                                                    aria-label={`Отметить оплату: ${cap(item.name)}, ${summary}`}>
+                                                    <b>{cap(item.name)}</b>
+                                                    <time dateTime={date.toISOString()}>{summary}</time>
+                                                    <span>Отметить оплату</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+                            )}
                         </div>
                         {editing && <button class="chip primary" onClick={() => setLesson({})}>Добавить занятие</button>}
                     </Card>

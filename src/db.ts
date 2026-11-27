@@ -143,6 +143,10 @@ CREATE TABLE IF NOT EXISTS lessons (
   status     TEXT NOT NULL CHECK (status IN ('planned', 'held', 'paid'))
 );
 CREATE INDEX IF NOT EXISTS lessons_week ON lessons(week_start, weekday, time);
+
+CREATE TABLE IF NOT EXISTS schedule_weeks (
+  week_start INTEGER PRIMARY KEY
+);
 `);
 
 addColumnIfMissing('lessons', 'price_kopecks', 'INTEGER NOT NULL DEFAULT 0 CHECK (price_kopecks >= 0)');

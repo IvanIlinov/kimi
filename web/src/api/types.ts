@@ -122,4 +122,5 @@ export interface AdminHome {
     month: { start: number; earnedKopecks: number; plannedKopecks?: number };
     attendance: { visits: number; visitors: number; participants: number };
     lessons: Lesson[];
+    debts?: (Lesson & { weekStart: number })[];
 }

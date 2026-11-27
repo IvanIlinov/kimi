@@ -2,6 +2,7 @@
 import { addUser, renameUser, removeUser, restoreUser } from '../../admin.ts';
 import { STAGING_PREVIEW_ENABLED } from '../../config.ts';
 import { db } from '../../db.ts';
+import { carryScheduleForward } from '../../schedule.ts';
 import { normalizeName } from '../../names.ts';
 import { setTasksTotal, setExam, setTopicStatus } from '../../write.ts';
 import { syncTag } from '../../tags.ts';
@@ -92,6 +93,7 @@ export function registerAdmin(router: Router): void {
         requireAdmin(viewer);
         const now = Date.now();
         const weekStart = weekStartMs(now);
+        carryScheduleForward(weekStart);
         const attendance = db.prepare(`
             SELECT COUNT(v.message_id) AS visits,
                    COUNT(DISTINCT v.user_id) AS visitors,
@@ -105,6 +107,11 @@ export function registerAdmin(router: Router): void {
             SELECT id, weekday, time, name, status, price_kopecks AS priceKopecks
             FROM lessons WHERE week_start = ?
             ORDER BY weekday, time, id
+        `).all(weekStart);
+        const debts = db.prepare(`
+            SELECT id, weekday, time, name, status, price_kopecks AS priceKopecks, week_start AS weekStart
+            FROM lessons WHERE week_start < ? AND status = 'held'
+            ORDER BY week_start, weekday, time, id
         `).all(weekStart);
         const moscowOffset = 3 * 3_600_000;
         const moscow = new Date(now + moscowOffset);
@@ -124,7 +131,7 @@ export function registerAdmin(router: Router): void {
             plannedKopecks: number;
         };
         return {
-            weekStart, attendance, lessons,
+            weekStart, attendance, lessons, debts,
             month: { start: monthStart, ...earnings },
             previewEnabled: STAGING_PREVIEW_ENABLED,
         };
@@ -148,6 +155,7 @@ export function registerAdmin(router: Router): void {
             (typeof priceKopecks !== 'number' || !Number.isSafeInteger(priceKopecks) || priceKopecks < 0)) {
             throw new HttpError(400, 'Стоимость должна быть неотрицательной суммой с точностью до копейки');
         }
+        carryScheduleForward(weekStart);
         if (id === undefined) {
             db.prepare(`
                 INSERT INTO lessons (week_start, weekday, time, name, status, price_kopecks) VALUES (?, ?, ?, ?, ?, ?)
@@ -174,6 +182,16 @@ export function registerAdmin(router: Router): void {
         `).get(id, weekStartMs(Date.now()));
         if (!lesson) throw new HttpError(404, 'Занятие не найдено на этой неделе');
         return lesson;
+    });
+
+    router.post('/api/admin/lessons/:id/pay-debt', ({ viewer, params }) => {
+        requireAdmin(viewer);
+        const result = db.prepare(`
+            UPDATE lessons SET status = 'paid'
+            WHERE id = ? AND week_start < ? AND status = 'held'
+        `).run(positiveId(params.id), weekStartMs(Date.now()));
+        if (!result.changes) throw new HttpError(404, 'Неоплаченное занятие не найдено');
+        return { ok: true };
     });
 
     router.post('/api/admin/lessons/:id/remove', ({ viewer, params }) => {

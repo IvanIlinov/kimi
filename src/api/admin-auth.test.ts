@@ -29,6 +29,7 @@ test('все административные маршруты запрещен�
         ['POST', '/api/admin/lessons'],
         ['POST', '/api/admin/lessons/1/remove'],
         ['POST', '/api/admin/lessons/1/cycle'],
+        ['POST', '/api/admin/lessons/1/pay-debt'],
         ['GET', '/api/admin/members'],
         ['GET', '/api/admin/journal'],
         ['POST', '/api/admin/members'],
@@ -347,4 +348,53 @@ test('история группирует изменения по московс
     const [corrected] = getAdminHistory(1, 0);
     assert.equal(corrected.rows[0].tasks, 37);
     assert.equal(corrected.rows[0].pct, 4);
+});
+
+test('расписание переходит на новую неделю, а долг сохраняет исходное занятие', (t) => {
+    const router = new Router();
+    registerAdmin(router);
+    const viewer = { tgId: 900001, firstName: 'Администратор', role: 'admin' as const, personId: null };
+    function call(method: string, path: string) {
+        const match = router.match(method, path);
+        assert.ok(match);
+        return match.handler({ viewer, params: match.params, query: new URLSearchParams(), body: {} });
+    }
+
+    const previous = Date.UTC(2040, 0, 1, 21); // начало понедельника в Москве
+    const week = 7 * 86_400_000;
+    const current = previous + week;
+    const now = t.mock.method(Date, 'now', () => current + 1000);
+    const insert = db.prepare(`
+        INSERT INTO lessons (week_start, weekday, time, name, status, price_kopecks)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const debtId = Number(insert.run(previous, 0, '16:30', 'Должник', 'held', 150000).lastInsertRowid);
+    const paidId = Number(insert.run(previous, 1, '18:00', 'Ученик', 'paid', 200000).lastInsertRowid);
+    type Slot = { id: number; weekday: number; time: string; name: string; status: string; priceKopecks: number };
+    const home = () => call('GET', '/api/admin/home') as {
+        lessons: Slot[];
+        debts: (Slot & { weekStart: number })[];
+    };
+
+    const first = home();
+    assert.deepEqual(first.lessons.map(({ id: _id, ...slot }) => ({ ...slot })), [
+        { weekday: 0, time: '16:30', name: 'Должник', status: 'planned', priceKopecks: 150000 },
+        { weekday: 1, time: '18:00', name: 'Ученик', status: 'planned', priceKopecks: 200000 },
+    ]);
+    assert.deepEqual(home().lessons, first.lessons);
+    assert.equal(db.prepare('SELECT status FROM lessons WHERE id = ?').get(paidId)?.status, 'paid');
+    assert.equal(first.debts.find(debt => debt.id === debtId)?.weekStart, previous);
+    assert.throws(() => call('POST', `/api/admin/lessons/${first.lessons[0].id}/pay-debt`),
+        (error: unknown) => error instanceof HttpError && error.status === 404);
+
+    now.mock.mockImplementation(() => current + week + 1000);
+    assert.equal(home().debts.filter(debt => debt.id === debtId).length, 1);
+    call('POST', `/api/admin/lessons/${debtId}/pay-debt`);
+    assert.ok(!home().debts.some(debt => debt.id === debtId));
+    assert.equal(db.prepare('SELECT status FROM lessons WHERE id = ?').get(debtId)?.status, 'paid');
+
+    for (const slot of home().lessons) call('POST', `/api/admin/lessons/${slot.id}/remove`);
+    assert.deepEqual(home().lessons, []);
+    now.mock.mockImplementation(() => current + 2 * week + 1000);
+    assert.deepEqual(home().lessons, []);
 });
