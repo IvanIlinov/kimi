@@ -2,19 +2,18 @@ import type { ComponentChildren } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Card } from './ui';
 
-const pageNames = ['Ближайшие цели', 'Прогресс', 'Итоги'];
-
-export function SwipeCard({ label, first, second, leading }: {
+export function SwipeCard({ label, first, second, pageNames }: {
     label: string;
     first: ComponentChildren;
-    second: ComponentChildren;
-    leading?: ComponentChildren;
+    second?: ComponentChildren;
+    pageNames?: readonly [string, string];
 }) {
-    const hasLeading = leading != null;
+    const hasSecond = second != null;
+    const interactive = hasSecond && pageNames != null;
     const track = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState(0);
     const touchStart = useRef<{ x: number; y: number; index: number } | null>(null);
-    const pages = hasLeading ? [second, first, leading] : [first, second];
+    const pages = hasSecond ? [first, second] : [first];
 
     function goTo(index: number) {
         const scroller = track.current;
@@ -28,14 +27,14 @@ export function SwipeCard({ label, first, second, leading }: {
     useLayoutEffect(() => {
         if (track.current) track.current.scrollLeft = 0;
         setActive(0);
-    }, [hasLeading]);
+    }, [hasSecond]);
 
     return (
-        <Card class={hasLeading ? 'swipe-card swipe-card-with-leading' : 'swipe-card'}>
+        <Card class={interactive ? 'swipe-card swipe-card-interactive' : 'swipe-card'}>
             <div class="swipe-card-track" ref={track} tabIndex={0} role="region" aria-label={label}
                 onTouchStart={(event) => {
                     touchStart.current = null;
-                    if (!hasLeading || event.touches.length !== 1 || (event.target as Element).closest('dialog')) return;
+                    if (!interactive || event.touches.length !== 1 || (event.target as Element).closest('dialog')) return;
                     const { scrollLeft, scrollWidth, clientWidth } = event.currentTarget;
                     const index = scrollLeft <= 1 ? 0
                         : scrollLeft >= scrollWidth - clientWidth - 1 ? pages.length - 1 : -1;
@@ -60,25 +59,27 @@ export function SwipeCard({ label, first, second, leading }: {
                 }}>
                 {pages.map((page, index) => <div class="swipe-card-page" key={index}>{page}</div>)}
             </div>
-            <div class="swipe-card-navigation">
-                {hasLeading && (
-                    <button class="swipe-card-arrow" type="button" aria-label="Предыдущая страница"
-                        onClick={() => goTo(active - 1)} />
-                )}
-                <div class="swipe-card-dots" aria-hidden={hasLeading ? undefined : 'true'}>
-                    {pages.map((_, index) => {
-                        const cls = index === active ? 'active' : '';
-                        return hasLeading ? (
-                            <button key={index} class={cls} type="button" aria-label={pageNames[index]}
-                                aria-current={index === active ? 'true' : undefined} onClick={() => goTo(index)} />
-                        ) : <span key={index} class={cls} />;
-                    })}
+            {hasSecond && (
+                <div class="swipe-card-navigation">
+                    {interactive && (
+                        <button class="swipe-card-arrow" type="button" aria-label="Предыдущая страница"
+                            onClick={() => goTo(active - 1)} />
+                    )}
+                    <div class="swipe-card-dots" aria-hidden={interactive ? undefined : 'true'}>
+                        {pages.map((_, index) => {
+                            const cls = index === active ? 'active' : '';
+                            return interactive ? (
+                                <button key={index} class={cls} type="button" aria-label={pageNames[index]}
+                                    aria-current={index === active ? 'true' : undefined} onClick={() => goTo(index)} />
+                            ) : <span key={index} class={cls} />;
+                        })}
+                    </div>
+                    {interactive && (
+                        <button class="swipe-card-arrow swipe-card-arrow-next" type="button" aria-label="Следующая страница"
+                            onClick={() => goTo(active + 1)} />
+                    )}
                 </div>
-                {hasLeading && (
-                    <button class="swipe-card-arrow swipe-card-arrow-next" type="button" aria-label="Следующая страница"
-                        onClick={() => goTo(active + 1)} />
-                )}
-            </div>
+            )}
         </Card>
     );
 }

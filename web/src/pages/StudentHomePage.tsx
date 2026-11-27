@@ -18,11 +18,7 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
     if (error) return <Screen hideTitle title={title}><Empty text={error} /></Screen>;
     if (!profile) return <Screen hideTitle title={title}><Loading /></Screen>;
 
-    const { name, place, pct, monthPct, daysLeft, month, week, totals } = profile;
-    const topicsLeft = Math.max(0, month.topics.goal - month.topics.value);
-    const tasksLeft = Math.max(0, week.goal - week.tasks);
-    const exam = month.exam.value ?? 0;
-    const examLeft = Math.max(0, month.exam.goal - exam);
+    const { name, place, pct, daysLeft, month, week, totals } = profile;
 
     const recaps = leadingPage ?? (profile.weeklyRecap && (
         <PeriodRecaps week={profile.weeklyRecap} currentWeek={profile.currentWeekRecap} study={profile.studyRecaps} autoOpen={autoOpenWeeklyRecap} />
@@ -50,31 +46,21 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
                     </div>
                 </Card>
                 <SwipeCard
-                    label={recaps ? "Ближайшие цели, прогресс и итоги" : "Прогресс и ближайшие цели"}
-                    leading={recaps}
+                    label={recaps ? "Ближайшие цели и итоги" : "Ближайшие цели"}
+                    pageNames={["Ближайшие цели", "Итоги"]}
+                    second={recaps}
                     first={
                         <>
-                            <Goal label={month.name ? cap(month.name) : 'Прогресс месяца'} value={monthPct} action={monthAction} />
-                            <Goal label="Прогресс недели" value={week.goalPct} />
+                            {monthAction}
+                            <Goal icon="target" label="Изучено заданий" value={month.topics.value} max={month.topics.goal} />
+                            <Goal icon="calendar-days" label="Решено задач за неделю" value={week.tasks} max={week.goal} />
+                            <Goal icon="clipboard-list" label="Балл пробника" value={month.exam.value ?? 0} max={month.exam.goal} />
                             {daysLeft != null && (
-                                <div class="student-countdown">
-                                    <div class="student-countdown-dial">
-                                        <strong>{daysLeft}</strong>
-                                        <small>{plural(daysLeft, ['день', 'дня', 'дней'])}</small>
-                                    </div>
-                                    <span>До начала<br />экзаменов</span>
-                                </div>
+                                <p class="student-countdown">
+                                    <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
+                                    <span>до начала экзаменов</span>
+                                </p>
                             )}
-                        </>
-                    }
-                    second={
-                        <>
-                            <Goal label="Изучено заданий" value={month.topics.value} max={month.topics.goal}
-                                note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
-                            <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
-                                note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
-                            <Goal icon="clipboard-list" label="Пробник" value={exam} max={month.exam.goal}
-                                note={remaining(examLeft, ['балл', 'балла', 'баллов'])} />
                         </>
                     }
                 />
@@ -83,38 +69,12 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
     );
 }
 
-function remaining(value: number, forms: [string, string, string]) {
-    return value ? `Осталось: ${value} ${plural(value, forms)}` : 'Цель выполнена';
-}
-
-function Goal({ icon, label, value, max, note, action }: {
-    icon?: string;
-    label: string;
-    value: number;
-    max?: number;
-    note?: string;
-    action?: ComponentChildren;
-}) {
-    const shown = max === undefined ? `${value}%` : `${value}/${max}`;
-
+function Goal({ icon, label, value, max }: { icon: string; label: string; value: number; max: number }) {
     return (
-        <div class="student-goal" role={icon ? 'group' : undefined} aria-label={icon ? label : undefined}>
-            {icon ? (
-                <div class="student-goal-with-icon">
-                    <NavIcon name={icon} />
-                    <SegmentBar value={value} max={max} />
-                    <strong>{shown}</strong>
-                </div>
-            ) : (
-                <>
-                    <div class="student-goal-heading between"><span>{label}</span>{action}</div>
-                    <div class="student-goal-progress">
-                        <SegmentBar value={value} max={max} />
-                        <strong>{shown}</strong>
-                    </div>
-                </>
-            )}
-            {note && <small>{note}</small>}
+        <div class="student-goal" role="group" aria-label={label}>
+            <NavIcon name={icon} />
+            <SegmentBar value={value} max={max} />
+            <strong>{value}/{max}</strong>
         </div>
     );
 }
