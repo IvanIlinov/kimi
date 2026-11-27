@@ -73,17 +73,31 @@ h1 { font: 800 clamp(32px, 10vw, 49px)/.9 "Roboto Condensed", sans-serif; margin
 .metrics dd span { color: var(--muted); font-size: 14px; }
 .metrics dt { color: var(--muted); font-size: 10px; }
 .panel { padding: 13px; }
-.section-head, .goal-label { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-h2 { font: 800 23px/1 "Roboto Condensed", sans-serif; }
-.segmented { display: flex; gap: 2px; }
-.segmented button { border: 0; background: #161b1e; color: var(--muted); font-size: 11px; padding: 6px; }
-.segmented button[aria-pressed="true"] { background: var(--yellow); color: #171504; }
-.goal-label { margin-top: 9px; font-size: 12px; }
+.goals { display: grid; gap: 8px; }
+.goal-row {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) 7ch;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+}
+.goal-row span { color: var(--yellow); font-size: 16px; line-height: 1; text-align: center; }
+.goal-row strong { text-align: right; font-variant-numeric: tabular-nums; }
+.countdown {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding-top: 9px;
+    border-top: 1px solid #ffffff21;
+    color: var(--muted);
+    font-size: 12px;
+}
+.countdown strong { font: 800 clamp(25px, 7vw, 32px)/1 "Roboto Condensed", sans-serif; color: var(--yellow); }
 progress { display: block; width: 100%; height: 7px; margin: 5px 0; border: 0; background: #363e44; accent-color: #72ff22; }
 progress::-webkit-progress-bar { background: #363e44; }
 progress::-webkit-progress-value { background: #72ff22; }
 progress::-moz-progress-bar { background: #72ff22; }
-.goals p, .topic-hint { color: var(--muted); font-size: 11px; }
+.topic-hint { color: var(--muted); font-size: 11px; }
 .dock {
     position: sticky;
     bottom: env(safe-area-inset-bottom);
@@ -97,10 +111,35 @@ progress::-moz-progress-bar { background: #72ff22; }
 .dock button { border: 0; display: grid; justify-items: center; padding: 3px 1px 5px; background: #292f35; font-size: 11px; min-height: 43px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
 .dock button span { font-size: 18px; line-height: 1; }
 .dock button[aria-current] { background: var(--yellow); color: #161403; font-weight: 700; }
-.ranking { margin: 12px 0 0; padding-left: 25px; }
-.ranking li { padding: 10px 4px; border-bottom: 1px solid #ffffff22; }
-.ranking strong { float: right; }
-.ranking li[aria-current] { color: var(--yellow); }
+.ranking-header { padding: 10px 12px 5px; border-left: 3px solid var(--yellow); }
+.ranking-header .eyebrow { color: var(--muted); }
+.ranking-header h1 { margin-bottom: 2px; }
+.ranking { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.ranking li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    min-height: 45px;
+    padding: 4px 9px 4px 5px;
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 9px);
+    background: linear-gradient(118deg, #3c4851 0, #2a3238 24%, #1a2024 70%);
+    box-shadow: inset 0 1px #ffffff25;
+}
+.ranking .rank, .ranking strong {
+    font: 800 20px/1 "Roboto Condensed", sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+.ranking .rank { color: var(--muted); }
+.ranking .player { font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+.ranking strong { min-width: 34px; padding: 4px 5px; background: #111719; color: #f5f6ee; }
+.ranking li:first-child .rank { color: var(--yellow); }
+.ranking li[aria-current] {
+    background: linear-gradient(112deg, #554813, #302d1d 32%, #202423 80%);
+    box-shadow: inset 3px 0 var(--yellow), inset 0 1px #fee97870;
+}
+.ranking li[aria-current] :is(.rank, .player, strong) { color: var(--yellow); }
 .topic-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; margin: 12px 0; }
 .topic-grid button { aspect-ratio: 1; border: 0; min-width: 0; background: #333d45; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px)); font-weight: 700; }
 .topic-grid [data-status="1"] { background: var(--yellow); color: #171504; }

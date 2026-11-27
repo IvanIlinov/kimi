@@ -38,30 +38,36 @@
                     <div><dd>183</dd><dt>Решено</dt></div>
                 </dl>
                 <div class="panel goals">
-                    <div class="section-head">
-                        <h2>Цели</h2>
-                        <div class="segmented" aria-label="Период целей">
-                            <button data-period="week" aria-pressed="true">Неделя</button>
-                            <button data-period="month" aria-pressed="false">Месяц</button>
-                        </div>
+                    <div class="goal-row">
+                        <span aria-hidden="true">◎</span>
+                        <progress value="14" max="27" aria-label="Изучено заданий"></progress>
+                        <strong>14 / 27</strong>
                     </div>
-                    <div class="goal-label"><span>Решено задач</span><strong id="goal-count">18 / 25</strong></div>
-                    <progress id="goal-meter" value="18" max="25" aria-label="Решено задач за неделю"></progress>
-                    <p id="goal-remaining">Ещё 7 задач до цели недели</p>
+                    <div class="goal-row">
+                        <span aria-hidden="true">≡</span>
+                        <progress value="18" max="25" aria-label="Решено задач за неделю"></progress>
+                        <strong>18 / 25</strong>
+                    </div>
+                    <div class="goal-row">
+                        <span aria-hidden="true">◇</span>
+                        <progress value="72" max="100" aria-label="Балл пробника"></progress>
+                        <strong>72 / 100</strong>
+                    </div>
+                    <p class="countdown"><strong>185 дней</strong><span>до начала экзаменов</span></p>
                 </div>
             </section>
             <section id="ranking" class="screen" aria-label="Рейтинг" hidden>
-                <div class="panel">
-                    <p class="eyebrow">За неделю</p>
+                <header class="ranking-header">
+                    <p class="eyebrow">Решено за неделю</p>
                     <h1>Рейтинг</h1>
-                    <ol class="ranking">
-                        <li><span>Алина Соколова</span><strong>32</strong></li>
-                        <li><span>Лев Орлов</span><strong>28</strong></li>
-                        <li><span>Соня Лебедева</span><strong>23</strong></li>
-                        <li aria-current="true"><span>Мира Волкова</span><strong>18</strong></li>
-                        <li><span>Макс Ким</span><strong>12</strong></li>
-                    </ol>
-                </div>
+                </header>
+                <ol class="ranking" role="list">
+                    <li><span class="rank">01</span><span class="player">Алина Соколова</span><strong>32</strong></li>
+                    <li><span class="rank">02</span><span class="player">Лев Орлов</span><strong>28</strong></li>
+                    <li><span class="rank">03</span><span class="player">Соня Лебедева</span><strong>23</strong></li>
+                    <li aria-current="true"><span class="rank">04</span><span class="player">Мира Волкова</span><strong>18</strong></li>
+                    <li><span class="rank">05</span><span class="player">Макс Ким</span><strong>12</strong></li>
+                </ol>
             </section>
             <section id="topics" class="screen" aria-label="Задания" hidden>
                 <div class="panel">

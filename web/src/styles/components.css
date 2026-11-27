@@ -174,27 +174,38 @@
 .list { padding: 7px; }
 
 .row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 3ch minmax(0, 1fr) auto;
+    grid-template-areas: "place name score" "place bar score";
     align-items: center;
-    gap: 10px;
+    gap: 3px 8px;
     width: 100%;
-    padding: 13px 10px;
     text-align: left;
-    transition: background 0.16s ease;
 }
-
-.row:not(:disabled):active { background: var(--surface-strong); }
-
+.row-place {
+    grid-area: place;
+    text-align: center;
+    color: var(--muted);
+    font: 800 clamp(15px, 4.5vw, 20px)/1 var(--font-display);
+    font-variant-numeric: tabular-nums;
+}
 .row-name {
-    width: 76px;
-    flex: none;
+    grid-area: name;
     overflow: hidden;
     font-weight: 650;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
-
-.row-bar { display: flex; flex: 1; min-width: 0; }
-.row-right { flex: none; }
+.row-bar { grid-area: bar; display: flex; min-width: 0; }
+.row-right {
+    grid-area: score;
+    min-width: 30px;
+    padding: 4px 5px;
+    background: #111719;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 750;
+}
 
 .stats {
     display: inline-flex;
@@ -750,6 +761,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
+    gap: 5px;
 }
 .layout-ranking .row { flex: 0 0 auto; padding: 9px 8px; }
 .layout-ranking .leader {
@@ -761,7 +773,7 @@
 .layout-ranking .leader-name { margin-bottom: 8px; }
 .layout-ranking .kpis { gap: 6px; }
 .layout-ranking .kpi b { font-size: clamp(15px, 4vw, 20px); }
-.layout-ranking .seg { align-self: center; height: 12px; min-height: 12px; }
+.layout-ranking .seg { align-self: center; height: 6px; min-height: 6px; }
 .ranking-scroll > :is(.row, .row-with-actions) {
     position: relative;
     isolation: isolate;
@@ -770,8 +782,14 @@
         100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
 }
 
-.ranking-scroll > :is(.row, .row-with-actions) + :is(.row, .row-with-actions) {
-    margin-top: -4px;
+.ranking-scroll > :first-child .row-place,
+.ranking-scroll .row[aria-current] :is(.row-place, .row-name, .row-right) { color: var(--accent); }
+
+.ranking-scroll > .row[aria-current],
+.ranking-scroll > .row-with-actions:has(.row[aria-current]) {
+    --row-accent-width: 3px;
+    --row-edge: linear-gradient(90deg, var(--accent), #9c7929 45%, #3a3829);
+    --row-face: linear-gradient(112deg, #554813, #302d1d 32%, #202423 80%);
 }
 .ranking-scroll > :is(.row, .row-with-actions):focus-within { z-index: 1; }
 
@@ -786,13 +804,14 @@
 .ranking-scroll > :is(.row, .row-with-actions)::before {
     z-index: -2;
     inset: 0;
-    background: #635737;
+    background: var(--row-edge, linear-gradient(115deg, #68757e55, #2a3238));
 }
 
 .ranking-scroll > :is(.row, .row-with-actions)::after {
     z-index: -1;
     inset: 1px;
-    background: var(--row-face, linear-gradient(120deg, #29271e, var(--surface) 75%));
+    inset-inline-start: var(--row-accent-width, 1px);
+    background: var(--row-face, linear-gradient(118deg, #3c4851, #2a3238 24%, #1a2024 70%));
 }
 
 .ranking-scroll .row:not(:disabled):active { background: transparent; }
@@ -1106,11 +1125,9 @@
     gap: clamp(8px, 1.6dvh, 14px);
 }
 .student-countdown {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: baseline;
-    gap: 3px 7px;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
     margin: 0;
     padding-block: 9px 0;
     border-top: 1px solid #ffffff20;
@@ -1119,7 +1136,7 @@
 }
 .student-countdown strong {
     color: var(--accent);
-    font: 750 clamp(16px, 3.2dvh, 22px)/1 var(--font-display);
+    font: 800 clamp(24px, 6.8vw, 32px)/1 var(--font-display);
     font-variant-numeric: tabular-nums;
 }
 
@@ -1286,7 +1303,6 @@
 .leader-heading:has(.arena-add) .label { margin: 0; }
 .row-with-actions { display: flex; align-items: center; flex: 0 0 auto; min-width: 0; }
 .layout-ranking .row-with-actions .row { flex: 1 1 auto; min-width: 0; padding-inline-end: 4px; gap: 6px; }
-.row-with-actions .row-name { width: clamp(46px, 19vw, 76px); white-space: nowrap; }
 .row-with-actions .stats { gap: 4px; }
 .arena-row-actions { display: flex; flex: 0 0 auto; }
 .arena-icon {

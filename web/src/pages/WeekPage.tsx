@@ -1,11 +1,12 @@
 import type { ComponentChildren } from 'preact';
 import { useApi } from '../api/useApi';
-import type { Week } from '../api/types';
+import type { Me, Week } from '../api/types';
 import { ArenaLeader } from '../components/ArenaLeader';
 import { Card, Empty, Loading, Row, SegmentBar } from '../components/ui';
 import { plural, sgn } from '../lib/format';
 
-export function WeekResults({ onOpen, addAction, rowActions }: {
+export function WeekResults({ viewer, onOpen, addAction, rowActions }: {
+    viewer: Me;
     onOpen: (id: number) => void;
     addAction?: ComponentChildren;
     rowActions?: (id: number, name: string) => ComponentChildren;
@@ -31,10 +32,12 @@ export function WeekResults({ onOpen, addAction, rowActions }: {
             <Card class="list">
                 <div class="ranking-scroll">
                     {data.rows.length === 0 && <Empty text="Пока никого нет" />}
-                    {data.rows.map((r) => (
+                    {data.rows.map((r, index) => (
                         <Row
                             key={r.id}
                             name={r.name}
+                            place={viewer.role !== 'student' || index < 10 ? index + 1 : undefined}
+                            current={r.id === viewer.personId}
                             bar={<SegmentBar value={Math.min(r.goalPct, 100)} segments={12} />}
                             right={
                                 <span class="stats">

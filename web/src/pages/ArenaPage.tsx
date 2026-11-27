@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { api } from '../api/client';
 import { useApi } from '../api/useApi';
-import type { Arena, ArenaMode } from '../api/types';
+import type { Arena, ArenaMode, Me } from '../api/types';
 import { Card, Empty, Label, Loading, Pill, Row, Screen, SegmentBar } from '../components/ui';
 import { cap, plural } from '../lib/format';
 import { ArenaLeader } from '../components/ArenaLeader';
@@ -15,7 +15,8 @@ const MODES = [
     { id: 'week', label: 'Неделя' },
 ] as const;
 
-export function ArenaPage({ onOpen, onEdit }: {
+export function ArenaPage({ viewer, onOpen, onEdit }: {
+    viewer: Me;
     onOpen: (id: number) => void;
     onEdit?: (id: number) => void;
 }) {
@@ -68,8 +69,8 @@ export function ArenaPage({ onOpen, onEdit }: {
             </div>
             {removeError && <p class="warn" role="alert">{removeError}</p>}
             {mode === 'week'
-                ? <WeekResults key={version} onOpen={onOpen} addAction={addAction} rowActions={rowActions} />
-                : <ArenaResults key={`${mode}-${version}`} mode={mode} onOpen={onOpen}
+                ? <WeekResults viewer={viewer} key={version} onOpen={onOpen} addAction={addAction} rowActions={rowActions} />
+                : <ArenaResults viewer={viewer} key={`${mode}-${version}`} mode={mode} onOpen={onOpen}
                     addAction={addAction} rowActions={rowActions} />}
             {adding && <AddParticipant onClose={() => setAdding(false)} onSaved={() => {
                 setAdding(false);
@@ -125,8 +126,9 @@ function AddParticipant({ onClose, onSaved }: { onClose: () => void; onSaved: ()
     );
 }
 
-function ArenaResults({ mode, onOpen, addAction, rowActions }: {
+function ArenaResults({ viewer, mode, onOpen, addAction, rowActions }: {
     mode: ArenaMode;
+    viewer: Me;
     onOpen: (id: number) => void;
     addAction?: ComponentChildren;
     rowActions?: (id: number, name: string) => ComponentChildren;
@@ -155,10 +157,12 @@ function ArenaResults({ mode, onOpen, addAction, rowActions }: {
             <Card class="list">
                 <div class="ranking-scroll">
                     {data.rows.length === 0 && <Empty text="Пока никого нет" />}
-                    {data.rows.map((r) => (
+                    {data.rows.map((r, index) => (
                         <Row
                             key={r.id}
                             name={r.name}
+                            place={viewer.role !== 'student' || index < 10 ? index + 1 : undefined}
+                            current={r.id === viewer.personId}
                             bar={<SegmentBar value={r.pct} segments={12} />}
                             right={
                                 <span class="stats">

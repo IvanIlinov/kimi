@@ -25,26 +25,6 @@ for (const button of screenButtons) {
     });
 }
 
-const goals = {
-    week: { value: 18, max: 25, period: "недели", label: "Решено задач за неделю" },
-    month: { value: 67, max: 100, period: "месяца", label: "Решено задач за месяц" },
-};
-const periodButtons = document.querySelectorAll("[data-period]");
-const meter = document.getElementById("goal-meter");
-
-for (const button of periodButtons) {
-    button.addEventListener("click", () => {
-        const { value, max, period, label } = goals[button.dataset.period];
-        for (const item of periodButtons) item.setAttribute("aria-pressed", String(item === button));
-
-        meter.max = max;
-        meter.value = value;
-        meter.setAttribute("aria-label", label);
-        document.getElementById("goal-count").textContent = `${value} / ${max}`;
-        document.getElementById("goal-remaining").textContent = `Ещё ${max - value} задач до цели ${period}`;
-    });
-}
-
 const grid = document.getElementById("topic-grid");
 const statuses = ["Не изучено", "В изучении", "Изучено", "Закреплено"];
 for (let number = 1; number <= 27; number++) {

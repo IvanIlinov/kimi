@@ -99,7 +99,7 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     else if (active === 'topics') page = <TopicsPage readOnly={preview !== null && !editingStudent} />;
     else {
         const admin = tabs === ADMIN_TABS;
-        page = <ArenaPage onOpen={admin ? (id) => startPreview(id, true) : open}
+        page = <ArenaPage viewer={me.data} onOpen={admin ? (id) => startPreview(id, true) : open}
             onEdit={admin ? (id) => startPreview(id, true, 'topics') : undefined} />;
     }
 

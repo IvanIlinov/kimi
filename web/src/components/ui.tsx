@@ -55,7 +55,9 @@ export function Pill({ standing }: { standing: Standing }) {
 }
 
 // Строка списка: имя, шкала, значение; нажатие открывает профиль
-export function Row({ name, bar, right, onClick, actions }: {
+export function Row({ name, place, current, bar, right, onClick, actions }: {
+    place?: number;
+    current?: boolean;
     name: string;
     bar?: ComponentChildren;
     right: ComponentChildren;
@@ -63,7 +65,8 @@ export function Row({ name, bar, right, onClick, actions }: {
     actions?: ComponentChildren;
 }) {
     const row = (
-        <button class="row" onClick={onClick} disabled={!onClick}>
+        <button class="row" aria-current={current || undefined} onClick={onClick} disabled={!onClick}>
+            <span class="row-place" aria-label={place == null ? undefined : `Место: ${place}`}>{place == null ? '—' : String(place).padStart(2, '0')}</span>
             <span class="row-name">{cap(name)}</span>
             <span class="row-bar">{bar}</span>
             <span class="row-right">{right}</span>
