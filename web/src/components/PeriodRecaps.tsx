@@ -134,7 +134,10 @@ export function PeriodRecaps({ week, currentWeek, study, autoOpen }: {
                             <dl>
                                 <div><dt>Решено задач</dt><dd>{recap.tasks} из {recap.goals.tasks}</dd></div>
                                 <div><dt>Изучено заданий</dt><dd>{recap.topics} из {recap.goals.topics}</dd></div>
-                                <div><dt>Балл пробника</dt><dd>{recap.examBefore} → {recap.exam}</dd></div>
+                                <div>
+                                    <dt>Балл пробника</dt>
+                                    <dd>{active === 'year' ? `${recap.exam} → 100` : `${recap.examBefore} → ${recap.exam}`}</dd>
+                                </div>
                             </dl>
                         </>
                     ) : (

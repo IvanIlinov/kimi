@@ -58,15 +58,18 @@ export function StudentHomePage({ id = 'me', monthAction, leadingPage, autoOpenW
                             <Goal label="Прогресс недели" value={week.goalPct} />
                             {daysLeft != null && (
                                 <div class="student-countdown">
-                                    <strong>{daysLeft} {plural(daysLeft, ['день', 'дня', 'дней'])}</strong>
-                                    <small>до начала экзаменов</small>
+                                    <div class="student-countdown-dial">
+                                        <strong>{daysLeft}</strong>
+                                        <small>{plural(daysLeft, ['день', 'дня', 'дней'])}</small>
+                                    </div>
+                                    <span>До начала<br />экзаменов</span>
                                 </div>
                             )}
                         </>
                     }
                     second={
                         <>
-                            <Goal icon="target" label="Изучено" value={month.topics.value} max={month.topics.goal}
+                            <Goal label="Изучено заданий" value={month.topics.value} max={month.topics.goal}
                                 note={remaining(topicsLeft, ['задание', 'задания', 'заданий'])} />
                             <Goal icon="calendar-days" label="Решено" value={week.tasks} max={week.goal}
                                 note={remaining(tasksLeft, ['задача', 'задачи', 'задач'])} />
@@ -104,7 +107,7 @@ function Goal({ icon, label, value, max, note, action }: {
                 </div>
             ) : (
                 <>
-                    {action ? <div class="between"><span>{label}</span>{action}</div> : <span>{label}</span>}
+                    <div class="student-goal-heading between"><span>{label}</span>{action}</div>
                     <div class="student-goal-progress">
                         <SegmentBar value={value} max={max} />
                         <strong>{shown}</strong>

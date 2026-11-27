@@ -1089,6 +1089,10 @@
         0 3px 5px color-mix(in srgb, var(--segment-color) 32%, transparent);
 }
 .student-home .student-goal .seg { --segment-shadow-opacity: 0.34; }
+.student-goal-heading {
+    min-height: 1.4em;
+    line-height: 1.4;
+}
 .student-goal-progress {
     display: flex;
     align-items: center;
@@ -1105,8 +1109,6 @@
     .student-frame .swipe-card-page { gap: 4px; }
     .student-frame .student-goal { gap: 2px; font-size: 12px; }
     .student-frame .student-goal small { font-size: 11px; }
-    .student-frame .student-countdown { padding-block: 4px; }
-    .student-frame .student-countdown strong { font-size: 22px; }
 }
 
 .swipe-card-page:has(> .student-countdown) {
@@ -1114,24 +1116,38 @@
     align-content: stretch;
 }
 .student-countdown {
-    display: grid;
+    display: flex;
+    align-items: center;
     align-self: center;
     justify-self: center;
-    width: min(100%, 15rem);
-    padding: 8px 12px;
-    justify-items: center;
+    gap: clamp(9px, 3vw, 15px);
     line-height: 1.15;
+    color: var(--muted);
+    font-size: clamp(11px, 3.5vw, 14px);
 }
-.student-countdown strong {
+.student-countdown-dial {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    width: clamp(54px, 9.5dvh, 78px);
+    aspect-ratio: 1;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: radial-gradient(circle, #363529, var(--surface) 75%);
+    box-shadow: inset 0 0 0 3px var(--surface), 0 0 12px #ffd40020;
+}
+.student-countdown-dial strong {
     color: var(--accent);
-    font: 750 clamp(22px, 5dvh, 32px)/1.15 var(--font-display);
+    font: 750 clamp(22px, 4.6dvh, 32px)/1 var(--font-display);
+    font-variant-numeric: tabular-nums;
 }
-.student-countdown small { color: var(--muted); font-size: 12px; }
+.student-countdown-dial small { font-size: 10px; }
 
 .swipe-card-page:has(.student-goal-with-icon) {
-    align-content: center;
-    gap: clamp(8px, 2dvh, 16px);
+    grid-template-rows: auto repeat(2, minmax(min-content, 1fr));
+    align-content: stretch;
 }
+.swipe-card-page:has(.student-goal-with-icon) > .student-goal:not(:first-child) { align-self: center; }
 .student-goal-with-icon {
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) 5ch;
