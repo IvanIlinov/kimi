@@ -9,6 +9,8 @@ import { ArenaLeader } from '../components/ArenaLeader';
 import { NavIcon } from '../components/NavIcon';
 import { WeekResults } from './WeekPage';
 
+const MONTH_TASK_GOAL = 100;
+
 const MODES = [
     { id: 'global', label: 'Глобальный' },
     { id: 'month', label: 'Месяц' },
@@ -167,9 +169,9 @@ function ArenaResults({ viewer, mode, onOpen, addAction, rowActions }: {
                             right={
                                 <span class="stats">
                                     {isMonth
-                                        ? <span aria-label={`Решено задач за месяц: ${r.tasks}`}>{r.tasks}</span>
+                                        ? <span aria-label={`Решено задач за месяц: ${r.tasks} из ${MONTH_TASK_GOAL}`}>{r.tasks}/{MONTH_TASK_GOAL}</span>
                                         : <span>{r.pct}%</span>}
-                                    <Pill standing={r.standing} />
+                                    {r.standing === 'ontrack' && <Pill standing={r.standing} />}
                                 </span>
                             }
                             onClick={() => onOpen(r.id)}
