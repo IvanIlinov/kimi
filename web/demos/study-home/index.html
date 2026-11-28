@@ -94,7 +94,7 @@
             <button type="button" data-level="medium" aria-pressed="false">Средние</button>
             <button type="button" data-level="hard" aria-pressed="false">Сложные</button>
         </div>
-        <div class="exam-formats" role="group" aria-label="Формат пробников">
+        <div class="section-tabs" role="group" aria-label="Формат пробников">
             <button type="button" data-format="official" aria-pressed="true">Официальные</button>
             <button type="button" data-format="standard" aria-pressed="false">Стандарт</button>
             <button type="button" data-format="extended" aria-pressed="false">Расширенные</button>
@@ -112,44 +112,56 @@
     </section>
     <section id="settings-page" hidden>
         <header class="exam-heading"><h1 tabindex="-1">Настройки</h1></header>
-        <form class="panel settings-panel" id="profile-settings">
-            <h2>Профиль и прогресс</h2>
-            <div class="settings-columns">
-                <label>Имя<input name="name" maxlength="40" required></label>
-                <label>Начало подготовки<input type="date" name="start" min="1900-01-01" max="9999-12-31" required></label>
-            </div>
-            <div class="settings-columns">
-                <label>Решено всего<input type="number" name="solved" min="0" max="999999" required></label>
-                <label>За неделю<input type="number" name="week" min="0" max="999999" required></label>
-            </div>
-            <div class="task-adjust" role="group" aria-label="Быстро изменить число решённых задач">
-                <button type="button" data-task-delta="-1">−1</button>
-                <button type="button" data-task-delta="1">+1</button>
-                <button type="button" data-task-delta="3">+3</button>
-                <button type="button" data-task-delta="5">+5</button>
-                <button type="button" data-task-delta="10">+10</button>
-            </div>
-            <div class="score-control">
-                <div class="score-header">
-                    <label for="settings-exam">Балл пробника</label>
-                    <div><output id="settings-exam-value" for="settings-exam"></output><span> / 100</span></div>
+        <div class="section-tabs settings-tabs" role="group" aria-label="Раздел настроек">
+            <button type="button" data-settings-tab="profile" aria-pressed="false" aria-controls="settings-profile-tab">Профиль</button>
+            <button type="button" data-settings-tab="progress" aria-pressed="true" aria-controls="settings-progress-tab">Прогресс</button>
+        </div>
+        <section id="settings-profile-tab" hidden>
+            <form class="panel settings-panel" id="profile-settings">
+                <div class="settings-columns">
+                    <label>Имя<input name="name" maxlength="40" required></label>
+                    <label>Начало подготовки<input type="date" name="start" min="1900-01-01" max="9999-12-31" required></label>
                 </div>
-                <div class="score-adjust">
-                    <button type="button" data-score-delta="-1" aria-label="Уменьшить балл на один">−</button>
-                    <input type="range" id="settings-exam" name="exam" min="0" max="100" step="1">
-                    <button type="button" data-score-delta="1" aria-label="Увеличить балл на один">+</button>
+                <div class="settings-submit">
+                    <button type="submit" class="settings-save">Сохранить</button>
+                    <p id="profile-feedback" role="status"></p>
                 </div>
-            </div>
-            <div class="settings-submit">
-                <button type="submit" class="settings-save">Сохранить</button>
-                <p id="profile-feedback" role="status"></p>
-            </div>
-        </form>
-        <section class="panel settings-panel" aria-labelledby="settings-status-title">
-            <h2 id="settings-status-title">Статусы заданий</h2>
-            <p class="settings-topic-hint">Нажми на плитку, чтобы сменить статус.</p>
-            <div id="settings-topic" class="topic-grid settings-topic-grid" role="group" aria-label="Статусы 27 заданий"></div>
-            <p id="status-feedback" role="status"></p>
+            </form>
+        </section>
+        <section id="settings-progress-tab">
+            <form class="panel settings-panel" id="progress-settings">
+                <div class="settings-columns">
+                    <label>Решено всего<input type="number" name="solved" min="0" max="999999" required></label>
+                    <label>За неделю<input type="number" name="week" min="0" max="999999" required></label>
+                </div>
+                <div class="task-adjust" role="group" aria-label="Быстро изменить число решённых задач">
+                    <button type="button" data-task-delta="-1">−1</button>
+                    <button type="button" data-task-delta="1">+1</button>
+                    <button type="button" data-task-delta="3">+3</button>
+                    <button type="button" data-task-delta="5">+5</button>
+                    <button type="button" data-task-delta="10">+10</button>
+                </div>
+                <div class="score-control">
+                    <div class="score-header">
+                        <label for="settings-exam">Балл пробника</label>
+                        <div><output id="settings-exam-value" for="settings-exam"></output><span> / 100</span></div>
+                    </div>
+                    <div class="score-adjust">
+                        <button type="button" data-score-delta="-1" aria-label="Уменьшить балл на один">−</button>
+                        <input type="range" id="settings-exam" name="exam" min="0" max="100" step="1">
+                        <button type="button" data-score-delta="1" aria-label="Увеличить балл на один">+</button>
+                    </div>
+                </div>
+                <div class="settings-submit">
+                    <button type="submit" class="settings-save">Сохранить</button>
+                    <p id="progress-feedback" role="status"></p>
+                </div>
+            </form>
+            <section class="panel settings-panel" aria-labelledby="settings-status-title">
+                <h2 id="settings-status-title">Статусы заданий</h2>
+                <div id="settings-topic" class="topic-grid settings-topic-grid" role="group" aria-label="Статусы 27 заданий"></div>
+                <p id="status-feedback" role="status"></p>
+            </section>
         </section>
     </section>
     <nav class="dock" aria-label="Нижнее меню">

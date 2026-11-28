@@ -146,6 +146,7 @@ for (const [index, status] of topicStatuses.entries()) {
 }
 
 const profileForm = byId("profile-settings");
+const progressForm = byId("progress-settings");
 const settingsGrid = byId("settings-topic");
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long", timeZone: "UTC" });
 
@@ -168,7 +169,7 @@ function updateProfile() {
 }
 
 const scoreInput = byId("settings-exam");
-const scoreButtons = [...profileForm.querySelectorAll("[data-score-delta]")];
+const scoreButtons = [...progressForm.querySelectorAll("[data-score-delta]")];
 
 function updateScore() {
     const score = Number(scoreInput.value);
@@ -179,29 +180,30 @@ function updateScore() {
     }
 }
 
-function clearProfileFeedback() {
-    byId("profile-feedback").textContent = "";
+function clearProgressFeedback() {
+    byId("progress-feedback").textContent = "";
 }
 
-profileForm.addEventListener("input", clearProfileFeedback);
+profileForm.addEventListener("input", () => { byId("profile-feedback").textContent = ""; });
+progressForm.addEventListener("input", clearProgressFeedback);
 scoreInput.addEventListener("input", updateScore);
 
 for (const button of scoreButtons) {
     button.addEventListener("click", () => {
         scoreInput.value = Number(scoreInput.value) + Number(button.dataset.scoreDelta);
         updateScore();
-        clearProfileFeedback();
+        clearProgressFeedback();
     });
 }
 
-for (const button of profileForm.querySelectorAll("[data-task-delta]")) {
+for (const button of progressForm.querySelectorAll("[data-task-delta]")) {
     button.addEventListener("click", () => {
         const delta = Number(button.dataset.taskDelta);
         for (const name of ["solved", "week"]) {
-            const input = profileForm.elements.namedItem(name);
+            const input = progressForm.elements.namedItem(name);
             input.value = Math.min(Number(input.max), Math.max(0, Number(input.value) + delta));
         }
-        clearProfileFeedback();
+        clearProgressFeedback();
     });
 }
 
@@ -213,16 +215,25 @@ profileForm.addEventListener("submit", event => {
         byId("profile-feedback").textContent = "Введи имя.";
         return;
     }
+    Object.assign(profile, { name, start: form.get("start") });
+    applySettings("profile-feedback");
+});
+
+progressForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const form = new FormData(progressForm);
     Object.assign(profile, {
-        name,
-        start: form.get("start"),
         solved: Number(form.get("solved")),
         week: Number(form.get("week")),
         exam: Number(form.get("exam")),
     });
-    updateProfile();
-    byId("profile-feedback").textContent = saveSettings() ? "Сохранено." : "Применено до перезагрузки.";
+    applySettings("progress-feedback");
 });
+
+function applySettings(feedback) {
+    updateProfile();
+    byId(feedback).textContent = saveSettings() ? "Сохранено." : "Применено до перезагрузки.";
+}
 
 function updateSettingsTile(button, number, status) {
     updateTile(button, number, status);
@@ -253,11 +264,29 @@ for (const [index, initial] of topicStatuses.entries()) {
 }
 updateProfile();
 
+const settingsTabs = [...document.querySelectorAll("[data-settings-tab]")];
+
+function showSettingsTab(tab) {
+    byId("settings-profile-tab").hidden = tab !== "profile";
+    byId("settings-progress-tab").hidden = tab !== "progress";
+    for (const button of settingsTabs) {
+        button.setAttribute("aria-pressed", String(button.dataset.settingsTab === tab));
+    }
+}
+
+for (const button of settingsTabs) {
+    button.addEventListener("click", () => showSettingsTab(button.dataset.settingsTab));
+}
+
 function showSettings(number) {
-    for (const [name, value] of Object.entries(profile)) profileForm.elements.namedItem(name).value = value;
+    for (const form of [profileForm, progressForm]) {
+        for (const input of form.querySelectorAll("input[name]")) input.value = profile[input.name];
+    }
     updateScore();
     byId("profile-feedback").textContent = "";
-    byId("status-feedback").textContent = "";
+    byId("progress-feedback").textContent = "";
+    byId("status-feedback").textContent = "Нажми на плитку, чтобы сменить статус.";
+    showSettingsTab("progress");
     if (number >= 1 && number <= topicStatuses.length) settingsGrid.children[number - 1].focus();
     else byId("settings-page").querySelector("h1").focus();
 }
