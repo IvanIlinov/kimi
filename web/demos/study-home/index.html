@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffc72b">
+<title>Профиль и задания</title>
+<link rel="stylesheet" href="./study.css">
+<script type="module" src="./study.js"></script>
+</head>
+<body>
+<main>
+    <section id="home">
+        <details class="profile" id="profile-card">
+            <summary>
+                <span class="identity"><small>Мой профиль</small><strong id="profile-name">Мира Волкова</strong><span>4-е место в рейтинге</span></span>
+                <span class="ring" role="img" aria-label="Общий прогресс 64 процента"><strong>64<small>%</small></strong><span>Прогресс</span></span>
+                <span class="chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="profile-body">
+                <dl class="metrics">
+                    <div><dt>Пробник</dt><dd id="profile-exam">72</dd></div>
+                    <div><dt>Изучено</dt><dd><b id="profile-studied">14</b><span>/27</span></dd></div>
+                    <div><dt>Решено</dt><dd id="profile-solved">183</dd></div>
+                </dl>
+                <div class="goals">
+                    <div id="profile-goal-studied"><span>Задания</span><progress value="14" max="27" aria-label="Изучено заданий"></progress><b>14/27</b></div>
+                    <div id="profile-goal-week"><span>Неделя</span><progress value="18" max="25" aria-label="Решено задач за неделю"></progress><b>18/25</b></div>
+                    <div id="profile-goal-exam"><span>Пробник</span><progress value="72" max="100" aria-label="Балл пробника"></progress><b>72/100</b></div>
+                </div>
+                <p class="profile-since" id="profile-since"></p>
+                <p class="countdown"><strong>185 дней</strong><span>до начала экзаменов</span></p>
+            </div>
+        </details>
+
+        <section class="panel" aria-label="Задания">
+            <div class="topic-grid" id="topics"></div>
+            <ul class="legend" aria-label="Статусы заданий">
+                <li data-status="0"><span>Не изучено</span></li>
+                <li data-status="1"><span>В изучении</span></li>
+                <li data-status="2"><span>Изучено</span></li>
+                <li data-status="3"><span>Закреплено</span></li>
+            </ul>
+        </section>
+    </section>
+
+    <section id="topic" hidden>
+        <a class="back" href="#" aria-label="Вернуться ко всем заданиям">← Все задания</a>
+        <header class="topic-header">
+            <span class="topic-number" id="topic-number"></span>
+            <h1 id="topic-title" tabindex="-1"></h1>
+            <a class="topic-status-link" id="topic-status-link" href="#settings">
+                <span id="topic-status-preview" aria-hidden="true"></span>
+                <span id="topic-status-label"></span>
+                <span class="topic-status-edit">Изменить</span>
+            </a>
+        </header>
+        <div class="study-actions" role="group" aria-label="Разделы задания">
+            <button type="button" data-material="cheat" aria-pressed="false" aria-controls="material">
+                <span aria-hidden="true">≡</span>Шпаргалка
+            </button>
+            <button type="button" data-material="lesson" aria-pressed="false" aria-controls="material">
+                <span aria-hidden="true">▷</span>Обучение
+            </button>
+            <button type="button" data-material="practice" aria-pressed="true" aria-controls="practice">
+                <span aria-hidden="true">✓</span>Практика
+            </button>
+        </div>
+        <section class="panel material" id="material" aria-labelledby="material-title" hidden>
+            <h2 id="material-title"></h2>
+            <div id="material-content"></div>
+        </section>
+        <section class="panel task-panel" id="practice">
+            <h2>Типажи</h2>
+            <div id="types" class="types" role="group" aria-label="Типажи заданий"></div>
+            <h2>Задачи</h2>
+            <div id="task-list" class="task-list"></div>
+        </section>
+    </section>
+    <section id="ranking-page" hidden>
+        <header class="ranking-heading"><h1 tabindex="-1">Рейтинг</h1><p>Решено за неделю</p></header>
+        <ol class="ranking-list">
+            <li><span>Алина Соколова</span><strong>24/25</strong></li>
+            <li><span>Лев Орлов</span><strong>22/25</strong></li>
+            <li><span>Соня Лебедева</span><strong>20/25</strong></li>
+            <li aria-current="true"><span id="ranking-name">Мира Волкова</span><strong id="ranking-week">18/25</strong></li>
+        </ol>
+    </section>
+    <section id="exams-page" hidden>
+        <header class="exam-heading"><h1 tabindex="-1">Пробники</h1><p>Информатика · примеры для демо</p></header>
+        <div class="exam-levels" role="group" aria-label="Сложность пробника">
+            <button type="button" data-level="all" aria-pressed="true">Все</button>
+            <button type="button" data-level="easy" aria-pressed="false">Простые</button>
+            <button type="button" data-level="medium" aria-pressed="false">Средние</button>
+            <button type="button" data-level="hard" aria-pressed="false">Сложные</button>
+        </div>
+        <div class="exam-formats" role="group" aria-label="Формат пробников">
+            <button type="button" data-format="official" aria-pressed="true">Официальные</button>
+            <button type="button" data-format="standard" aria-pressed="false">Стандарт</button>
+            <button type="button" data-format="extended" aria-pressed="false">Расширенные</button>
+        </div>
+        <div class="exam-list" id="exam-results"></div>
+    </section>
+    <section id="exam-page" hidden>
+        <a class="back" href="#exams">← Все пробники</a>
+        <header class="exam-heading"><h1 id="exam-title" tabindex="-1"></h1><p id="exam-summary"></p></header>
+        <div class="exam-progress">
+            <span id="exam-progress-label"></span>
+            <progress id="exam-progress-bar" aria-label="Решено задач"></progress>
+        </div>
+        <div id="exam-problems" class="exam-problems"></div>
+    </section>
+    <section id="settings-page" hidden>
+        <header class="exam-heading"><h1 tabindex="-1">Настройки</h1></header>
+        <form class="panel settings-panel" id="profile-settings">
+            <h2>Профиль и прогресс</h2>
+            <label>Имя<input name="name" maxlength="40" required></label>
+            <label>Дата начала подготовки<input type="date" name="start" min="1900-01-01" max="9999-12-31" required></label>
+            <div class="settings-columns">
+                <label>Решено всего<input type="number" name="solved" min="0" max="999999" required></label>
+                <label>За неделю<input type="number" name="week" min="0" max="999999" required></label>
+            </div>
+            <label>Балл пробника<input type="number" name="exam" min="0" max="100" required></label>
+            <button type="submit" class="settings-save">Сохранить</button>
+            <p id="profile-feedback" role="status"></p>
+        </form>
+        <section class="panel settings-panel" aria-labelledby="settings-status-title">
+            <h2 id="settings-status-title">Статусы заданий</h2>
+            <p class="settings-topic-hint">Нажми на плитку, чтобы сменить статус.</p>
+            <div id="settings-topic" class="topic-grid settings-topic-grid" role="group" aria-label="Статусы 27 заданий"></div>
+            <p id="status-feedback" role="status"></p>
+        </section>
+    </section>
+    <nav class="dock" aria-label="Нижнее меню">
+        <a href="#ranking" data-section="ranking"><span aria-hidden="true">≡</span>Рейтинг</a>
+        <a href="#tasks" data-section="tasks" aria-current="page"><span aria-hidden="true">⊞</span>Задания</a>
+        <a href="#exams" data-section="exams"><span aria-hidden="true">▤</span>Пробники</a>
+        <a href="#settings" data-section="settings"><span aria-hidden="true">⚙</span>Настройки</a>
+    </nav>
+</main>
+
+<dialog id="problem" aria-labelledby="problem-title">
+    <form method="dialog"><button type="submit" class="close" aria-label="Закрыть">×</button></form>
+    <h2 id="problem-title"></h2>
+    <p id="problem-text"></p>
+    <details class="answer"><summary>Показать ответ</summary><p id="problem-answer"></p></details>
+</dialog>
+<dialog id="exam-problem" aria-labelledby="exam-problem-title">
+    <form method="dialog"><button type="submit" class="close" aria-label="Закрыть">×</button></form>
+    <h2 id="exam-problem-title"></h2>
+    <p id="exam-problem-text"></p>
+    <form id="exam-answer-form" class="exam-answer">
+        <label for="exam-answer">Ответ</label>
+        <div><input id="exam-answer" inputmode="numeric" required placeholder="Введи число"><button type="submit">Проверить</button></div>
+        <p id="exam-feedback" role="status"></p>
+    </form>
+</dialog>
+</body>
+</html>
