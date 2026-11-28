@@ -4,22 +4,22 @@ import { topic11 } from "./topic-11.js";
 const catalog = {
     5: {
         title: "Алгоритмы и числа",
-        cheat: ["Приписать 0 справа — умножить число на 2.", "Приписать 1 справа — умножить на 2 и прибавить 1.", "Для нескольких разрядов повторяй операцию слева направо."],
-        lesson: ["Возьмём число 6 и припишем справа 01.", "Сначала приписываем 0: 6 × 2 = 12.", "Теперь приписываем 1: 12 × 2 + 1 = 25."],
+        cheat: [["Приписать 0", "N → 2N"], ["Приписать 1", "N → 2N + 1"], ["k разрядов", "N → N × 2ᵏ + S; S — значение приписанного блока"]],
+        lesson: [["Исходное число", "N = 6; приписываем 01"], ["Дописываем 0", "6 × 2 = 12"], ["Дописываем 1", "12 × 2 + 1 = 25"]],
         tasks: [
-            { type: "Двоичная запись", title: "Допиши разряд", text: "К двоичной записи числа 13 справа приписали 0. Какое число получилось в десятичной системе?", answer: "26", solution: "Приписывание нуля справа в двоичной записи сдвигает все разряды влево. Значение удваивается: 13 × 2 = 26." },
-            { type: "Двоичная запись", title: "Два новых разряда", text: "К двоичной записи числа 6 справа приписали 01. Какое число получилось в десятичной системе?", answer: "25", solution: "Два разряда справа умножают исходное число на 4. Приписанное 01 — это 1, поэтому получаем 6 × 4 + 1 = 25." },
-            { type: "Поиск числа", title: "Найди минимальное N", text: "К двоичной записи натурального числа N справа приписывают 1. Найди минимальное N, при котором результат больше 30.", answer: "15", solution: "При приписывании единицы получаем 2N + 1. Для N = 14 это 29, а для N = 15 — 31. Выражение растёт с N, поэтому 15 — минимум." },
+            { type: "Двоичная запись", title: "Допиши разряд", text: "К двоичной записи числа 13 справа приписали 0. Какое число получилось в десятичной системе?", answer: "26", solution: [["Сдвиг", "Ноль справа → N × 2"], ["Подстановка", "13 × 2 = 26"]] },
+            { type: "Двоичная запись", title: "Два новых разряда", text: "К двоичной записи числа 6 справа приписали 01. Какое число получилось в десятичной системе?", answer: "25", solution: [["Два разряда", "01₂ = 1; сдвиг на 2 разряда → N × 4"], ["Подстановка", "6 × 4 + 1 = 25"]] },
+            { type: "Поиск числа", title: "Найди минимальное N", text: "К двоичной записи натурального числа N справа приписывают 1. Найди минимальное N, при котором результат больше 30.", answer: "15", solution: [["Условие", "2N + 1 > 30"], ["Граница", "N = 14 → 29; N = 15 → 31"], ["Минимум", "N = 15"]] },
         ],
     },
     8: {
         title: "Комбинаторика",
-        cheat: ["Для независимых позиций перемножай число вариантов.", "Без повторений на каждой следующей позиции вариантов на один меньше.", "Если порядок важен, одинаковый набор символов может дать несколько кодов."],
-        lesson: ["Составим трёхбуквенный код из А, Б и В с ровно одной буквой А.", "У А три возможные позиции. Для каждой из двух оставшихся позиций выбираем Б или В.", "Перемножаем: 3 × 2 × 2 = 12 кодов."],
+        cheat: [["Независимый выбор", "Всего = a₁ × a₂ × … × aₙ"], ["Без повторов", "Для k мест из n знаков: n × (n − 1) × … × (n − k + 1)"], ["Первый разряд числа", "Ноль исключаем только на первой позиции"]],
+        lesson: [["Место буквы А", "3 варианта"], ["Остальные позиции", "Б или В → 2 × 2 варианта"], ["Всего", "3 × 2 × 2 = 12 кодов"]],
         tasks: [
-            { type: "Слова", title: "Код из трёх букв", text: "Сколько трёхбуквенных кодов можно составить из букв А, Б, В, если буквы могут повторяться?", answer: "27", solution: "В каждой из трёх позиций доступны три буквы. Повторения разрешены, поэтому число кодов равно 3 × 3 × 3 = 27." },
-            { type: "Слова", title: "Ровно одна буква А", text: "Сколько трёхбуквенных кодов из букв А, Б, В содержат ровно одну букву А? Другие буквы могут повторяться.", answer: "12", solution: "Для единственной буквы А есть три позиции. В двух оставшихся независимо выбираем Б или В. Всего 3 × 2 × 2 = 12 кодов." },
-            { type: "Числа", title: "Число без повторений", text: "Сколько трёхзначных чисел можно составить из цифр 0, 1, 2, 3 без повторения цифр?", answer: "18", solution: "В первой позиции три выбора: 1, 2 или 3. Во второй остаются три цифры, включая 0, в третьей — две. Всего 3 × 3 × 2 = 18." },
+            { type: "Слова", title: "Код из трёх букв", text: "Сколько трёхбуквенных кодов можно составить из букв А, Б, В, если буквы могут повторяться?", answer: "27", solution: [["Выбор", "3 буквы на каждую из 3 позиций"], ["Всего", "3 × 3 × 3 = 27"]] },
+            { type: "Слова", title: "Ровно одна буква А", text: "Сколько трёхбуквенных кодов из букв А, Б, В содержат ровно одну букву А? Другие буквы могут повторяться.", answer: "12", solution: [["Место для А", "3 позиции"], ["Остальные", "2 × 2 варианта"], ["Всего", "3 × 2 × 2 = 12"]] },
+            { type: "Числа", title: "Число без повторений", text: "Сколько трёхзначных чисел можно составить из цифр 0, 1, 2, 3 без повторения цифр?", answer: "18", solution: [["Первая цифра", "3 варианта: 1, 2, 3"], ["Следующие", "3 варианта, затем 2"], ["Всего", "3 × 3 × 2 = 18"]] },
         ],
     },
     11: topic11,
@@ -91,13 +91,13 @@ function showMaterial(kind) {
             example.open = index === 0;
             title.textContent = lesson.title;
             prompt.textContent = lesson.prompt;
-            example.append(title, prompt, materialList("ol", lesson.steps));
+            example.append(title, prompt, formulaChain(lesson.steps));
             content.append(example);
         }
         appendWorkedPractice(content, entry.workedExamples);
         return;
     }
-    content.append(materialList(kind === "cheat" ? "ul" : "ol", entry[kind]));
+    content.append(formulaChain(entry[kind]));
 }
 
 function appendWorkedPractice(content, examples) {
@@ -115,26 +115,29 @@ function appendWorkedPractice(content, examples) {
             const example = document.createElement("details");
             const title = document.createElement("summary");
             const prompt = document.createElement("p");
-            const solution = document.createElement("p");
             const answer = document.createElement("p");
             example.className = "worked-example";
             title.textContent = task.title;
             prompt.textContent = task.text;
-            solution.textContent = task.solution;
             answer.textContent = `Ответ: ${task.answer}`;
             answer.className = "worked-answer";
-            example.append(title, prompt, solution, answer);
+            example.append(title, prompt, formulaChain(task.solution), answer);
             group.append(example);
         }
         content.append(group);
     }
 }
 
-function materialList(tag, steps) {
-    const list = document.createElement(tag);
-    for (const step of steps) {
+function formulaChain(steps) {
+    const list = document.createElement("ol");
+    list.className = "formula-chain";
+    for (const [label, expression] of steps) {
         const item = document.createElement("li");
-        item.textContent = step;
+        const title = document.createElement("strong");
+        const formula = document.createElement("span");
+        title.textContent = label;
+        formula.textContent = expression;
+        item.append(title, formula);
         list.append(item);
     }
     return list;
@@ -411,8 +414,7 @@ function openProblem(task) {
     byId("problem-answer-panel").open = false;
     const solution = byId("problem-solution");
     solution.open = false;
-    solution.hidden = !task.solution;
-    byId("problem-explanation").textContent = task.solution ?? "";
+    byId("problem-explanation").replaceChildren(formulaChain(task.solution));
     practiceForm.hidden = !task.encoding;
     practiceAnswer.value = "";
     practiceFeedback.textContent = "";

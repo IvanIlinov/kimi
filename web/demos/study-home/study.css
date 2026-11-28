@@ -700,3 +700,26 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
 .worked-example :is(ol, ul) { font-size: 13px; }
 #material-content h3 { margin: 14px 0 6px; font: 800 18px/1.1 var(--display); }
 .worked-answer { font-weight: 750; }
+
+.material .formula-chain, .formula-chain {
+    display: grid;
+    gap: 0;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.formula-chain li {
+    display: grid;
+    grid-template-columns: minmax(64px, 28%) minmax(0, 1fr);
+    gap: 7px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+}
+.formula-chain strong { color: var(--muted); font-size: 11px; }
+.formula-chain span {
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font: 550 12px/1.45 var(--data);
+    font-variant-numeric: tabular-nums;
+}
