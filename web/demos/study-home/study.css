@@ -305,6 +305,8 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
 .close { position: absolute; top: 8px; right: 8px; width: 35px; height: 35px; border: 1px solid var(--line); border-radius: 5px; background: var(--cream); font-size: 22px; }
 .answer { margin-top: 14px; font-weight: 700; }
 .answer summary { cursor: pointer; }
+.answer + .answer { margin-top: 8px; }
+#problem-explanation { font-weight: 400; }
 
 .dock {
     position: fixed;
