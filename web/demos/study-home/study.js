@@ -139,6 +139,7 @@ for (const [index, status] of topicStatuses.entries()) {
     tile.className = "topic-tile";
     tile.href = `#task-${number}`;
     const label = document.createElement("span");
+    label.className = "topic-number-label";
     label.textContent = number;
     tile.append(label);
     updateTile(tile, number, status);
@@ -294,6 +295,7 @@ for (const [index, initial] of topicStatuses.entries()) {
     const label = document.createElement("span");
     button.type = "button";
     button.className = "topic-tile";
+    label.className = "topic-number-label";
     label.textContent = number;
     button.append(label);
     updateSettingsTile(button, number, initial);
