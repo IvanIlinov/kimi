@@ -122,10 +122,9 @@ progress::-moz-progress-bar {
 }
 .topic-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(5px, 1.6vw, 7px); margin: 12px 0 12px; }
 .topic-tile {
+    position: relative;
     display: grid;
-    grid-template-rows: 1fr 13px;
-    justify-items: center;
-    align-items: center;
+    place-items: center;
     aspect-ratio: 1.07;
     border: 1px solid #211d17;
     border-radius: 5px;
@@ -137,7 +136,6 @@ progress::-moz-progress-bar {
     text-decoration: none;
 }
 .topic-tile[data-status="3"] {
-    grid-template-rows: 1fr;
     border-color: #976d2a8c;
     background: linear-gradient(150deg, #fff9da, var(--cream));
     color: var(--ink);
@@ -158,6 +156,16 @@ progress::-moz-progress-bar {
     background: color-mix(in srgb, var(--graphite) 23%, transparent);
 }
 .status-meter i.filled { background: var(--cream); }
+.topic-tile .status-meter {
+    position: absolute;
+    inset: auto 0 4px;
+    margin-inline: auto;
+    min-height: 7px;
+    padding-inline: 2px;
+    border-radius: 3px;
+    background: #18161266;
+}
+.topic-tile .status-meter i { height: 3px; }
 .topic-tile .status-meter i:not(.filled) {
     background: color-mix(in srgb, var(--cream) 24%, transparent);
 }
@@ -636,15 +644,19 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
 
 .settings-topic-grid { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; margin: 0; }
 .settings-topic-grid .topic-tile {
-    grid-template-rows: 1fr 8px;
     min-height: 30px;
     min-width: 0;
     padding: 0;
     font-size: clamp(13px, 4vw, 18px);
 }
-.settings-topic-grid .topic-tile[data-status="3"] { grid-template-rows: 1fr; }
-.settings-topic-grid .status-meter { width: min(18px, 85%); min-height: 5px; gap: 1px; }
-.settings-topic-grid .status-meter i { height: 3px; }
+.settings-topic-grid .topic-tile .status-meter {
+    bottom: 1px;
+    width: min(19px, 85%);
+    min-height: 4px;
+    padding-inline: 1px;
+    gap: 1px;
+}
+.settings-topic-grid .topic-tile .status-meter i { height: 2px; }
 
 
 :is(.settings-tabs, .ranking-tabs) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
