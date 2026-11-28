@@ -696,3 +696,5 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
 .worked-example summary { cursor: pointer; font-weight: 750; }
 .worked-example p { margin-top: 7px; }
 .worked-example :is(ol, ul) { font-size: 13px; }
+#material-content h3 { margin: 14px 0 6px; font: 800 18px/1.1 var(--display); }
+.worked-answer { font-weight: 750; }

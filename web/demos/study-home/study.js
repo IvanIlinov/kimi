@@ -94,9 +94,40 @@ function showMaterial(kind) {
             example.append(title, prompt, materialList("ol", lesson.steps));
             content.append(example);
         }
+        appendWorkedPractice(content, entry.workedExamples);
         return;
     }
     content.append(materialList(kind === "cheat" ? "ul" : "ol", entry[kind]));
+}
+
+function appendWorkedPractice(content, examples) {
+    const heading = document.createElement("h3");
+    heading.textContent = "Разобранные задачи";
+    content.append(heading);
+    const types = new Set(examples.map(task => task.type));
+    for (const type of types) {
+        const group = document.createElement("details");
+        const label = document.createElement("summary");
+        group.className = "worked-example";
+        label.textContent = type;
+        group.append(label);
+        for (const task of examples.filter(item => item.type === type)) {
+            const example = document.createElement("details");
+            const title = document.createElement("summary");
+            const prompt = document.createElement("p");
+            const solution = document.createElement("p");
+            const answer = document.createElement("p");
+            example.className = "worked-example";
+            title.textContent = task.title;
+            prompt.textContent = task.text;
+            solution.textContent = task.solution;
+            answer.textContent = `Ответ: ${task.answer}`;
+            answer.className = "worked-answer";
+            example.append(title, prompt, solution, answer);
+            group.append(example);
+        }
+        content.append(group);
+    }
 }
 
 function materialList(tag, steps) {
@@ -366,21 +397,19 @@ let practiceTask;
 practiceForm.addEventListener("submit", event => {
     event.preventDefault();
     const value = practiceAnswer.value.trim();
-    const correct = /^[0-9]+$/.test(value) && Number(value) === Number(practiceTask.answer.split(" ")[0]);
-    practiceFeedback.textContent = correct ? "Верно!" : "Пока неверно. Проверь вычисления.";
-    if (correct) byId("problem-solution").open = true;
+    const correct = /^[0-9]+$/.test(value) && Number(value) === Number(practiceTask.answer);
+    practiceFeedback.textContent = correct ? "Верно!" : "Пока неверно. Попробуй ещё раз.";
 });
 
 function openProblem(task) {
     practiceTask = task;
     byId("problem-title").textContent = task.title;
     byId("problem-text").textContent = task.text;
+    byId("problem-encoding").textContent = task.encoding ?? "";
+    byId("problem-encoding").hidden = !task.encoding;
     byId("problem-answer").textContent = task.answer;
-    byId("problem-explanation").textContent = task.solution ?? "";
-    byId("problem-explanation").hidden = !task.solution;
-    byId("problem-solution-label").textContent = task.solution ? "Показать решение" : "Показать ответ";
     byId("problem-solution").open = false;
-    practiceForm.hidden = !task.solution;
+    practiceForm.hidden = !task.encoding;
     practiceAnswer.value = "";
     practiceFeedback.textContent = "";
     dialog.showModal();

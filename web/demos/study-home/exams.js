@@ -5,15 +5,15 @@ const formats = {
     extended: "расширенный",
 };
 const variants = [
-    { id: "demo", title: "Демоверсия", level: "easy", format: "official", tasks: { 5: [0], 8: [0], 11: [0] } },
-    { id: "main", title: "Основная волна", level: "medium", format: "official", tasks: { 5: [1], 8: [1], 11: [2] } },
-    { id: "retake", title: "Пересдача", level: "hard", format: "official", tasks: { 5: [2], 8: [2], 11: [1] } },
-    { id: "standard-easy", title: "Разминка", level: "easy", format: "standard", tasks: { 5: [0], 8: [0], 11: [2] } },
-    { id: "standard-medium", title: "Тренировочный вариант", level: "medium", format: "standard", tasks: { 5: [2], 8: [1], 11: [0] } },
-    { id: "standard-hard", title: "Контрольный вариант", level: "hard", format: "standard", tasks: { 5: [1], 8: [2], 11: [2] } },
+    { id: "demo", title: "Демоверсия", level: "easy", format: "official", tasks: { 5: [0], 8: [0] } },
+    { id: "main", title: "Основная волна", level: "medium", format: "official", tasks: { 5: [1], 8: [1] } },
+    { id: "retake", title: "Пересдача", level: "hard", format: "official", tasks: { 5: [2], 8: [2] } },
+    { id: "standard-easy", title: "Разминка", level: "easy", format: "standard", tasks: { 5: [0], 8: [0] } },
+    { id: "standard-medium", title: "Тренировочный вариант", level: "medium", format: "standard", tasks: { 5: [2], 8: [1] } },
+    { id: "standard-hard", title: "Контрольный вариант", level: "hard", format: "standard", tasks: { 5: [1], 8: [2] } },
     { id: "foundation", title: "Базовые типажи", level: "easy", format: "extended", tasks: { 5: [0, 2], 8: [0, 2] } },
-    { id: "mixed", title: "Смешанные типажи", level: "medium", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [0, 3] } },
-    { id: "advanced", title: "Сложные типажи", level: "hard", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [1, 4] } },
+    { id: "mixed", title: "Смешанные типажи", level: "medium", format: "extended", tasks: { 5: [1, 2], 8: [1, 2] } },
+    { id: "advanced", title: "Сложные типажи", level: "hard", format: "extended", tasks: { 5: [1, 2], 8: [1, 2] } },
 ];
 
 const byId = id => document.getElementById(id);
