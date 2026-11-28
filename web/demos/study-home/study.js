@@ -68,6 +68,9 @@ function saveSettings() {
 
 const byId = id => document.getElementById(id);
 const grid = byId("topics");
+const shellProfile = byId("study-shell-profile");
+const sharedProfile = document.documentElement.dataset.design === "2";
+if (sharedProfile) shellProfile.append(byId("profile-card"));
 const dialog = byId("problem");
 const exams = createExams(catalog);
 let activeNumber = null;
@@ -399,6 +402,11 @@ function showPage() {
     const exam = exams.fromHash(location.hash);
     const settings = /^#settings(?:-task-(\d+))?$/.exec(location.hash);
     const section = settings ? "settings" : exam || location.hash === "#exams" ? "exams" : location.hash === "#ranking" ? "ranking" : "tasks";
+    if (sharedProfile) {
+        const showShell = !showTopic && !exam;
+        shellProfile.hidden = !showShell;
+        shellProfile.parentElement.toggleAttribute("data-shared-profile", showShell);
+    }
     byId("settings-page").hidden = !settings;
     byId("ranking-page").hidden = section !== "ranking";
     byId("exams-page").hidden = section !== "exams" || !!exam;
