@@ -66,9 +66,17 @@
     letter-spacing: .005em;
 }
 [data-design="2"] .identity > span { padding-top: 1px; color: var(--muted); }
-[data-design="2"] .ring { width: clamp(59px, 18vw, 80px); }
+[data-design="2"] .ring {
+    width: clamp(59px, 18vw, 80px);
+    border-color: #6f925b;
+    color: var(--ink);
+    background:
+        radial-gradient(closest-side, #161c1d 73%, #35423a 75% 80%, transparent 82%),
+        conic-gradient(from -60deg, #b6ff7e, var(--lime) 64%, #414d46 64%);
+    box-shadow: 0 5px 0 #111719, 0 8px 11px #080d1080, inset 0 0 0 3px #232d27, 0 0 10px #72ff2226;
+}
 [data-design="2"] .ring strong { font-size: clamp(23px, 7.2vw, 32px); }
-[data-design="2"] .ring > span { margin-top: 3px; font-size: 8px; }
+[data-design="2"] .ring > span { margin-top: 3px; color: var(--muted); font-size: 8px; }
 [data-design="2"] .metrics dt,
 [data-design="2"] .profile-since,
 [data-design="2"] .countdown span { color: var(--muted); }
