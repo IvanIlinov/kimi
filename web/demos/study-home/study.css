@@ -135,6 +135,8 @@ progress::-moz-progress-bar {
     font-variant-numeric: tabular-nums;
     text-decoration: none;
 }
+/* The digit shapes sit slightly above the midpoint of the font's line box. */
+.topic-tile:not([data-status="3"]) > :first-child { transform: translateY(.06em); }
 .topic-tile[data-status="3"] {
     border-color: #976d2a8c;
     background: linear-gradient(150deg, #fff9da, var(--cream));
@@ -158,7 +160,7 @@ progress::-moz-progress-bar {
 .status-meter i.filled { background: var(--cream); }
 .topic-tile .status-meter {
     position: absolute;
-    inset: auto 0 4px;
+    inset: auto 0 2px;
     margin-inline: auto;
     min-height: 7px;
     padding-inline: 2px;
