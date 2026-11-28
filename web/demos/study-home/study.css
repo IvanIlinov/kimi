@@ -686,3 +686,13 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
     #settings-page .settings-save { min-height: 30px; }
     .settings-topic-grid .topic-tile { height: 30px; aspect-ratio: auto; }
 }
+
+.worked-example {
+    margin-top: 7px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+}
+.worked-example summary { cursor: pointer; font-weight: 750; }
+.worked-example p { margin-top: 7px; }
+.worked-example :is(ol, ul) { font-size: 13px; }

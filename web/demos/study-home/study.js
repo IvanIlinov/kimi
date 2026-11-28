@@ -1,4 +1,5 @@
 import { createExams } from "./exams.js";
+import { topic11 } from "./topic-11.js";
 
 const catalog = {
     5: {
@@ -21,16 +22,7 @@ const catalog = {
             { type: "Числа", title: "Число без повторений", text: "Сколько трёхзначных чисел можно составить из цифр 0, 1, 2, 3 без повторения цифр?", answer: "18" },
         ],
     },
-    11: {
-        title: "Кодирование информации",
-        cheat: ["Число бит на символ — наименьшее b, для которого 2ᵇ ≥ размер алфавита.", "Умножь биты на число символов, затем раздели на 8.", "Если на запись выделяют целое число байт, округляй вверх для каждой записи отдельно."],
-        lesson: ["Рассмотрим пароль из 12 символов алфавита на 32 знака. На один символ нужно 5 бит, так как 2⁵ = 32.", "На пароль нужно 12 × 5 = 60 бит. Делим на 8 и округляем вверх: 8 байт.", "Для 64 паролей умножаем 8 × 64 = 512 байт."],
-        tasks: [
-            { type: "Пароли", title: "Память для пароля", text: "Пароль состоит из 8 символов алфавита из 16 знаков. Каждый символ кодируется одинаковым минимальным числом бит. Сколько байт занимает пароль?", answer: "4 байта" },
-            { type: "Пароли", title: "Память для 64 паролей", text: "Каждый пароль состоит из 12 символов алфавита из 32 знаков. На один пароль выделяют минимальное целое число байт, каждому символу отводят одинаковое минимальное число бит. Сколько байт занимают 64 пароля?", answer: "512 байт" },
-            { type: "Идентификаторы", title: "Минимальный размер записи", text: "Идентификатор состоит из 9 символов. В алфавите 20 знаков. Каждый символ кодируется минимальным одинаковым числом бит. Какое минимальное целое число байт нужно на один идентификатор?", answer: "6 байт" },
-        ],
-    },
+    11: topic11,
 };
 
 const statuses = ["Не изучено", "В изучении", "Изучено", "Закреплено"];
@@ -88,13 +80,33 @@ function showMaterial(kind) {
 
     const entry = catalog[activeNumber];
     byId("material-title").textContent = kind === "cheat" ? "Шпаргалка" : "Обучение";
-    const list = document.createElement(kind === "cheat" ? "ul" : "ol");
-    for (const step of entry[kind]) {
+    const content = byId("material-content");
+    content.replaceChildren();
+    if (kind === "lesson" && entry.lessons) {
+        for (const [index, lesson] of entry.lessons.entries()) {
+            const example = document.createElement("details");
+            const title = document.createElement("summary");
+            const prompt = document.createElement("p");
+            example.className = "worked-example";
+            example.open = index === 0;
+            title.textContent = lesson.title;
+            prompt.textContent = lesson.prompt;
+            example.append(title, prompt, materialList("ol", lesson.steps));
+            content.append(example);
+        }
+        return;
+    }
+    content.append(materialList(kind === "cheat" ? "ul" : "ol", entry[kind]));
+}
+
+function materialList(tag, steps) {
+    const list = document.createElement(tag);
+    for (const step of steps) {
         const item = document.createElement("li");
         item.textContent = step;
         list.append(item);
     }
-    byId("material-content").replaceChildren(list);
+    return list;
 }
 
 for (const button of materialButtons) {
@@ -346,11 +358,31 @@ function showSettings(number) {
     else byId("settings-page").querySelector("h1").focus();
 }
 
+const practiceForm = byId("practice-answer-form");
+const practiceAnswer = byId("practice-answer");
+const practiceFeedback = byId("practice-feedback");
+let practiceTask;
+
+practiceForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const value = practiceAnswer.value.trim();
+    const correct = /^[0-9]+$/.test(value) && Number(value) === Number(practiceTask.answer.split(" ")[0]);
+    practiceFeedback.textContent = correct ? "Верно!" : "Пока неверно. Проверь вычисления.";
+    if (correct) byId("problem-solution").open = true;
+});
+
 function openProblem(task) {
+    practiceTask = task;
     byId("problem-title").textContent = task.title;
     byId("problem-text").textContent = task.text;
     byId("problem-answer").textContent = task.answer;
-    dialog.querySelector("details").open = false;
+    byId("problem-explanation").textContent = task.solution ?? "";
+    byId("problem-explanation").hidden = !task.solution;
+    byId("problem-solution-label").textContent = task.solution ? "Показать решение" : "Показать ответ";
+    byId("problem-solution").open = false;
+    practiceForm.hidden = !task.solution;
+    practiceAnswer.value = "";
+    practiceFeedback.textContent = "";
     dialog.showModal();
 }
 

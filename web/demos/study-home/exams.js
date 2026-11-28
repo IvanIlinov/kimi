@@ -12,8 +12,8 @@ const variants = [
     { id: "standard-medium", title: "Тренировочный вариант", level: "medium", format: "standard", tasks: { 5: [2], 8: [1], 11: [0] } },
     { id: "standard-hard", title: "Контрольный вариант", level: "hard", format: "standard", tasks: { 5: [1], 8: [2], 11: [2] } },
     { id: "foundation", title: "Базовые типажи", level: "easy", format: "extended", tasks: { 5: [0, 2], 8: [0, 2] } },
-    { id: "mixed", title: "Смешанные типажи", level: "medium", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [0, 2] } },
-    { id: "advanced", title: "Сложные типажи", level: "hard", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [1, 2] } },
+    { id: "mixed", title: "Смешанные типажи", level: "medium", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [0, 3] } },
+    { id: "advanced", title: "Сложные типажи", level: "hard", format: "extended", tasks: { 5: [1, 2], 8: [1, 2], 11: [1, 4] } },
 ];
 
 const byId = id => document.getElementById(id);
