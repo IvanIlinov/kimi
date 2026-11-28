@@ -26,7 +26,16 @@
         #13181c;
 }
 [data-design="2"] :focus-visible { outline-color: var(--yellow); outline-offset: 2px; }
-[data-design="2"] #home { gap: 16px; }
+[data-design="2"] main:has(#home:not([hidden])) {
+    --home-top: max(13px, env(safe-area-inset-top));
+    --home-bottom: calc(70px + env(safe-area-inset-bottom));
+    padding-bottom: var(--home-bottom);
+}
+[data-design="2"] #home {
+    grid-template-rows: auto 1fr;
+    min-height: calc(100dvh - var(--home-top) - var(--home-bottom));
+    gap: clamp(12px, 2dvh, 18px);
+}
 
 [data-design="2"] .profile {
     border: 1px solid var(--line);
@@ -37,7 +46,7 @@
 }
 [data-design="2"] .profile > summary {
     grid-template-columns: minmax(0, 1fr) auto 12px;
-    min-height: 88px;
+    min-height: clamp(88px, 13.4dvh, 114px);
     gap: 9px;
     padding: 10px 12px;
     border-inline-start: 3px solid var(--yellow);
@@ -91,7 +100,9 @@
     box-shadow: var(--raised);
 }
 [data-design="2"] #home > .panel {
-    padding: 0 0 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 clamp(8px, 1.5dvh, 14px);
     border: 0;
     border-bottom: 1px solid var(--line);
     border-radius: 0;
@@ -103,7 +114,9 @@
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: 9px;
-    margin-bottom: 9px;
+    margin-bottom: clamp(11px, 2.1dvh, 19px);
+    padding: clamp(6px, 1.35dvh, 13px) 0;
+    border-block: 1px solid #343d448a;
     color: var(--muted);
     font-size: 11px;
 }
@@ -113,7 +126,14 @@
     font: 750 12px/1 var(--data);
 }
 [data-design="2"] .tracker-coverage progress { height: 4px; filter: drop-shadow(0 0 3px #72ff2240); }
-[data-design="2"] #topics { margin-top: 0; }
+[data-design="2"] #topics {
+    flex: 1;
+    grid-auto-rows: minmax(38px, 1fr);
+    row-gap: clamp(7px, 1.8dvh, 16px);
+    margin: 0 0 clamp(13px, 2.7dvh, 25px);
+}
+[data-design="2"] #topics .topic-tile { aspect-ratio: auto; }
+[data-design="2"] #home .legend { flex: none; }
 [data-design="2"] .topic-tile {
     --tile-edge: #3f4c54;
     --tile-surface: #20282e;
