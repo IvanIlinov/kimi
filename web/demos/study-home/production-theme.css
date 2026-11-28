@@ -154,7 +154,12 @@
     row-gap: clamp(7px, 1.8dvh, 16px);
     margin: 0 0 clamp(13px, 2.7dvh, 25px);
 }
-[data-design="2"] #topics .topic-tile { aspect-ratio: auto; }
+[data-design="2"] #topics .topic-tile {
+    align-self: center;
+    height: calc(100% - clamp(4px, 1dvh, 9px));
+    margin-inline: 1px;
+    aspect-ratio: auto;
+}
 [data-design="2"] #home .legend { flex: none; }
 [data-design="2"] .topic-tile {
     --tile-edge: #3f4c54;
