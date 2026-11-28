@@ -67,6 +67,9 @@ function saveSettings() {
 }
 
 const byId = id => document.getElementById(id);
+if (new URLSearchParams(location.search).get("from") === "mini-app") {
+    byId("demo-return").hidden = false;
+}
 const grid = byId("topics");
 const dialog = byId("problem");
 const exams = createExams(catalog);

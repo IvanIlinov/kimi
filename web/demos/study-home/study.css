@@ -185,6 +185,7 @@ progress::-moz-progress-bar {
 .legend li { display: grid; justify-items: center; gap: 3px; white-space: nowrap; }
 
 .back { display: inline-block; padding: 5px 0 12px; font-size: 12px; font-weight: 750; text-decoration: none; }
+.demo-return { padding: 3px 0 10px; }
 .topic-header, .ranking-heading {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

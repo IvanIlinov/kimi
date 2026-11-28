@@ -12,6 +12,11 @@ import { TopicsPage } from './pages/TopicsPage';
 import { StudentHomePage } from './pages/StudentHomePage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
+const STAGING_API = 'https://staging-82-148-234-108.sslip.io';
+const STUDY_DEMO = (import.meta.env.VITE_API_URL === STAGING_API || import.meta.env.VITE_API_URL === `${STAGING_API}/`)
+    ? { label: 'Демо', icon: 'eye', href: '/demos/study-home/?from=mini-app' }
+    : undefined;
+
 type TabId = 'home' | 'week' | 'topics' | 'arena' | 'adminHistory';
 
 const STUDENT_TABS: Tab<TabId>[] = [
@@ -106,7 +111,7 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     return (
         <div class="arena-shell">
             {page}
-            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go}
+            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} link={STUDY_DEMO}
                 exit={preview ? {
                     label: editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра',
                     onClick: stopPreview,

@@ -7,11 +7,12 @@ export interface Tab<Id extends string> {
     label: string;
 }
 
-export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
+export function TabBar<Id extends string>({ tabs, active, onChange, exit, link }: {
     tabs: Tab<Id>[];
     active: Id | null;
     onChange: (id: Id) => void;
     exit?: { label: string; onClick: () => void };
+    link?: { label: string; icon: string; href: string };
 }) {
     return (
         <nav class="tabbar" aria-label="Разделы">
@@ -29,7 +30,7 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
                     <button
                         key={t.id}
                         class={t.id === active ? 'tab active' : 'tab'}
-                        data-edge={tabs.length === 1 ? 'both' : index === 0 ? 'start' : index === tabs.length - 1 ? 'end' : 'both'}
+                        data-edge={tabs.length === 1 && !link ? 'both' : index === 0 ? 'start' : index === tabs.length - 1 && !link ? 'end' : 'both'}
                         aria-label={t.label}
                         aria-current={t.id === active ? 'page' : undefined}
                         onClick={() => {
@@ -41,6 +42,12 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit }: {
                         <span class="tab-label">{t.label}</span>
                     </button>
                 ))}
+                {link && (
+                    <a class="tab tabbar-link" data-edge="end" href={link.href} onClick={() => haptic.tap()}>
+                        <NavIcon name={link.icon} />
+                        <span class="tab-label">{link.label}</span>
+                    </a>
+                )}
             </div>
         </nav>
     );

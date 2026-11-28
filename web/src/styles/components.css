@@ -476,6 +476,11 @@
     transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
 
+.tabbar-link { text-decoration: none; }
+.tabbar-tabs:has(.tabbar-link):has(.tabbar-exit) > .tab:not(.tabbar-exit) {
+    width: clamp(49px, 16vw, 72px);
+}
+
 .tab[data-edge="start"] {
     --tab-shape: polygon(0 10px, 10px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
 }
