@@ -10,7 +10,6 @@
 </head>
 <body>
 <main>
-    <a class="back demo-return" id="demo-return" href="/" hidden>← Вернуться в Mini App</a>
     <section id="home">
         <details class="profile" id="profile-card">
             <summary>
@@ -115,15 +114,36 @@
         <header class="exam-heading"><h1 tabindex="-1">Настройки</h1></header>
         <form class="panel settings-panel" id="profile-settings">
             <h2>Профиль и прогресс</h2>
-            <label>Имя<input name="name" maxlength="40" required></label>
-            <label>Дата начала подготовки<input type="date" name="start" min="1900-01-01" max="9999-12-31" required></label>
+            <div class="settings-columns">
+                <label>Имя<input name="name" maxlength="40" required></label>
+                <label>Начало подготовки<input type="date" name="start" min="1900-01-01" max="9999-12-31" required></label>
+            </div>
             <div class="settings-columns">
                 <label>Решено всего<input type="number" name="solved" min="0" max="999999" required></label>
                 <label>За неделю<input type="number" name="week" min="0" max="999999" required></label>
             </div>
-            <label>Балл пробника<input type="number" name="exam" min="0" max="100" required></label>
-            <button type="submit" class="settings-save">Сохранить</button>
-            <p id="profile-feedback" role="status"></p>
+            <div class="task-adjust" role="group" aria-label="Быстро изменить число решённых задач">
+                <button type="button" data-task-delta="-1">−1</button>
+                <button type="button" data-task-delta="1">+1</button>
+                <button type="button" data-task-delta="3">+3</button>
+                <button type="button" data-task-delta="5">+5</button>
+                <button type="button" data-task-delta="10">+10</button>
+            </div>
+            <div class="score-control">
+                <div class="score-header">
+                    <label for="settings-exam">Балл пробника</label>
+                    <div><output id="settings-exam-value" for="settings-exam"></output><span> / 100</span></div>
+                </div>
+                <div class="score-adjust">
+                    <button type="button" data-score-delta="-1" aria-label="Уменьшить балл на один">−</button>
+                    <input type="range" id="settings-exam" name="exam" min="0" max="100" step="1">
+                    <button type="button" data-score-delta="1" aria-label="Увеличить балл на один">+</button>
+                </div>
+            </div>
+            <div class="settings-submit">
+                <button type="submit" class="settings-save">Сохранить</button>
+                <p id="profile-feedback" role="status"></p>
+            </div>
         </form>
         <section class="panel settings-panel" aria-labelledby="settings-status-title">
             <h2 id="settings-status-title">Статусы заданий</h2>
@@ -133,10 +153,10 @@
         </section>
     </section>
     <nav class="dock" aria-label="Нижнее меню">
-        <a href="#ranking" data-section="ranking"><span aria-hidden="true">≡</span>Рейтинг</a>
-        <a href="#tasks" data-section="tasks" aria-current="page"><span aria-hidden="true">⊞</span>Задания</a>
-        <a href="#exams" data-section="exams"><span aria-hidden="true">▤</span>Пробники</a>
-        <a href="#settings" data-section="settings"><span aria-hidden="true">⚙</span>Настройки</a>
+        <a href="#ranking" data-section="ranking"><span class="dock-icon dock-icon-ranking" aria-hidden="true"></span>Рейтинг</a>
+        <a href="#tasks" data-section="tasks" aria-current="page"><span class="dock-icon dock-icon-tasks" aria-hidden="true"></span>Задания</a>
+        <a href="#exams" data-section="exams"><span class="dock-icon dock-icon-exams" aria-hidden="true"></span>Пробники</a>
+        <a href="#settings" data-section="settings"><span class="dock-icon dock-icon-settings" aria-hidden="true"></span>Настройки</a>
     </nav>
 </main>
 

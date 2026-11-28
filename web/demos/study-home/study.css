@@ -185,7 +185,6 @@ progress::-moz-progress-bar {
 .legend li { display: grid; justify-items: center; gap: 3px; white-space: nowrap; }
 
 .back { display: inline-block; padding: 5px 0 12px; font-size: 12px; font-weight: 750; text-decoration: none; }
-.demo-return { padding: 3px 0 10px; }
 .topic-header, .ranking-heading {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -311,7 +310,48 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
     text-decoration: none;
     font-size: 10px;
 }
-.dock a span { font-size: 17px; line-height: 1; }
+.dock-icon {
+    display: block;
+    position: relative;
+    width: 18px;
+    height: 17px;
+}
+.dock-icon-ranking {
+    background:
+        linear-gradient(currentColor, currentColor) left bottom / 4px 8px no-repeat,
+        linear-gradient(currentColor, currentColor) center bottom / 4px 15px no-repeat,
+        linear-gradient(currentColor, currentColor) right bottom / 4px 11px no-repeat;
+    border-bottom: 1px solid currentColor;
+}
+.dock-icon-tasks {
+    background:
+        radial-gradient(circle, currentColor 64%, transparent 70%) 1px 0 / 7px 7px no-repeat,
+        radial-gradient(circle, currentColor 64%, transparent 70%) 10px 0 / 7px 7px no-repeat,
+        radial-gradient(circle, currentColor 64%, transparent 70%) 1px 9px / 7px 7px no-repeat,
+        radial-gradient(circle, currentColor 64%, transparent 70%) 10px 9px / 7px 7px no-repeat;
+}
+.dock-icon-exams {
+    width: 13px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    background: repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 4px) center 4px / 7px 9px no-repeat;
+}
+.dock-icon-settings {
+    background:
+        linear-gradient(currentColor, currentColor) center 4px / 17px 1px no-repeat,
+        linear-gradient(currentColor, currentColor) center 12px / 17px 1px no-repeat;
+}
+.dock-icon-settings::before, .dock-icon-settings::after {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+}
+.dock-icon-settings::before { top: 2px; left: 4px; }
+.dock-icon-settings::after { top: 10px; right: 4px; }
+
 .dock a[aria-current="page"] { color: var(--ink); background: linear-gradient(145deg, #ffe682, #ffca30); font-weight: 800; }
 .dock a:focus-visible { outline-color: var(--cream); outline-offset: -2px; }
 .ranking-heading { grid-template-columns: 1fr; gap: 4px; }
@@ -423,7 +463,7 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
 .settings-panel { display: grid; gap: 9px; }
 .settings-panel + .settings-panel { margin-top: 11px; }
 .settings-panel label { display: grid; gap: 3px; min-width: 0; font-size: 11px; font-weight: 700; }
-.settings-panel input {
+.settings-panel input:not([type="range"]) {
     width: 100%;
     min-width: 0;
     min-height: 35px;
@@ -435,7 +475,40 @@ dialog p { margin-top: 10px; overflow-wrap: anywhere; }
     font: inherit;
     font-size: 14px;
 }
-.settings-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.settings-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: 6px; }
+.task-adjust, .score-adjust { display: grid; gap: 4px; align-items: center; }
+.task-adjust { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.task-adjust button, .score-adjust button {
+    min-height: 29px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--cream);
+    font: 750 12px/1 var(--data);
+}
+.task-adjust button:active, .score-adjust button:active { background: var(--yellow); }
+.score-control {
+    display: grid;
+    gap: 5px;
+    padding: 7px 8px;
+    border-radius: 5px;
+    background: var(--profile-metal);
+    color: var(--cream);
+}
+.score-header { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; }
+.score-header output { font: 900 27px/1 var(--display); font-variant-numeric: tabular-nums; }
+.score-header span { color: #dfd1aa; font: 10px var(--data); }
+.score-adjust { grid-template-columns: 30px minmax(0, 1fr) 30px; }
+.score-adjust input {
+    width: 100%;
+    margin: 0;
+    min-height: 27px;
+    accent-color: var(--yellow);
+    color-scheme: dark;
+}
+.score-adjust input:focus-visible { outline-color: var(--cream); }
+.score-adjust button:disabled { opacity: .48; cursor: default; }
+.settings-submit { display: flex; align-items: center; gap: 8px; }
 .settings-save {
     justify-self: start;
     min-height: 34px;

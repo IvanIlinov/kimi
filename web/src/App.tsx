@@ -14,7 +14,7 @@ import { insideTelegram, useBackButton } from './lib/telegram';
 
 const STAGING_API = 'https://staging-82-148-234-108.sslip.io';
 const STUDY_DEMO = (import.meta.env.VITE_API_URL === STAGING_API || import.meta.env.VITE_API_URL === `${STAGING_API}/`)
-    ? { label: 'Демо', icon: 'eye', href: '/demos/study-home/?from=mini-app' }
+    ? { label: 'Демо', icon: 'eye', href: '/demos/study-home/' }
     : undefined;
 
 type TabId = 'home' | 'week' | 'topics' | 'arena' | 'adminHistory';
