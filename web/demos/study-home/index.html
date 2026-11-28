@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#ffc72b">
 <title>Профиль и задания</title>
 <link rel="stylesheet" href="./study.css">
+<link rel="stylesheet" href="./production-theme.css">
+<script>
+    if (new URLSearchParams(location.search).get("design") === "2") {
+        document.documentElement.dataset.design = "2";
+        document.querySelector('meta[name="theme-color"]').content = "#171b1e";
+    }
+</script>
 <script type="module" src="./study.js"></script>
 </head>
 <body>
@@ -34,6 +41,10 @@
         </details>
 
         <section class="panel" aria-label="Задания">
+            <div class="tracker-coverage">
+                <span>Изучено <b id="tracker-studied-count">14/27</b></span>
+                <progress id="tracker-studied-meter" value="14" max="27" aria-label="Изучено заданий"></progress>
+            </div>
             <div class="topic-grid" id="topics"></div>
             <ul class="legend" aria-label="Статусы заданий">
                 <li data-status="0"><span>Не изучено</span></li>

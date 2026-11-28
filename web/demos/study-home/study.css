@@ -120,6 +120,7 @@ progress::-moz-progress-bar {
     background: linear-gradient(143deg, #ffe79cd9, #ffce51b0);
     box-shadow: inset 0 1px #fff6c9, 0 3px 0 #b1761e70;
 }
+.tracker-coverage { display: none; }
 .topic-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(5px, 1.6vw, 7px); margin: 12px 0 12px; }
 .topic-tile {
     position: relative;

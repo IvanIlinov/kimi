@@ -477,7 +477,7 @@
 }
 
 .tabbar-link { text-decoration: none; }
-.tabbar-tabs:has(.tabbar-link):has(.tabbar-exit) > .tab:not(.tabbar-exit) {
+.tabbar-tabs:not(.tabbar-tabs-compact):has(.tabbar-link):has(.tabbar-exit) > .tab:not(.tabbar-exit) {
     width: clamp(49px, 16vw, 72px);
 }
 
@@ -519,6 +519,20 @@
     width: var(--exit-width);
 }
 .tabbar-exit svg { width: 21px; height: 21px; }
+
+.tabbar-tabs-compact { width: 100%; gap: 3px; }
+.tabbar-tabs-compact > .tab {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+.tabbar-tabs-compact > .tab.tabbar-exit {
+    position: static;
+    flex: 0 0 clamp(28px, 10vw, 44px);
+    width: auto;
+}
+.tabbar-tabs-compact:has(.tabbar-exit)::before { inset-inline-start: 0; }
+.tabbar-tabs-compact .tab-label { font-size: clamp(9px, 2.8vw, 11px); }
 
 /* ---- Администрирование ---- */
 .admin-list {

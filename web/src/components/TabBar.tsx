@@ -7,16 +7,17 @@ export interface Tab<Id extends string> {
     label: string;
 }
 
-export function TabBar<Id extends string>({ tabs, active, onChange, exit, link }: {
+export function TabBar<Id extends string>({ tabs, active, onChange, exit, links = [] }: {
     tabs: Tab<Id>[];
     active: Id | null;
     onChange: (id: Id) => void;
     exit?: { label: string; onClick: () => void };
-    link?: { label: string; icon: string; href: string };
+    links?: { label: string; icon: string; href: string }[];
 }) {
+    const compact = tabs.length + links.length >= 5;
     return (
         <nav class="tabbar" aria-label="Разделы">
-            <div class="tabbar-tabs">
+            <div class={compact ? "tabbar-tabs tabbar-tabs-compact" : "tabbar-tabs"}>
                 {exit && (
                     <button type="button" class="tab tabbar-exit" data-edge="start" aria-label={exit.label} title={exit.label}
                         onClick={() => {
@@ -30,7 +31,9 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit, link }
                     <button
                         key={t.id}
                         class={t.id === active ? 'tab active' : 'tab'}
-                        data-edge={tabs.length === 1 && !link ? 'both' : index === 0 ? 'start' : index === tabs.length - 1 && !link ? 'end' : 'both'}
+                        data-edge={tabs.length === 1 && links.length === 0 ? 'both'
+                            : index === 0 && !(compact && exit) ? 'start'
+                            : index === tabs.length - 1 && links.length === 0 ? 'end' : 'both'}
                         aria-label={t.label}
                         aria-current={t.id === active ? 'page' : undefined}
                         onClick={() => {
@@ -42,12 +45,13 @@ export function TabBar<Id extends string>({ tabs, active, onChange, exit, link }
                         <span class="tab-label">{t.label}</span>
                     </button>
                 ))}
-                {link && (
-                    <a class="tab tabbar-link" data-edge="end" href={link.href} onClick={() => haptic.tap()}>
+                {links.map((link, index) => (
+                    <a key={link.href} class="tab tabbar-link" data-edge={index === links.length - 1 ? "end" : "both"}
+                        href={link.href} onClick={() => haptic.tap()}>
                         <NavIcon name={link.icon} />
                         <span class="tab-label">{link.label}</span>
                     </a>
-                )}
+                ))}
             </div>
         </nav>
     );

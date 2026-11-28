@@ -13,8 +13,11 @@ import { StudentHomePage } from './pages/StudentHomePage';
 import { insideTelegram, useBackButton } from './lib/telegram';
 
 const STAGING_API = 'https://staging-82-148-234-108.sslip.io';
-const STUDY_DEMO = (import.meta.env.VITE_API_URL === STAGING_API || import.meta.env.VITE_API_URL === `${STAGING_API}/`)
-    ? { label: 'Демо', icon: 'eye', href: '/demos/study-home/' }
+const STUDY_DEMOS = (import.meta.env.VITE_API_URL === STAGING_API || import.meta.env.VITE_API_URL === `${STAGING_API}/`)
+    ? [
+        { label: 'Демо', icon: 'eye', href: '/demos/study-home/' },
+        { label: 'Демо-2', icon: 'eye', href: '/demos/study-home/?design=2' },
+    ]
     : undefined;
 
 type TabId = 'home' | 'week' | 'topics' | 'arena' | 'adminHistory';
@@ -111,7 +114,7 @@ export function App({ StudentHome = StudentHomePage } = {}) {
     return (
         <div class="arena-shell">
             {page}
-            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} link={STUDY_DEMO}
+            <TabBar tabs={tabs} active={openId !== null ? null : active} onChange={go} links={STUDY_DEMOS}
                 exit={preview ? {
                     label: editingStudent ? 'Вернуться в рейтинг' : 'Выйти из просмотра',
                     onClick: stopPreview,

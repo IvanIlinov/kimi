@@ -220,6 +220,8 @@ function updateProfile() {
     byId("profile-exam").textContent = profile.exam;
     const studied = topicStatuses.filter(status => status >= 2).length;
     byId("profile-studied").textContent = studied;
+    byId("tracker-studied-count").textContent = `${studied}/${topicStatuses.length}`;
+    byId("tracker-studied-meter").value = studied;
     byId("profile-since").textContent = `Подготовка с ${dateFormat.format(new Date(profile.start))}`;
     renderRanking();
 
