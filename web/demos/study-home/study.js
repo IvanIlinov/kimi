@@ -150,15 +150,77 @@ const progressForm = byId("progress-settings");
 const settingsGrid = byId("settings-topic");
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long", timeZone: "UTC" });
 
+const rankingExamples = [
+    { name: "Алина Соколова", progress: 82, week: 24, exam: 86, studied: 22, solved: 254, start: "2026-08-24" },
+    { name: "Лев Орлов", progress: 71, week: 22, exam: 74, studied: 18, solved: 215, start: "2026-09-01" },
+    { name: "Соня Лебедева", progress: 76, week: 20, exam: 79, studied: 20, solved: 230, start: "2026-09-05" },
+];
+const rankingTabs = document.querySelectorAll("[data-ranking]");
+let rankingPeriod = "global";
+
+function rankingElement(tag, text, className) {
+    const element = document.createElement(tag);
+    if (text) element.textContent = text;
+    if (className) element.className = className;
+    return element;
+}
+
+function renderRanking() {
+    const own = { ...profile, progress: 64, studied: topicStatuses.filter(status => status >= 2).length, current: true };
+    const metric = rankingPeriod === "week" ? "week" : "progress";
+    const people = [...rankingExamples, own].sort((a, b) => b[metric] - a[metric]);
+    const list = byId("ranking-list");
+    list.replaceChildren();
+
+    for (const [index, player] of people.entries()) {
+        const row = document.createElement("li");
+        const card = rankingElement("details", "", player.current ? "ranking-player ranking-player-own" : "ranking-player");
+        card.name = "ranking-profiles";
+        const summary = rankingElement("summary", "", "ranking-summary");
+        const place = rankingElement("span", String(index + 1).padStart(2, "0"), "ranking-place");
+        const name = rankingElement("strong", player.name, "ranking-name");
+        const value = rankingElement("span", metric === "week" ? `${player.week}/25` : `${player.progress}%`, "ranking-value");
+        value.setAttribute("aria-label", metric === "week"
+            ? `Решено за неделю: ${player.week} из 25`
+            : `Общий прогресс: ${player.progress}%`);
+        const caret = rankingElement("span", "", "ranking-caret");
+        caret.setAttribute("aria-hidden", "true");
+        summary.append(place, name, value, caret);
+
+        const body = rankingElement("div", "", "ranking-profile");
+        const metrics = rankingElement("dl", "", "ranking-metrics");
+        for (const [label, amount] of [["Пробник", player.exam], ["Изучено", `${player.studied}/27`], ["Решено", player.solved]]) {
+            const item = document.createElement("div");
+            item.append(rankingElement("dt", label), rankingElement("dd", String(amount)));
+            metrics.append(item);
+        }
+        const start = rankingElement("div", "", "ranking-start");
+        const date = rankingElement("time", dateFormat.format(new Date(player.start)));
+        date.dateTime = player.start;
+        start.append(rankingElement("span", "Начало подготовки"), date);
+        body.append(metrics, start);
+        card.append(summary, body);
+        row.append(card);
+        list.append(row);
+    }
+}
+
+for (const button of rankingTabs) {
+    button.addEventListener("click", () => {
+        rankingPeriod = button.dataset.ranking;
+        for (const item of rankingTabs) item.setAttribute("aria-pressed", String(item === button));
+        renderRanking();
+    });
+}
+
 function updateProfile() {
     byId("profile-name").textContent = profile.name;
-    byId("ranking-name").textContent = profile.name;
-    byId("ranking-week").textContent = `${profile.week}/25`;
     byId("profile-solved").textContent = profile.solved;
     byId("profile-exam").textContent = profile.exam;
     const studied = topicStatuses.filter(status => status >= 2).length;
     byId("profile-studied").textContent = studied;
     byId("profile-since").textContent = `Подготовка с ${dateFormat.format(new Date(profile.start))}`;
+    renderRanking();
 
     for (const [key, value] of Object.entries({ studied, week: profile.week, exam: profile.exam })) {
         const row = byId(`profile-goal-${key}`);
@@ -169,15 +231,9 @@ function updateProfile() {
 }
 
 const scoreInput = byId("settings-exam");
-const scoreButtons = [...progressForm.querySelectorAll("[data-score-delta]")];
 
 function updateScore() {
-    const score = Number(scoreInput.value);
-    byId("settings-exam-value").textContent = score;
-    for (const button of scoreButtons) {
-        const next = score + Number(button.dataset.scoreDelta);
-        button.disabled = next < 0 || next > 100;
-    }
+    byId("settings-exam-value").textContent = scoreInput.value;
 }
 
 function clearProgressFeedback() {
@@ -187,14 +243,6 @@ function clearProgressFeedback() {
 profileForm.addEventListener("input", () => { byId("profile-feedback").textContent = ""; });
 progressForm.addEventListener("input", clearProgressFeedback);
 scoreInput.addEventListener("input", updateScore);
-
-for (const button of scoreButtons) {
-    button.addEventListener("click", () => {
-        scoreInput.value = Number(scoreInput.value) + Number(button.dataset.scoreDelta);
-        updateScore();
-        clearProgressFeedback();
-    });
-}
 
 for (const button of progressForm.querySelectorAll("[data-task-delta]")) {
     button.addEventListener("click", () => {

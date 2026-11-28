@@ -78,13 +78,12 @@
         </section>
     </section>
     <section id="ranking-page" hidden>
-        <header class="ranking-heading"><h1 tabindex="-1">Рейтинг</h1><p>Решено за неделю</p></header>
-        <ol class="ranking-list">
-            <li><span>Алина Соколова</span><strong>24/25</strong></li>
-            <li><span>Лев Орлов</span><strong>22/25</strong></li>
-            <li><span>Соня Лебедева</span><strong>20/25</strong></li>
-            <li aria-current="true"><span id="ranking-name">Мира Волкова</span><strong id="ranking-week">18/25</strong></li>
-        </ol>
+        <header class="ranking-heading"><h1 tabindex="-1">Рейтинг</h1></header>
+        <div class="section-tabs ranking-tabs" role="group" aria-label="Период рейтинга">
+            <button type="button" data-ranking="global" aria-pressed="true">Глобальный</button>
+            <button type="button" data-ranking="week" aria-pressed="false">Неделя</button>
+        </div>
+        <ol class="ranking-list" id="ranking-list"></ol>
     </section>
     <section id="exams-page" hidden>
         <header class="exam-heading"><h1 tabindex="-1">Пробники</h1><p>Информатика · примеры для демо</p></header>
@@ -146,11 +145,7 @@
                         <label for="settings-exam">Балл пробника</label>
                         <div><output id="settings-exam-value" for="settings-exam"></output><span> / 100</span></div>
                     </div>
-                    <div class="score-adjust">
-                        <button type="button" data-score-delta="-1" aria-label="Уменьшить балл на один">−</button>
-                        <input type="range" id="settings-exam" name="exam" min="0" max="100" step="1">
-                        <button type="button" data-score-delta="1" aria-label="Увеличить балл на один">+</button>
-                    </div>
+                    <input type="range" id="settings-exam" name="exam" min="0" max="100" step="1">
                 </div>
                 <div class="settings-submit">
                     <button type="submit" class="settings-save">Сохранить</button>
